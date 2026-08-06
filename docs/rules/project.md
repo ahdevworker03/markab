@@ -1,141 +1,135 @@
-# Project Context
+# Project
 
-## Overview
+This repository contains the production codebase for the Vehicle Rental Management Platform.
 
-Vehicle Rental Management Platform is a modern SaaS platform designed for small and medium-sized vehicle rental businesses in Lebanon, with future expansion to the MENA region.
+The project follows a documentation-first, API-first, and monorepo architecture. Repository documentation is the primary source of truth for architecture, workflows, and development decisions.
 
-The platform helps rental businesses replace manual notebooks and spreadsheets with a reliable digital system for managing customers, vehicles, rentals, payments, maintenance, and daily operations.
+## Product Vision
 
-The project is developed as a production-ready application while serving as a learning journey for building a complete full-stack SaaS.
+Build a production-ready SaaS platform for vehicle rental businesses.
 
----
+The platform is designed to be:
 
-## Vision
+- Multi-tenant
+- API-first
+- Mobile-first
+- Offline-first
+- Arabic-first
+- Scalable
+- Maintainable
 
-Build a reliable, maintainable, and scalable platform that can grow from a single business to thousands of organizations without requiring major architectural redesign.
+## Current Stage
 
-Every implementation should balance simplicity today with a clear path for future growth.
+This repository contains the production implementation.
 
----
+Development follows an incremental approach where architecture, documentation, and API contracts are established before implementation.
 
-## Current Status
+## Repository Architecture
 
-- Frontend validation has been completed.
-- Product-market fit has been validated with real rental businesses.
-- The project is entering production backend development.
-- Documentation and architecture are considered the source of truth before implementation.
-- Development follows an API-first and contract-driven approach.
+The repository is organized as a monorepo.
 
----
+Major repository areas include:
 
-## Product Goals
+- Applications
+- Shared packages
+- Generated packages
+- Documentation
+- Repository rules
+- AI skills
 
-- Build a production-ready SaaS platform.
-- Support multiple organizations (multi-tenancy).
-- Operate offline when internet connectivity is unavailable.
-- Deliver a mobile-first experience while fully supporting desktop.
-- Maintain a clean architecture that supports long-term growth.
-- Prioritize reliability, maintainability, and developer productivity.
-
----
-
-## Architecture Summary
-
-The platform consists of:
-
-- React + TypeScript frontend.
-- Express + TypeScript backend.
-- PostgreSQL database.
-- Prisma ORM.
-- REST API.
-- Offline synchronization layer.
-- Object storage for uploaded files.
-
-Each component has a clearly defined responsibility and can evolve independently.
-
----
+Follow `monorepo.md` for package boundaries and ownership.
 
 ## Repository Structure
 
-- `artifacts/` — Deployable applications.
-- `docs/` — Product, planning, architecture, and development documentation.
-- Shared packages contain reusable code that supports multiple applications.
-- Workspace configuration is managed from the repository root.
+```text
+apps/
+  web/
+  api/
 
----
+packages/
+  api-spec/
+  api-client-react/
+  api-zod/
+  shared/
 
-## Technology Stack
+docs/
 
-### Frontend
+rules/
 
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
+.opencode/
+  skills/
+```
 
-### Backend
-
-- Node.js
-- Express
-- TypeScript
-- Prisma
-
-### Database
-
-- PostgreSQL
-
-### Development
-
-- pnpm Workspaces
-- Prettier
-- ESLint
-- OpenAPI
-
----
-
-## Development Philosophy
-
-This repository values:
-
-- Simplicity over unnecessary complexity.
-- Consistency over personal preference.
-- Incremental improvements over large rewrites.
-- Architecture before implementation.
-- Business requirements before technical preferences.
-
-Avoid over-engineering.
-
-Build only what the product currently requires.
-
----
-
-## Repository Principles
-
-- Follow the documented architecture.
-- Respect module boundaries.
-- Keep responsibilities clearly separated.
-- Make the smallest coherent change.
-- Preserve existing patterns unless improvement is justified.
-- Repository decisions take precedence over generic best practices.
-
----
+Repository structure may evolve, but responsibilities should remain consistent.
 
 ## Source of Truth
 
-The following documents define repository truth:
+Different parts of the repository own different responsibilities.
 
-- Product documentation.
-- Planning documentation.
-- Architecture documentation.
-- Repository rules.
-- Existing implementation.
+| Area                         | Source of Truth                  |
+| ---------------------------- | -------------------------------- |
+| Product behavior             | Product documentation            |
+| Architecture                 | Architecture documentation       |
+| API contracts                | `packages/api-spec`              |
+| Generated API client         | Generated from API specification |
+| Generated validation schemas | Generated from API specification |
+| Shared business logic        | Owning package                   |
+| Repository rules             | `rules/`                         |
+| AI technology knowledge      | `.opencode/skills/`              |
 
-When conflicts occur, repository documentation always overrides assumptions.
+Never duplicate a source of truth.
 
----
+## Development Principles
 
-## Long-Term Objective
+Development in this repository follows these principles:
 
-The objective is not simply to build software.
+- Documentation-first
+- API-first
+- Small incremental changes
+- Clear package ownership
+- Single source of truth
+- Simplicity over complexity
+- Consistency over cleverness
+- Long-term maintainability
 
-The objective is to build a high-quality, production-ready SaaS while establishing a maintainable codebase, documentation system, and development workflow that can support the product for years.
+## Generated Artifacts
+
+Some packages are generated from authoritative sources.
+
+Generated artifacts are not edited manually.
+
+Follow:
+
+- `api-contracts.md`
+- `generated-code.md`
+
+before modifying generated packages.
+
+## Repository Rules
+
+Repository behavior is defined by the rule files inside `rules/`.
+
+These files define:
+
+- workflow
+- architecture boundaries
+- safety
+- documentation
+- testing
+- coding standards
+- UI/UX expectations
+- monorepo behavior
+- API contract ownership
+- generated code handling
+
+Technology-specific implementation guidance belongs in `.opencode/skills/`.
+
+## Long-Term Goal
+
+Maintain a production-quality repository that remains:
+
+- predictable
+- modular
+- well documented
+- easy to extend
+- safe for AI-assisted development
