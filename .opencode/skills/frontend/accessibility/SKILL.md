@@ -1,6 +1,6 @@
 ---
 name: accessibility
-description: Web accessibility (a11y) implementation with WCAG 2.1/2.2 standards, semantic HTML, ARIA attributes, keyboard navigation, focus management, color contrast, screen reader support, and React accessibility patterns. Applicable when writing .tsx/.jsx files, designing UI components, implementing forms, managing focus, or ensuring inclusive user experiences.
+description: Web accessibility (a11y) implementation with WCAG 2.1/2.2 standards, semantic HTML, ARIA attributes, keyboard navigation, focus management, color contrast, screen reader support, and React accessibility patterns. Applicable when making UI accessible, implementing ARIA attributes or semantic HTML, auditing against WCAG 2.1/2.2 standards, managing focus and keyboard navigation, supporting screen readers, or ensuring inclusive user experiences.
 ---
 
 # Accessibility
@@ -13,7 +13,7 @@ This skill guides the agent in building accessible web applications following WC
 
 ## When to Load
 
-- User is writing, reviewing, or refactoring any `.tsx` or `.jsx` file that renders UI.
+- User is writing or reviewing UI with an accessibility focus (not general React work — see `react` skill).
 - User mentions: `accessibility`, `a11y`, `ARIA`, `role`, `aria-label`, `tabIndex`, `focus`, `screen reader`, `keyboard navigation`, `WCAG`, `semantic HTML`.
 - User asks about forms, modals, dialogs, focus management, or keyboard interactions.
 - User is designing components that need to be inclusive (buttons, links, inputs, modals, tooltips, dropdowns).
