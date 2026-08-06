@@ -152,7 +152,7 @@ importers:
         specifier: ~5.9.3
         version: 5.9.3
 
-  artifacts/api-server:
+  apps/api:
     dependencies:
       '@workspace/api-zod':
         specifier: workspace:*
@@ -204,7 +204,7 @@ importers:
         specifier: 3.1.0
         version: 3.1.0
 
-  artifacts/car-rental:
+  apps/web:
     devDependencies:
       '@esbuild/win32-x64':
         specifier: ^0.27.3
