@@ -1,28 +1,43 @@
 # Git Conventions
 
+These conventions define how version control is used in this repository.
+
 ## Commits
 
-- Use [Conventional Commits](https://www.conventionalcommits.org/) format:
-
-Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `style`, `ci`.
-
-- Keep commits atomic and focused on a single logical change.
-- Commit messages are written in imperative mood (“Add feature” not “Added feature”).
+- Follow the Conventional Commits specification.
+- Keep each commit focused on a single logical change.
+- Write commit messages in the imperative mood.
+- Avoid mixing unrelated changes in the same commit.
+- Do not create temporary or "WIP" commits unless explicitly requested.
 
 ## Branches
 
-- Follow the naming convention defined in `project.md`. Typically:
-- Feature branches: `feat/description`
-- Bug fixes: `fix/description`
-- Chores: `chore/description`
-- Always branch from the latest main/master unless otherwise indicated.
+- Follow the branch naming convention defined in `project.md`.
+- Create branches from the latest target branch unless instructed otherwise.
+- Keep branch scope limited to a single feature, fix, or task.
 
-## Pull Requests & Merges
+## Pull Requests
 
-- Do not open a PR or merge unless the user requests it.
-- If asked to prepare a PR, include a meaningful description, linked issues, and a summary of testing.
+- Do not open pull requests unless the user requests them.
+- When preparing a pull request, include:
+  - A clear summary.
+  - Testing performed.
+  - Breaking changes, if any.
+  - Related issues or tasks, when applicable.
 
-## Safety
+## History
 
-- Never force‑push to shared branches.
-- Before pushing, ensure the branch is up‑to‑date with the target (rebase if safe and permitted).
+- Keep commit history clean and easy to understand.
+- Do not rewrite shared history unless explicitly approved.
+- Never force-push shared branches.
+
+## Synchronization
+
+- Ensure the working branch is up to date before merging or pushing when appropriate.
+- Resolve conflicts deliberately rather than automatically.
+
+## Repository Safety
+
+- Never commit secrets, credentials, API keys, or environment files.
+- Verify generated files before committing them.
+- Respect the repository's ignore rules.

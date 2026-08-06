@@ -1,48 +1,57 @@
-# UI / UX Rules for This Repository
+# UI / UX Rules
 
-Apply these rules to any frontend or user-facing change.
+Apply these rules to every user-facing change.
 
-## Product Context
+## Product Principles
 
-- This is an internal business tool, not a marketing site.
-- Optimize for clarity, speed, and repeated daily use.
-- Prefer consistency over visual experimentation.
+- This is a business productivity platform, not a marketing website.
+- Design for speed, clarity, and repeated daily use.
+- Prioritize task completion over visual experimentation.
+- Consistency is more important than novelty.
 
-## Language and Layout
+## Language & Layout
 
-- Arabic is the primary language unless the task explicitly says otherwise.
-- Design and implement RTL-first, not LTR with RTL fixes layered on later.
-- Use terminology that matches the business language in the product docs.
+- Arabic is the primary application language unless explicitly specified otherwise.
+- Design RTL-first rather than adapting LTR layouts.
+- Use terminology defined in the product documentation.
+- Keep labels short, clear, and business-oriented.
 
-## Mobile-First Behavior
+## Mobile First
 
-- Start from portrait phone usage and scale up to larger screens.
-- Preserve one-handed usability, large touch targets, and short task flows.
-- Desktop responsiveness should not break the mobile mental model.
+- Design for portrait mobile devices first.
+- Scale progressively to tablets and desktop.
+- Preserve one-handed usability whenever practical.
+- Desktop layouts should extend the mobile experience rather than redesign it.
 
-## Visual Consistency
+## Design System
 
-- Follow the design direction in `docs/03-design-system.md`.
-- Keep spacing consistent and predictable across screens and components.
-- Reuse established card, form, badge, and navigation patterns before inventing new ones.
-- Avoid decorative UI that does not improve task completion.
+- Follow the project's Design System as the single source of truth.
+- Reuse existing components before creating new ones.
+- Keep spacing, typography, colors, and interaction patterns consistent.
+- Do not introduce visual styles that conflict with the established design language.
+
+## User Experience
+
+- Minimize the number of steps required to complete common tasks.
+- Keep navigation predictable and easy to learn.
+- Prioritize readability over visual density.
+- Reduce cognitive load whenever possible.
 
 ## Accessibility
 
-- Keep semantic structure correct.
-- Ensure keyboard access for interactive elements.
-- Maintain readable contrast and clear focus states.
-- Label form controls explicitly and keep error messages understandable.
-
-## Component and Styling Conventions
-
-- Prefer existing Tailwind utility patterns over ad hoc CSS.
-- Reuse workspace UI primitives and shadcn/Radix patterns where they already exist.
-- Keep presentation concerns separate from business and data logic.
-- Preserve RTL-safe spacing, alignment, icon placement, and overflow behavior.
+- Use semantic HTML whenever possible.
+- Ensure keyboard accessibility for interactive elements.
+- Maintain sufficient color contrast.
+- Provide clear labels, validation messages, and feedback.
 
 ## User Feedback
 
-- Loading, empty, and error states are required for user-facing flows.
-- Feedback should be brief, clear, and non-technical.
-- Do not add motion or styling variation unless it serves comprehension.
+- User-facing flows must include loading, empty, success, and error states.
+- Messages should be short, clear, and understandable by non-technical users.
+- Avoid unnecessary animations or visual effects that do not improve usability.
+
+## Separation of Concerns
+
+- Keep presentation separate from business logic.
+- UI components should remain reusable whenever practical.
+- Follow the documented frontend architecture when implementing interfaces.

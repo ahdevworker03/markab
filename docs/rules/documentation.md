@@ -1,34 +1,68 @@
 # Documentation Standards
 
-Document the parts of the system that other people or packages must rely on.
+Document only information that other developers, packages, or future contributors cannot reliably infer from the code.
 
-## Document These
+## What to Document
 
-- public APIs and contract changes
-- reusable workspace libraries
-- shared utilities with non-obvious behavior
-- complex business logic
-- architectural decisions that affect future implementation
-- generated-code workflows and source-of-truth boundaries
+Document:
 
-## Comments
+- Public APIs and contract changes.
+- Architecture and design decisions.
+- Business rules that are not obvious from the implementation.
+- Shared libraries and reusable utilities.
+- Source-of-truth boundaries and generated code workflows.
+- Setup, deployment, and operational workflows.
 
-- Keep comments rare and useful.
-- Explain why, constraints, or edge cases, not obvious mechanics.
-- Remove stale comments when changing related logic.
+## Code Comments
 
-## Project Docs
+- Keep comments rare and valuable.
+- Explain **why**, constraints, assumptions, or edge cases.
+- Do not comment code that is already clear from names, types, or tests.
+- Remove or update comments whenever the related code changes.
 
-- Update `README.md` when setup, scripts, or high-level behavior changes.
-- Update architecture or product docs when the repository truth changes.
-- Add migration notes for breaking API or workflow changes.
+## Project Documentation
 
-## When Not to Document
+Update project documentation whenever repository truth changes.
 
-- Do not add docstrings or comments to every function by default.
-- Do not document code that is already obvious from names, types, and tests.
+This includes:
 
-## Style
+- README.md
+- Architecture documents
+- Product documentation
+- API documentation
+- Development workflows
 
-- Write in direct, simple English.
-- Prefer concrete examples when a workflow is easy to misuse.
+Documentation must always reflect the current implementation.
+
+## Source of Truth
+
+- Every concept should have a single source of truth.
+- Avoid duplicating the same information across multiple documents.
+- Reference existing documentation instead of copying it.
+- Generated artifacts should never become the primary source of truth.
+
+## Breaking Changes
+
+Document changes that affect:
+
+- Public APIs.
+- Development workflows.
+- Configuration.
+- Build or deployment processes.
+- Database migrations.
+- User-facing behavior.
+
+Include migration guidance whenever required.
+
+## Documentation Style
+
+- Write in clear, concise English.
+- Prefer concrete examples for complex workflows.
+- Keep documentation easy to scan with headings and short sections.
+- Keep documentation close to the code or artifact it describes.
+
+## Documentation Quality
+
+- Documentation should evolve with the codebase.
+- Remove obsolete documentation instead of leaving outdated information.
+- Favor self-documenting code over excessive documentation.

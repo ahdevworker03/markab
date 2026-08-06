@@ -2,79 +2,140 @@
 
 ## Overview
 
-Car Rental Management System is an Arabic-first internal tool for small Lebanese car rental businesses. The current repository is a validation prototype built to answer one question quickly: would this replace the owner's notebook?
+Vehicle Rental Management Platform is a modern SaaS platform designed for small and medium-sized vehicle rental businesses in Lebanon, with future expansion to the MENA region.
+
+The platform helps rental businesses replace manual notebooks and spreadsheets with a reliable digital system for managing customers, vehicles, rentals, payments, maintenance, and daily operations.
+
+The project is developed as a production-ready application while serving as a learning journey for building a complete full-stack SaaS.
+
+---
+
+## Vision
+
+Build a reliable, maintainable, and scalable platform that can grow from a single business to thousands of organizations without requiring major architectural redesign.
+
+Every implementation should balance simplicity today with a clear path for future growth.
+
+---
 
 ## Current Status
 
-- Frontend MVP is the primary deliverable and is live as a prototype.
-- The frontend is functional but uses in-memory mock data only.
-- The backend exists as a stub with a health check and shared schema wiring.
-- Authentication, persistence, and production business workflows are not implemented.
+- Frontend validation has been completed.
+- Product-market fit has been validated with real rental businesses.
+- The project is entering production backend development.
+- Documentation and architecture are considered the source of truth before implementation.
+- Development follows an API-first and contract-driven approach.
 
-## Goals
+---
 
-- Validate product-market fit before building full infrastructure.
-- Keep frontend flows realistic enough for user testing.
-- Preserve a clean path from prototype data to API-backed implementation.
-- Maintain a repository structure that supports long-term monorepo growth.
+## Product Goals
+
+- Build a production-ready SaaS platform.
+- Support multiple organizations (multi-tenancy).
+- Operate offline when internet connectivity is unavailable.
+- Deliver a mobile-first experience while fully supporting desktop.
+- Maintain a clean architecture that supports long-term growth.
+- Prioritize reliability, maintainability, and developer productivity.
+
+---
 
 ## Architecture Summary
 
-- `artifacts/car-rental/`: React 19 + Vite single-page app, Arabic UI, RTL, mobile-first.
-- `artifacts/api-server/`: Express 5 API server stub.
-- `lib/api-spec/`: OpenAPI 3.1 source of truth.
-- `lib/api-client-react/`: generated React Query client from OpenAPI.
-- `lib/api-zod/`: generated Zod schemas from OpenAPI.
-- `lib/db/`: Drizzle + PostgreSQL database layer, currently skeletal.
+The platform consists of:
+
+- React + TypeScript frontend.
+- Express + TypeScript backend.
+- PostgreSQL database.
+- Prisma ORM.
+- REST API.
+- Offline synchronization layer.
+- Object storage for uploaded files.
+
+Each component has a clearly defined responsibility and can evolve independently.
+
+---
 
 ## Repository Structure
 
-- `artifacts/` deployable applications.
-- `lib/` shared internal libraries.
-- `docs/` product, design, architecture, and rule documentation.
-- Root `package.json`, `pnpm-workspace.yaml`, and `tsconfig*.json` define workspace-wide behavior.
+- `artifacts/` — Deployable applications.
+- `docs/` — Product, planning, architecture, and development documentation.
+- Shared packages contain reusable code that supports multiple applications.
+- Workspace configuration is managed from the repository root.
+
+---
 
 ## Technology Stack
 
-- Package manager: `pnpm` workspaces only.
-- Language: TypeScript across the workspace.
-- Frontend: React 19, Vite 7, Tailwind CSS 4, wouter, react-hook-form, Zod, Radix/shadcn patterns, Recharts.
-- Backend: Express 5, Pino, Zod, Drizzle ORM, PostgreSQL.
-- Tooling: TypeScript project references, Prettier, Orval, esbuild.
+### Frontend
 
-## Responsibilities
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
 
-- Frontend owns prototype UX, routing, forms, mock data flows, and validation-facing interactions.
-- Backend owns API surface, request validation, persistence boundaries, and future production data flows.
-- Shared libraries own the API contract, generated clients/schemas, and database access primitives.
+### Backend
 
-## Generated Code Boundaries
+- Node.js
+- Express
+- TypeScript
+- Prisma
 
-- Treat `lib/api-client-react/` and `lib/api-zod/` as generated outputs.
-- Change generated behavior by editing `lib/api-spec/` or the codegen configuration, then regenerate.
-- Do not hand-edit generated files unless the user explicitly asks for a temporary patch.
+### Database
 
-## OpenAPI Workflow
+- PostgreSQL
 
-- Update the OpenAPI spec first.
-- Regenerate client and schema packages second.
-- Update frontend or backend consumers last.
-- Repository facts override assumptions about what the API "should" look like.
+### Development
 
-## Important Constraints
+- pnpm Workspaces
+- Prettier
+- ESLint
+- OpenAPI
 
-- This repo is a prototype first, not a production system.
-- Mock data behavior in the frontend is intentional unless the task explicitly moves a flow to the API.
-- Arabic copy, RTL layout, and mobile usability are product requirements, not polish.
-- Avoid introducing infrastructure or dependency complexity without a clear repository-level need.
+---
 
 ## Development Philosophy
 
-- Follow the current repository before proposing new patterns.
-- Prefer small, reviewable changes over broad refactors.
-- Preserve the migration path from prototype code to contract-driven production code.
+This repository values:
+
+- Simplicity over unnecessary complexity.
+- Consistency over personal preference.
+- Incremental improvements over large rewrites.
+- Architecture before implementation.
+- Business requirements before technical preferences.
+
+Avoid over-engineering.
+
+Build only what the product currently requires.
+
+---
+
+## Repository Principles
+
+- Follow the documented architecture.
+- Respect module boundaries.
+- Keep responsibilities clearly separated.
+- Make the smallest coherent change.
+- Preserve existing patterns unless improvement is justified.
+- Repository decisions take precedence over generic best practices.
+
+---
 
 ## Source of Truth
 
-- Repository architecture: `docs/architecture/`
-- Setup, scripts, and status: `README.md`, root `package.json`, `pnpm-workspace.yaml`
+The following documents define repository truth:
+
+- Product documentation.
+- Planning documentation.
+- Architecture documentation.
+- Repository rules.
+- Existing implementation.
+
+When conflicts occur, repository documentation always overrides assumptions.
+
+---
+
+## Long-Term Objective
+
+The objective is not simply to build software.
+
+The objective is to build a high-quality, production-ready SaaS while establishing a maintainable codebase, documentation system, and development workflow that can support the product for years.

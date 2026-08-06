@@ -1,37 +1,47 @@
-# Design and Architecture Principles
+# Design & Architecture
 
-Use these rules when a task affects structure, boundaries, or long-term extensibility.
+Apply these rules whenever a task affects architecture, module boundaries, system design, or long-term maintainability.
 
-## Structural Decisions
+## Design Principles
 
-- Abstract only when it removes real duplication or clarifies the design.
-- Prefer composition over deep inheritance or tightly coupled frameworks.
-- Keep dependencies minimal and explicit.
-- Optimize for clear boundaries before optimizing for reuse.
+- Follow the documented architecture before introducing new patterns.
+- Prefer simple designs over flexible designs that solve problems the project does not have.
+- Keep responsibilities clearly separated between layers and modules.
+- Introduce abstractions only when they remove real duplication or significantly improve clarity.
+- Preserve clear boundaries between frontend, backend, database, and infrastructure.
 
-## Public Surfaces
+## Architecture Consistency
 
-- Keep public interfaces small, stable, and documented.
-- Hide internal implementation details behind package or module boundaries.
-- Measure performance work instead of guessing.
+- Reuse existing architectural patterns before creating new ones.
+- Respect established folder structures and module boundaries.
+- Avoid hidden coupling between unrelated features.
+- Keep public interfaces small, stable, and intentional.
 
-## State and Data Flow
+## Performance
 
-- Minimize shared mutable state.
-- Keep data flow easy to trace across packages and layers.
-- Preserve the distinction between prototype frontend behavior and future API-backed behavior.
+- Prioritize correctness and maintainability before optimization.
+- Measure performance before introducing optimizations.
+- Avoid complexity introduced solely for theoretical performance gains.
 
-## Decision Escalation
+## Future Growth
 
-Pause and ask for approval before changing:
+- Design for reasonable extensibility without over-engineering.
+- Build for today's approved roadmap rather than speculative future requirements.
+- Prefer incremental evolution over large architectural rewrites.
 
-- project architecture
-- folder structure
-- major dependencies
-- UX direction
-- business logic
-- public APIs
-- database schema
-- deployment strategy
+## Approval Required
 
-Routine implementation inside an approved direction does not require confirmation.
+Request confirmation before changing:
+
+- System architecture
+- Folder structure
+- Module boundaries
+- Public APIs
+- Database schema
+- Authentication strategy
+- Deployment architecture
+- Core business logic
+- Major dependencies
+- User experience or product behavior
+
+Routine implementation within the approved architecture does not require confirmation.

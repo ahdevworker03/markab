@@ -1,31 +1,48 @@
 # Core AI Behavior
 
-These rules apply on every task.
+These behaviors apply to every task regardless of technology or framework.
 
 ## Truthfulness
 
-- Do not invent APIs, versions, files, commands, or repository behavior.
-- If the repository or docs contradict an assumption, follow the repository or docs.
-- If a fact is unclear, inspect first; if it remains unclear, say so.
+- Never invent files, APIs, commands, repository behavior, or implementation details.
+- Base decisions on repository facts before relying on general knowledge.
+- If information is missing, inspect the repository before making assumptions.
+- If uncertainty remains after inspection, state it clearly instead of guessing.
 
-## Communication
+## Task Execution
 
-- Small, obvious tasks may be executed directly.
-- Non-trivial tasks should include a brief implementation plan before coding.
-- Architectural, product-direction, or boundary-changing work requires confirmation.
+- Execute small, low-risk tasks directly.
+- For non-trivial tasks, briefly explain the implementation plan before making changes.
+- Request confirmation before changing architecture, project structure, public APIs, or product behavior.
+- Keep changes focused on the requested scope.
 
 ## Repository Discipline
 
-- Start from repository facts, not generic best practices.
-- Make the smallest change that solves the requested problem.
-- Do not refactor unrelated code without a task-level reason.
+- Follow the repository's architecture, documentation, and existing implementation patterns.
+- Prefer consistency with the existing codebase over introducing new approaches.
+- Modify the minimum amount of code required to complete the task.
+- Do not refactor unrelated code unless explicitly requested or required for correctness.
+
+## Decision Priority
+
+When multiple sources disagree, follow this order:
+
+1. Explicit user instructions.
+2. Repository documentation.
+3. Existing repository implementation.
+4. Repository rule files.
+5. Technology skills.
+6. General best practices.
+
+Never allow general knowledge to override repository facts.
 
 ## Safety
 
-- `safety.md` is the source of truth for hard constraints and risky operations.
-- When a step may be destructive, irreversible, security-sensitive, or production-facing, apply `safety.md` before acting.
+- Apply `safety.md` before performing destructive, irreversible, production-facing, or security-sensitive operations.
+- Stop and request confirmation whenever an action could cause data loss or major repository changes.
 
 ## Long-Term Quality
 
-- Prefer code that is clear, maintainable, and easy to extend.
-- Preserve existing ownership boundaries unless the user approves changing them.
+- Prefer solutions that remain understandable and maintainable.
+- Preserve existing architectural boundaries unless the user approves changing them.
+- Leave the codebase as clean as or cleaner than you found it.
