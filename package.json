@@ -7,11 +7,17 @@
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --if-present run typecheck",
-    "dev": "pnpm --filter @workspace/car-rental run dev"
+    "dev": "pnpm --filter @workspace/car-rental run dev",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "private": true,
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.0",
     "prettier": "^3.9.5",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.66.0"
   }
 }

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "lsp": true,
+  "mcp": {
+    "context7": {
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp"],
+      "enabled": true,
+      "environment": {
+        "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}"
+      }
+    },
+
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "-y", "@playwright/mcp", "--headless"],
+      "enabled": true
+    },
+
+    "github": {
+      "type": "local",
+      "command": ["npx", "-y", "github-mcp-server-js"],
+      "enabled": true,
+      "environment": {
+        "GITHUB_TOKEN": "{env:GITHUB_TOKEN}",
+        "GITHUB_PERMISSION": "read-write",
+        "LOG_LEVEL": "info"
+      }
+    },
+
+    "openapi": {
+      "type": "local",
+      "command": ["uvx", "awslabs.openapi-mcp-server@latest"],
+      "enabled": true,
+      "environment": {
+        "API_NAME": "vehicle-rental-api",
+        "API_BASE_URL": "http://localhost:3000/api",
+        "API_SPEC_PATH": "lib/api-spec/openapi.yaml",
+        "LOG_LEVEL": "ERROR",
+        "ENABLE_OPERATION_PROMPTS": "true",
+        "ALLOW_INSECURE_HTTP": "true",
+        "ALLOW_PRIVATE_NETWORKS": "true"
+      }
+    },
+
+    "vercel": {
+      "type": "remote",
+      "url": "https://mcp.vercel.com",
+      "enabled": true
+    },
+
+    "postgresql": {
+      "enabled": false
+    },
+
+    "docker": {
+      "enabled": false
+    }
+  }
+}
