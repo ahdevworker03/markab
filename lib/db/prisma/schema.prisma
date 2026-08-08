@@ -13,5 +13,28 @@ model Organization {
   updated_at DateTime  @updatedAt
   deleted_at DateTime?
 
+  users User[]
+
+  @@index([deleted_at])
+}
+
+enum Role {
+  OWNER
+  MANAGER
+  EMPLOYEE
+}
+
+model User {
+  id              String       @id @default(uuid()) @db.Uuid
+  email           String       @unique
+  password_hash   String
+  role            Role         @default(OWNER)
+  organization_id String       @db.Uuid
+  organization    Organization @relation(fields: [organization_id], references: [id])
+  created_at      DateTime     @default(now())
+  updated_at      DateTime     @updatedAt
+  deleted_at      DateTime?
+
+  @@index([organization_id])
   @@index([deleted_at])
 }
