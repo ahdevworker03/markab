@@ -9,6 +9,8 @@ This is the default entry point for every task.
 
 Read this first, then load only the rule files that are relevant to the task.
 
+---
+
 ## How to Use
 
 1. Read `project.md` first.
@@ -16,6 +18,8 @@ Read this first, then load only the rule files that are relevant to the task.
 3. Read only the rule files listed for that task.
 4. Follow references only when they are directly relevant.
 5. If repository facts conflict with a general rule, follow the repository.
+
+---
 
 ## Task Routing
 
@@ -32,6 +36,8 @@ Read this first, then load only the rule files that are relevant to the task.
 | **API Contract Changes**       | `project.md` → `core-behavior.md` → `development-workflow.md` → `api-contracts.md` → `generated-code.md` → `design-decisions.md` → `safety.md`                                                                                                                                           |
 | **Generated Code Changes**     | `project.md` → `core-behavior.md` → `development-workflow.md` → `generated-code.md` → `api-contracts.md` → `safety.md`                                                                                                                                                                   |
 
+---
+
 ## Rule Priority
 
 When guidance conflicts, follow this order:
@@ -45,9 +51,47 @@ When guidance conflicts, follow this order:
 
 Never let assumptions override repository facts.
 
+---
+
+## Response Report
+
+After completing every implementation, review, or planning task, generate a complete Markdown report.
+
+Write the report to:
+
+```
+docs/response.md
+```
+
+(relative to the repository root)
+
+The report should overwrite the previous contents unless the task explicitly requires preserving history.
+
+The report should contain, when applicable:
+
+- Summary
+- Files Created
+- Files Modified
+- Files Removed
+- Architecture Decisions
+- Documentation Traceability
+- Verification
+- Acceptance Criteria Checklist
+- Manual Testing
+- Remaining Issues
+- Recommended Next Step
+
+The response shown in chat and the contents of `docs/response.md` should be identical.
+
+This report is intended to make it easy for the developer to review, copy, archive, or commit implementation summaries.
+
+---
+
 ## Loading Principle
 
 - Do **not** load every rule file by default.
 - Load only the rule files required for the current task.
 - Keep context focused by avoiding unrelated rules.
 - Follow references only when they are directly relevant to the task.
+
+---
