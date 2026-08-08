@@ -4,22 +4,25 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./schema": "./src/schema/index.ts"
+    ".": "./src/index.ts"
   },
   "scripts": {
-    "push": "drizzle-kit push --config ./drizzle.config.ts",
-    "push-force": "drizzle-kit push --force --config ./drizzle.config.ts"
+    "db:generate": "dotenv prisma generate",
+    "db:migrate": "dotenv prisma migrate dev",
+    "db:migrate:deploy": "dotenv prisma migrate deploy",
+    "db:push": "dotenv prisma db push",
+    "db:seed": "dotenv prisma db seed",
+    "db:studio": "dotenv prisma studio"
   },
   "dependencies": {
-    "drizzle-orm": "catalog:",
-    "drizzle-zod": "^0.8.3",
-    "pg": "^8.22.0",
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "@types/pg": "^8.20.0",
-    "drizzle-kit": "^0.31.10"
+    "dotenv-cli": "^11.0.0",
+    "prisma": "^7.9.1",
+      "tsx": "catalog:"
   }
 }

@@ -1,16 +1,16 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import pg from "pg";
-import * as schema from "./schema";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
 
-const { Pool } = pg;
+const connectionString = process.env["DATABASE_URL"];
 
-if (!process.env.DATABASE_URL) {
+if (!connectionString) {
   throw new Error(
     "DATABASE_URL must be set. Did you forget to provision a database?",
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle(pool, { schema });
+const adapter = new PrismaPg({ connectionString });
 
-export * from "./schema";
+const prisma = new PrismaClient({ adapter });
+
+export default prisma;
