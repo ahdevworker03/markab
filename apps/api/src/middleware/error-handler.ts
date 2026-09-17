@@ -40,11 +40,6 @@ export function errorHandler(
     return;
   }
 
-  if (err.name === "PrismaClientValidationError") {
-    res.status(422).json({ error: { code: "VALIDATION_ERROR", message: "Invalid request data." } });
-    return;
-  }
-
   logger.error({ err }, "Unhandled error");
 
   const isProduction = process.env["NODE_ENV"] === "production";

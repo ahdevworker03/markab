@@ -459,6 +459,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: User ID
       responses:
         "200":
@@ -492,6 +493,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: User ID
       requestBody:
         required: true
@@ -542,6 +544,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: User ID
       responses:
         "204":
@@ -740,6 +743,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Customer ID
       responses:
         "200":
@@ -778,6 +782,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Customer ID
       requestBody:
         required: true
@@ -834,6 +839,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Customer ID
       responses:
         "204":
@@ -991,6 +997,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Vehicle ID
       responses:
         "200":
@@ -1023,6 +1030,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Vehicle ID
       requestBody:
         required: true
@@ -1079,6 +1087,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Vehicle ID
       responses:
         "204":
@@ -1115,6 +1124,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         "200":
           description: List of photos
@@ -1146,6 +1156,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -1205,11 +1216,13 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
         - name: id
           in: path
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         "200":
           description: Photo image
@@ -1252,11 +1265,13 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
         - name: id
           in: path
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         "200":
           description: Photo
@@ -1288,11 +1303,13 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
         - name: id
           in: path
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         "204":
           description: Photo deleted
@@ -1328,6 +1345,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         "200":
           description: List of documents
@@ -1359,6 +1377,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -1421,11 +1440,13 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
         - name: id
           in: path
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         "200":
           description: Document
@@ -1455,11 +1476,11 @@ paths:
         - name: vehicleId
           in: path
           required: true
-          schema: { type: string }
+          schema: { type: string, format: uuid }
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema: { type: string, format: uuid }
       requestBody:
         required: true
         content:
@@ -1509,11 +1530,13 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
         - name: id
           in: path
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         "204":
           description: Document deleted
@@ -1549,11 +1572,13 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
         - name: id
           in: path
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         "200":
           description: File download
@@ -1596,6 +1621,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         "200":
           description: List of documents
@@ -1627,6 +1653,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -1689,11 +1716,13 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
         - name: id
           in: path
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         "200":
           description: Document
@@ -1723,11 +1752,11 @@ paths:
         - name: customerId
           in: path
           required: true
-          schema: { type: string }
+          schema: { type: string, format: uuid }
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema: { type: string, format: uuid }
       requestBody:
         required: true
         content:
@@ -1777,11 +1806,13 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
         - name: id
           in: path
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         "204":
           description: Document deleted
@@ -1817,11 +1848,13 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
         - name: id
           in: path
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         "200":
           description: File download
@@ -2009,6 +2042,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Rental ID
       responses:
         "200":
@@ -2041,6 +2075,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Rental ID
       requestBody:
         required: true
@@ -2097,6 +2132,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Rental ID
       responses:
         "204":
@@ -2139,6 +2175,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Rental ID
       requestBody:
         required: true
@@ -2197,6 +2234,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Rental ID
       requestBody:
         required: true
@@ -2255,6 +2293,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Rental ID
       requestBody:
         required: true
@@ -2313,6 +2352,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Rental ID
       responses:
         "200":
@@ -2365,6 +2405,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Rental ID
       responses:
         "200":
@@ -2397,6 +2438,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Rental ID
       responses:
         "201":
@@ -2447,6 +2489,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Rental ID
       responses:
         "204":
@@ -2483,6 +2526,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Rental ID
       responses:
         "200":
@@ -2517,6 +2561,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Rental ID
       responses:
         "200":
@@ -2558,6 +2603,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Rental ID
       responses:
         "200":
@@ -2590,6 +2636,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Rental ID
       requestBody:
         required: true
@@ -2646,12 +2693,14 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Rental ID
         - name: documentId
           in: path
           required: true
           schema:
             type: string
+            format: uuid
           description: Document ID
       responses:
         "200":
@@ -2682,11 +2731,11 @@ paths:
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema: { type: string, format: uuid }
         - name: documentId
           in: path
           required: true
-          schema: { type: string }
+          schema: { type: string, format: uuid }
       requestBody:
         required: true
         content:
@@ -2736,12 +2785,14 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Rental ID
         - name: documentId
           in: path
           required: true
           schema:
             type: string
+            format: uuid
           description: Document ID
       responses:
         "204":
@@ -2778,12 +2829,14 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Rental ID
         - name: documentId
           in: path
           required: true
           schema:
             type: string
+            format: uuid
           description: Document ID
       responses:
         "200":
@@ -2898,6 +2951,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Maintenance ID
       responses:
         "200":
@@ -2930,6 +2984,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Maintenance ID
       requestBody:
         required: true
@@ -2986,6 +3041,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Maintenance ID
       responses:
         "204":
@@ -3022,6 +3078,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Maintenance ID
       requestBody:
         required: true
@@ -3151,6 +3208,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Maintenance schedule ID
       responses:
         "200":
@@ -3183,6 +3241,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Maintenance schedule ID
       requestBody:
         required: true
@@ -3233,6 +3292,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Maintenance schedule ID
       responses:
         "204":
@@ -3269,6 +3329,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Vehicle ID
       responses:
         "200":
@@ -3374,6 +3435,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Expense ID
       responses:
         "200":
@@ -3406,6 +3468,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Expense ID
       requestBody:
         required: true
@@ -3456,6 +3519,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Expense ID
       responses:
         "204":
@@ -3513,6 +3577,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Rental ID
       responses:
         "200":
@@ -3545,6 +3610,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Rental ID
       requestBody:
         required: true
@@ -3661,6 +3727,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Task ID
       responses:
         "200":
@@ -3693,6 +3760,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Task ID
       requestBody:
         required: true
@@ -3749,6 +3817,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Task ID
       responses:
         "204":
@@ -3785,6 +3854,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: Task ID
       responses:
         "200":
