@@ -13,6 +13,7 @@ import {
   requireOperationalOrganization,
   validateBody,
   validateQuery,
+  validateUuidParam,
 } from "../../middleware";
 import {
   createVehicleSchema,
@@ -23,6 +24,7 @@ import {
 
 const router: IRouter = Router();
 router.use(authenticate, requireOperationalOrganization);
+router.param("id", validateUuidParam);
 
 router.get(
   "/vehicles",

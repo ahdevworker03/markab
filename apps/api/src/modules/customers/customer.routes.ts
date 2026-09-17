@@ -6,6 +6,7 @@ import {
   requireOperationalOrganization,
   validateBody,
   validateQuery,
+  validateUuidParam,
 } from "../../middleware";
 import {
   createCustomerSchema,
@@ -15,6 +16,7 @@ import {
 
 const router: IRouter = Router();
 router.use(authenticate, requireOperationalOrganization);
+router.param("id", validateUuidParam);
 
 router.get(
   "/customers",

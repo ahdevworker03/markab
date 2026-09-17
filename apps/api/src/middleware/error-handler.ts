@@ -2,6 +2,10 @@ import type { Request, Response, NextFunction } from "express";
 import { logger } from "../config";
 import { AppError } from "../shared";
 
+interface ParserError extends Error {
+  type?: string;
+}
+
 export function notFoundHandler(
   _req: Request,
   _res: Response,
@@ -11,7 +15,7 @@ export function notFoundHandler(
 }
 
 export function errorHandler(
-  err: Error,
+  err: ParserError,
   _req: Request,
   res: Response,
   _next: NextFunction,
@@ -23,6 +27,21 @@ export function errorHandler(
         message: err.message,
       },
     });
+    return;
+  }
+
+  if (err.type === "entity.parse.failed") {
+    res.status(400).json({ error: { code: "MALFORMED_JSON", message: "Malformed JSON request body." } });
+    return;
+  }
+
+  if (err.type === "entity.too.large") {
+    res.status(413).json({ error: { code: "PAYLOAD_TOO_LARGE", message: "Request body is too large." } });
+    return;
+  }
+
+  if (err.name === "PrismaClientValidationError") {
+    res.status(422).json({ error: { code: "VALIDATION_ERROR", message: "Invalid request data." } });
     return;
   }
 

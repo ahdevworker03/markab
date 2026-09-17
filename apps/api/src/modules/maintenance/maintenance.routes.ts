@@ -14,6 +14,7 @@ import {
   requireOperationalOrganization,
   validateBody,
   validateQuery,
+  validateUuidParam,
 } from "../../middleware";
 import {
   createMaintenanceSchema,
@@ -24,6 +25,8 @@ import {
 
 const router: IRouter = Router();
 router.use(authenticate, requireOperationalOrganization);
+router.param("id", validateUuidParam);
+router.param("vehicleId", validateUuidParam);
 
 router.get(
   "/maintenance",

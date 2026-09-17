@@ -17,12 +17,15 @@ import {
   authenticate,
   requireOperationalOrganization,
   requireRole,
+  validateUuidParam,
 } from "../../middleware";
 import { validateBody } from "../../middleware";
 import { documentMetadataSchema } from "../media/media.validation";
 
 const router: IRouter = Router();
 router.use(authenticate, requireOperationalOrganization);
+router.param("id", validateUuidParam);
+router.param("documentId", validateUuidParam);
 
 router.get("/rentals/:id/contract", get);
 router.get("/rentals/:id/contract/printable", printable);

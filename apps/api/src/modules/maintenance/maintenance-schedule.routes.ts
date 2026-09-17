@@ -6,6 +6,7 @@ import {
   validateBody,
   validateParams,
   validateQuery,
+  validateUuidParam,
 } from "../../middleware";
 import { create, get, list, remove, update } from "./maintenance-schedule.controller";
 import {
@@ -19,6 +20,7 @@ import {
 
 const router: IRouter = Router();
 router.use(authenticate, requireOperationalOrganization);
+router.param("id", validateUuidParam);
 
 router.get(
   "/maintenance-schedules",
