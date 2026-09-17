@@ -90,7 +90,7 @@ export const CreateMaintenanceResponse = zod.object({
  * @summary Get a maintenance record in the current organization
  */
 export const GetMaintenanceParams = zod.object({
-  "id": zod.coerce.string().describe('Maintenance ID')
+  "id": zod.coerce.string().uuid().describe('Maintenance ID')
 })
 
 export const GetMaintenanceResponse = zod.object({
@@ -119,7 +119,7 @@ export const GetMaintenanceResponse = zod.object({
  * @summary Update a maintenance record in the current organization
  */
 export const UpdateMaintenanceParams = zod.object({
-  "id": zod.coerce.string().describe('Maintenance ID')
+  "id": zod.coerce.string().uuid().describe('Maintenance ID')
 })
 
 export const updateMaintenanceBodyCostMin = 0;
@@ -171,7 +171,7 @@ export const UpdateMaintenanceResponse = zod.object({
  * @summary Soft delete a maintenance record in the current organization
  */
 export const DeleteMaintenanceParams = zod.object({
-  "id": zod.coerce.string().describe('Maintenance ID')
+  "id": zod.coerce.string().uuid().describe('Maintenance ID')
 })
 
 export const DeleteMaintenanceResponse = zod.void()
@@ -180,7 +180,7 @@ export const DeleteMaintenanceResponse = zod.void()
  * @summary Complete a maintenance record in the current organization
  */
 export const CompleteMaintenanceParams = zod.object({
-  "id": zod.coerce.string().describe('Maintenance ID')
+  "id": zod.coerce.string().uuid().describe('Maintenance ID')
 })
 
 export const completeMaintenanceBodyCostMin = 0;
@@ -277,7 +277,7 @@ export const CreateMaintenanceScheduleResponse = zod.object({
  * @summary Get a maintenance schedule in the current organization
  */
 export const GetMaintenanceScheduleParams = zod.object({
-  "id": zod.coerce.string().describe('Maintenance schedule ID')
+  "id": zod.coerce.string().uuid().describe('Maintenance schedule ID')
 })
 
 export const GetMaintenanceScheduleResponse = zod.object({
@@ -300,7 +300,7 @@ export const GetMaintenanceScheduleResponse = zod.object({
  * @summary Update a maintenance schedule in the current organization
  */
 export const UpdateMaintenanceScheduleParams = zod.object({
-  "id": zod.coerce.string().describe('Maintenance schedule ID')
+  "id": zod.coerce.string().uuid().describe('Maintenance schedule ID')
 })
 
 
@@ -339,7 +339,7 @@ export const UpdateMaintenanceScheduleResponse = zod.object({
  * @summary Soft delete a maintenance schedule in the current organization
  */
 export const DeleteMaintenanceScheduleParams = zod.object({
-  "id": zod.coerce.string().describe('Maintenance schedule ID')
+  "id": zod.coerce.string().uuid().describe('Maintenance schedule ID')
 })
 
 export const DeleteMaintenanceScheduleResponse = zod.void()
@@ -348,7 +348,7 @@ export const DeleteMaintenanceScheduleResponse = zod.void()
  * @summary List maintenance history for a vehicle in the current organization
  */
 export const ListVehicleMaintenanceParams = zod.object({
-  "vehicleId": zod.coerce.string().describe('Vehicle ID')
+  "vehicleId": zod.coerce.string().uuid().describe('Vehicle ID')
 })
 
 export const ListVehicleMaintenanceResponse = zod.object({

@@ -81,7 +81,7 @@ export const CreateTaskResponse = zod.object({
  * @summary Get a task in the current organization
  */
 export const GetTaskParams = zod.object({
-  "id": zod.coerce.string().describe('Task ID')
+  "id": zod.coerce.string().uuid().describe('Task ID')
 })
 
 
@@ -112,7 +112,7 @@ export const GetTaskResponse = zod.object({
  * @summary Update a task in the current organization
  */
 export const UpdateTaskParams = zod.object({
-  "id": zod.coerce.string().describe('Task ID')
+  "id": zod.coerce.string().uuid().describe('Task ID')
 })
 
 
@@ -158,7 +158,7 @@ export const UpdateTaskResponse = zod.object({
  * @summary Soft delete a task in the current organization
  */
 export const DeleteTaskParams = zod.object({
-  "id": zod.coerce.string().describe('Task ID')
+  "id": zod.coerce.string().uuid().describe('Task ID')
 })
 
 export const DeleteTaskResponse = zod.void()
@@ -167,7 +167,7 @@ export const DeleteTaskResponse = zod.void()
  * @summary Complete a task in the current organization
  */
 export const CompleteTaskParams = zod.object({
-  "id": zod.coerce.string().describe('Task ID')
+  "id": zod.coerce.string().uuid().describe('Task ID')
 })
 
 

@@ -48,7 +48,7 @@ export const CreateUserResponse = zod.object({
  * @summary Get a user in the current organization
  */
 export const GetUserParams = zod.object({
-  "id": zod.coerce.string().describe('User ID')
+  "id": zod.coerce.string().uuid().describe('User ID')
 })
 
 export const GetUserResponse = zod.object({
@@ -65,7 +65,7 @@ export const GetUserResponse = zod.object({
  * @summary Update a user role in the current organization
  */
 export const UpdateUserParams = zod.object({
-  "id": zod.coerce.string().describe('User ID')
+  "id": zod.coerce.string().uuid().describe('User ID')
 })
 
 export const UpdateUserBody = zod.object({
@@ -86,7 +86,7 @@ export const UpdateUserResponse = zod.object({
  * @summary Soft delete a user in the current organization
  */
 export const DeleteUserParams = zod.object({
-  "id": zod.coerce.string().describe('User ID')
+  "id": zod.coerce.string().uuid().describe('User ID')
 })
 
 export const DeleteUserResponse = zod.void()
