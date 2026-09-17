@@ -23,6 +23,12 @@ export function getApiErrorMessage(error: unknown): ApiErrorMessage {
   if (error instanceof ApiError) {
     const body = extractBody(error);
 
+    if (body?.error?.code === "VEHICLE_UNAVAILABLE") {
+      return {
+        title: "لا يمكن بدء الصيانة لأن المركبة مرتبطة بإيجار قائم أو غير متاحة حالياً.",
+      };
+    }
+
     if (body?.error?.message) {
       return { title: body.error.message };
     }
