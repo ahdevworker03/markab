@@ -45,7 +45,10 @@ export function ContractSection({ rentalId }: ContractSectionProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const contract = useRentalContract(rentalId);
-  const signed = useRentalContractSignedDocuments(rentalId);
+  const signed = useRentalContractSignedDocuments(
+    rentalId,
+    Boolean(contract.query.data?.data),
+  );
 
   const [localError, setLocalError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
