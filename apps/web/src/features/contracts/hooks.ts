@@ -16,7 +16,12 @@ import {
 export function useRentalContract(rentalId: string) {
   const queryClient = useQueryClient();
 
-  const query = useGetRentalContract(rentalId);
+  const query = useGetRentalContract(rentalId, {
+    query: {
+      queryKey: getGetRentalContractQueryKey(rentalId),
+      retry: false,
+    },
+  });
 
   const generate = useGenerateRentalContract({
     mutation: {
@@ -40,10 +45,15 @@ export function useRentalContract(rentalId: string) {
   return { query, generate, remove, printable, pdf };
 }
 
-export function useRentalContractSignedDocuments(rentalId: string) {
+export function useRentalContractSignedDocuments(rentalId: string, enabled: boolean) {
   const queryClient = useQueryClient();
 
-  const query = useListRentalContractSignedDocuments(rentalId);
+  const query = useListRentalContractSignedDocuments(rentalId, {
+    query: {
+      queryKey: getListRentalContractSignedDocumentsQueryKey(rentalId),
+      enabled,
+    },
+  });
 
   const upload = useUploadRentalContractSignedDocument({
     mutation: {
