@@ -53,10 +53,10 @@ function makeRecord(
   };
 }
 
-function makeApiError(message: string): ApiError {
+function makeApiError(message: string, code = "VEHICLE_UNAVAILABLE"): ApiError {
   return new ApiError(
     new Response(null, { status: 409, statusText: "Conflict" }),
-    { error: { code: "VEHICLE_UNAVAILABLE", message } },
+    { error: { code, message } },
     { method: "PATCH", url: "/api/maintenance/maintenance-1" },
   );
 }
@@ -100,8 +100,12 @@ describe("MaintenanceDetailPage", () => {
   it("shows start and completion actions to an owner for scheduled maintenance", () => {
     render(<MaintenanceDetailPage params={{ id: "maintenance-1" }} />);
 
-    expect(screen.getByRole("button", { name: "بدء الصيانة" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "إكمال الصيانة" })).toBeInTheDocument();
+    const startButton = screen.getByRole("button", { name: "بدء الصيانة" });
+    const completeButton = screen.getByRole("button", { name: "إكمال الصيانة" });
+
+    expect(startButton).toHaveClass("bg-primary");
+    expect(completeButton).toHaveClass("border");
+    expect(completeButton).not.toHaveClass("bg-primary");
   });
 
   it("starts maintenance and hides the start action after refreshed data is in progress", async () => {
@@ -124,14 +128,33 @@ describe("MaintenanceDetailPage", () => {
     expect(screen.getByRole("button", { name: "إكمال الصيانة" })).toBeInTheDocument();
   });
 
-  it("shows the API error when starting maintenance fails", async () => {
+  it("shows Arabic feedback for a vehicle-unavailable start error", async () => {
     const mutations = mockMutations();
-    mutations.update.mutateAsync.mockRejectedValue(makeApiError("المركبة غير متاحة"));
+    mutations.update.mutateAsync.mockRejectedValue(
+      makeApiError("Vehicle has an active rental and cannot enter maintenance"),
+    );
     render(<MaintenanceDetailPage params={{ id: "maintenance-1" }} />);
 
     fireEvent.click(screen.getByRole("button", { name: "بدء الصيانة" }));
 
-    expect(await screen.findByText("المركبة غير متاحة")).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "لا يمكن بدء الصيانة لأن المركبة مرتبطة بإيجار قائم أو غير متاحة حالياً.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Vehicle has an active rental and cannot enter maintenance"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps the generic API message for unknown start errors", async () => {
+    const mutations = mockMutations();
+    mutations.update.mutateAsync.mockRejectedValue(makeApiError("تعذر بدء الصيانة", "OTHER"));
+    render(<MaintenanceDetailPage params={{ id: "maintenance-1" }} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "بدء الصيانة" }));
+
+    expect(await screen.findByText("تعذر بدء الصيانة")).toBeInTheDocument();
   });
 
   it.each(["IN_PROGRESS", "COMPLETED"] as const)(
@@ -141,6 +164,11 @@ describe("MaintenanceDetailPage", () => {
       render(<MaintenanceDetailPage params={{ id: "maintenance-1" }} />);
 
       expect(screen.queryByRole("button", { name: "بدء الصيانة" })).not.toBeInTheDocument();
+      if (status === "IN_PROGRESS") {
+        expect(screen.getByRole("button", { name: "إكمال الصيانة" })).toBeInTheDocument();
+      } else {
+        expect(screen.queryByRole("button", { name: "إكمال الصيانة" })).not.toBeInTheDocument();
+      }
     },
   );
 

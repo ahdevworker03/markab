@@ -104,13 +104,12 @@ export default function MaintenanceDetailPage({ params }: DetailPageParams) {
 
         <DetailSection title="إجراءات الصيانة" description="ابدأ السجل ثم أكمله عند انتهاء العمل.">
           {actionError && !completing && <InlineFeedback variant="error">{actionError}</InlineFeedback>}
-          {isOwner && record.status === "SCHEDULED" && <Button type="button" variant="outline" onClick={handleStart} disabled={mutations.update.isPending}>{mutations.update.isPending ? "جارٍ البدء" : "بدء الصيانة"}</Button>}
           {isOwner && record.status !== "COMPLETED" && (completing ? (
                 <div className="max-w-xl space-y-3">
                   <FormField label="التكلفة النهائية" required hint="USD · رقم غير سالب" error={actionError ?? undefined} htmlFor="maintenance-completion-cost"><input id="maintenance-completion-cost" type="number" dir="ltr" inputMode="decimal" min={0} placeholder="150" value={cost} onChange={(event) => { setCost(event.target.value); setActionError(null); }} className={actionError ? `${inputClass} border-destructive focus:ring-destructive/30` : inputClass} /></FormField>
                   <div className="flex flex-wrap gap-2"><Button type="button" variant="outline" onClick={() => { setCompleting(false); setActionError(null); }} disabled={mutations.complete.isPending}>إلغاء</Button><Button type="button" onClick={handleComplete} disabled={mutations.complete.isPending}>{mutations.complete.isPending ? "جارٍ الحفظ" : "تأكيد الإكمال"}</Button></div>
                 </div>
-              ) : <Button type="button" onClick={() => { setCompleting(true); setActionError(null); }}><CheckCircle2 className="size-4" aria-hidden="true" />إكمال الصيانة</Button>)}
+              ) : <div className="flex flex-wrap gap-2">{record.status === "SCHEDULED" && <Button type="button" onClick={handleStart} disabled={mutations.update.isPending}>{mutations.update.isPending ? "جارٍ البدء" : "بدء الصيانة"}</Button>}<Button type="button" variant="outline" onClick={() => { setCompleting(true); setActionError(null); }}><CheckCircle2 className="size-4" aria-hidden="true" />إكمال الصيانة</Button></div>)}
               {!isOwner && record.status !== "COMPLETED" && <InlineFeedback variant="info">لا تملك صلاحية إكمال الصيانة.</InlineFeedback>}
               {record.status === "COMPLETED" && <p className="ui-secondary-text">تم إكمال هذا السجل.</p>}
             </DetailSection>
