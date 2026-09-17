@@ -23,12 +23,16 @@ import {
   authenticate,
   requireOperationalOrganization,
   requireRole,
+  validateUuidParam,
 } from "../../middleware";
 import { validateBody } from "../../middleware";
 import { documentMetadataSchema } from "./media.validation";
 
 const router: IRouter = Router();
 router.use(authenticate, requireOperationalOrganization);
+router.param("vehicleId", validateUuidParam);
+router.param("customerId", validateUuidParam);
+router.param("id", validateUuidParam);
 
 // Photos
 router.get("/vehicles/:vehicleId/photos", listPhotos);

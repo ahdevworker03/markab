@@ -5,11 +5,13 @@ import {
   requireOperationalOrganization,
   requireRole,
   validateBody,
+  validateUuidParam,
 } from "../../middleware";
 import { createUserSchema, updateUserSchema } from "./user.validation";
 
 const router: IRouter = Router();
 router.use(authenticate, requireOperationalOrganization);
+router.param("id", validateUuidParam);
 
 router.get("/users", list);
 router.get("/users/:id", get);

@@ -12,6 +12,7 @@ import {
   requireOperationalOrganization,
   validateBody,
   validateQuery,
+  validateUuidParam,
 } from "../../middleware";
 import {
   createExpenseSchema,
@@ -21,6 +22,7 @@ import {
 
 const router: IRouter = Router();
 router.use(authenticate, requireOperationalOrganization);
+router.param("id", validateUuidParam);
 
 router.get(
   "/expenses",

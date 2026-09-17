@@ -9,11 +9,13 @@ import {
   requireRole,
   requireOperationalOrganization,
   validateBody,
+  validateUuidParam,
 } from "../../middleware";
 import { createPaymentSchema } from "./payment.validation";
 
 const router: IRouter = Router();
 router.use(authenticate, requireOperationalOrganization);
+router.param("rentalId", validateUuidParam);
 
 router.get("/payments", list);
 router.get("/rentals/:rentalId/payments", listByRental);
