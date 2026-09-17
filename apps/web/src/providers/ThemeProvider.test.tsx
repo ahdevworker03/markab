@@ -1,10 +1,19 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { useLayoutEffect } from "react";
 import { beforeEach, describe, expect, it } from "vitest";
-import { ThemeProvider, useTheme } from "./ThemeProvider";
+import { initializeTheme, ThemeProvider, useTheme } from "./ThemeProvider";
 
 function ThemeProbe() {
   const { theme, toggleTheme } = useTheme();
   return <button onClick={toggleTheme}>{theme}</button>;
+}
+
+function LayoutProbe({ onThemeApplied }: { onThemeApplied: (applied: boolean) => void }) {
+  useLayoutEffect(() => {
+    onThemeApplied(document.documentElement.classList.contains("dark"));
+  }, [onThemeApplied]);
+
+  return null;
 }
 
 describe("ThemeProvider", () => {
@@ -42,5 +51,21 @@ describe("ThemeProvider", () => {
 
     expect(screen.getByRole("button").textContent).toBe("dark");
     expect(document.documentElement.classList.contains("dark")).toBe(true);
+  });
+
+  it("initializes the persisted theme before the app renders", () => {
+    localStorage.setItem("vehicle-rental-theme", "dark");
+    let appliedBeforePaint = false;
+
+    initializeTheme();
+
+    render(
+      <ThemeProvider>
+        <LayoutProbe onThemeApplied={(applied) => (appliedBeforePaint = applied)} />
+      </ThemeProvider>,
+    );
+
+    expect(appliedBeforePaint).toBe(true);
+    expect(document.documentElement.style.colorScheme).toBe("dark");
   });
 });

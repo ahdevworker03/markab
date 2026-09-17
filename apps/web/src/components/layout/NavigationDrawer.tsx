@@ -10,6 +10,7 @@ import {
 import { cn } from "@/lib/utils";
 import { NAVIGATION_GROUPS, isNavigationRouteActive } from "./navigation";
 import { LogoutButton } from "./LogoutButton";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface NavigationDrawerProps {
   open: boolean;
@@ -102,8 +103,9 @@ export function NavigationDrawer({
             </section>
           ))}
         </nav>
-        <div className="border-t border-border p-3">
-          <LogoutButton className="w-full justify-start" />
+        <div className="flex gap-2 border-t border-border p-3">
+          <LogoutButton className="min-w-0 flex-1 justify-start" />
+          <ThemeToggle className="text-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring" />
         </div>
       </SheetContent>
     </Sheet>
