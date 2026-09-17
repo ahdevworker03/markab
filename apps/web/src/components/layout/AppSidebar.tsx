@@ -1,7 +1,6 @@
 import { Link, useLocation } from "wouter";
-import { Moon, Sun } from "lucide-react";
 import { LogoutButton } from "./LogoutButton";
-import { useTheme } from "@/providers/ThemeProvider";
+import { ThemeToggle } from "./ThemeToggle";
 import {
   Sidebar,
   SidebarContent,
@@ -54,8 +53,6 @@ function AppSidebarLink({ item }: { item: NavigationItem }) {
  * only at `lg` where BottomNavigation is hidden.
  */
 export function AppSidebar() {
-  const { theme, toggleTheme } = useTheme();
-
   return (
     <Sidebar
       side="right"
@@ -102,16 +99,7 @@ export function AppSidebar() {
       <SidebarFooter className="p-3">
         <div className="flex items-center gap-2">
           <LogoutButton className="min-w-0 flex-1 justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
-          <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label={theme === "light" ? "تفعيل الوضع الليلي" : "تفعيل الوضع النهاري"}
-            aria-pressed={theme === "dark"}
-            title={theme === "light" ? "الوضع الليلي" : "الوضع النهاري"}
-            className="flex size-10 shrink-0 items-center justify-center rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-          >
-            {theme === "light" ? <Moon className="size-4" aria-hidden="true" /> : <Sun className="size-4" aria-hidden="true" />}
-          </button>
+          <ThemeToggle />
         </div>
       </SidebarFooter>
     </Sidebar>

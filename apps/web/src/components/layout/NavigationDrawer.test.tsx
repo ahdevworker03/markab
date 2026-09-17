@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { ThemeProvider } from "@/providers/ThemeProvider";
 import { NavigationDrawer } from "./NavigationDrawer";
 
 vi.mock("./LogoutButton", () => ({
@@ -8,7 +9,7 @@ vi.mock("./LogoutButton", () => ({
 
 describe("NavigationDrawer", () => {
   it("reserves header space for the logical-end close button", () => {
-    render(<NavigationDrawer open onOpenChange={vi.fn()} />);
+    render(<ThemeProvider><NavigationDrawer open onOpenChange={vi.fn()} /></ThemeProvider>);
 
     expect(screen.getByRole("button", { name: "إغلاق" })).toHaveClass(
       "absolute",
@@ -23,7 +24,7 @@ describe("NavigationDrawer", () => {
 
   it("closes through the close button and Escape", () => {
     const onOpenChange = vi.fn();
-    render(<NavigationDrawer open onOpenChange={onOpenChange} />);
+    render(<ThemeProvider><NavigationDrawer open onOpenChange={onOpenChange} /></ThemeProvider>);
 
     fireEvent.click(screen.getByRole("button", { name: "إغلاق" }));
     expect(onOpenChange).toHaveBeenCalledWith(false);
@@ -31,5 +32,11 @@ describe("NavigationDrawer", () => {
     onOpenChange.mockClear();
     fireEvent.keyDown(document, { key: "Escape" });
     expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("uses readable toggle colors on the drawer surface", () => {
+    render(<ThemeProvider><NavigationDrawer open onOpenChange={vi.fn()} /></ThemeProvider>);
+
+    expect(screen.getByRole("button", { name: "تفعيل الوضع الليلي" })).toHaveClass("text-foreground");
   });
 });

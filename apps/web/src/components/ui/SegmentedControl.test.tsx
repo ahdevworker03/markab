@@ -23,6 +23,14 @@ describe("SegmentedControl keyboard navigation", () => {
     expect(tabs[0]).toHaveAttribute("tabIndex", "-1");
   });
 
+  it("renders the active tab on a theme-aware surface", () => {
+    render(
+      <SegmentedControl options={OPTIONS} value="ended" onChange={() => {}} />
+    );
+
+    expect(screen.getByRole("tab", { name: "منتهية" })).toHaveClass("bg-background");
+  });
+
   it("ArrowLeft moves selection forward in RTL and reports the new value", () => {
     let next = "";
     render(

@@ -7,6 +7,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ALL_NAVIGATION_ITEMS, isNavigationRouteActive } from "./navigation";
 import { LogoutButton } from "./LogoutButton";
+import { ThemeToggle } from "./ThemeToggle";
 
 /**
  * The deliberate 768–1023px navigation state: every existing module remains
@@ -76,8 +77,9 @@ export function TabletNavigationRail() {
         </ul>
       </nav>
 
-      <div className="border-t border-sidebar-border p-2">
+      <div className="space-y-1 border-t border-sidebar-border p-2">
         <LogoutButton className="size-12 justify-center px-0 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground [&>span]:sr-only" />
+        <ThemeToggle className="size-12" />
       </div>
     </aside>
   );
