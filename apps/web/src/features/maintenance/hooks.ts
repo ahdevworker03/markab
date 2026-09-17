@@ -9,10 +9,14 @@ import {
   useUpdateMaintenanceSchedule,
   useDeleteMaintenanceSchedule,
   useCreateMaintenance,
+  useUpdateMaintenance,
   useCompleteMaintenance,
   useDeleteMaintenance,
   getListMaintenanceQueryKey,
   getGetMaintenanceQueryKey,
+  getListVehicleMaintenanceQueryKey,
+  getGetVehicleQueryKey,
+  getListVehiclesQueryKey,
   getListMaintenanceSchedulesQueryKey,
 } from "@workspace/api-client-react";
 
@@ -58,6 +62,24 @@ export function useMaintenanceMutations() {
     },
   });
 
+  const update = useUpdateMaintenance({
+    mutation: {
+      onSuccess: (data, variables) => {
+        invalidateAll();
+        void queryClient.invalidateQueries({
+          queryKey: getGetMaintenanceQueryKey(variables.id),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: getListVehicleMaintenanceQueryKey(data.data.vehicleId),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: getGetVehicleQueryKey(data.data.vehicleId),
+        });
+        void queryClient.invalidateQueries({ queryKey: getListVehiclesQueryKey() });
+      },
+    },
+  });
+
   const complete = useCompleteMaintenance({
     mutation: {
       onSuccess: (_data, variables) => {
@@ -80,7 +102,7 @@ export function useMaintenanceMutations() {
     },
   });
 
-  return { create, complete, remove };
+  return { create, update, complete, remove };
 }
 
 export function useMaintenanceForVehicleList(vehicleId: string) {

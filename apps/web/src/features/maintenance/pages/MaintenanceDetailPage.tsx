@@ -54,6 +54,20 @@ export default function MaintenanceDetailPage({ params }: DetailPageParams) {
     }
   }
 
+  async function handleStart() {
+    if (!record) return;
+    setActionError(null);
+    try {
+      await mutations.update.mutateAsync({
+        id: record.id,
+        data: { status: "IN_PROGRESS" },
+      });
+      setSuccessMessage("تم بدء الصيانة.");
+    } catch (error) {
+      setActionError(getApiErrorMessage(error).title);
+    }
+  }
+
   if (maintenanceQuery.isLoading) return <div className="min-h-full"><PageHeader title="تفاصيل الصيانة" showBack /><div className="px-4 py-6 sm:px-6"><LoadingState rows={5} /></div></div>;
   if (maintenanceQuery.isError || !record) return <div className="min-h-full"><PageHeader title="تفاصيل الصيانة" showBack /><div className="px-4 py-6 sm:px-6"><ErrorState title="تعذر تحميل سجل الصيانة" description={maintenanceQuery.error ? getApiErrorMessage(maintenanceQuery.error).title : "لم يتم العثور على هذا السجل."} onRetry={() => void maintenanceQuery.refetch()} /></div></div>;
 
@@ -88,8 +102,10 @@ export default function MaintenanceDetailPage({ params }: DetailPageParams) {
               </div>
             </DetailSection>
 
-            <DetailSection title="إجراءات الصيانة" description="أكمل السجل عند انتهاء العمل.">
-              {isOwner && record.status !== "COMPLETED" && (completing ? (
+        <DetailSection title="إجراءات الصيانة" description="ابدأ السجل ثم أكمله عند انتهاء العمل.">
+          {actionError && !completing && <InlineFeedback variant="error">{actionError}</InlineFeedback>}
+          {isOwner && record.status === "SCHEDULED" && <Button type="button" variant="outline" onClick={handleStart} disabled={mutations.update.isPending}>{mutations.update.isPending ? "جارٍ البدء" : "بدء الصيانة"}</Button>}
+          {isOwner && record.status !== "COMPLETED" && (completing ? (
                 <div className="max-w-xl space-y-3">
                   <FormField label="التكلفة النهائية" required hint="USD · رقم غير سالب" error={actionError ?? undefined} htmlFor="maintenance-completion-cost"><input id="maintenance-completion-cost" type="number" dir="ltr" inputMode="decimal" min={0} placeholder="150" value={cost} onChange={(event) => { setCost(event.target.value); setActionError(null); }} className={actionError ? `${inputClass} border-destructive focus:ring-destructive/30` : inputClass} /></FormField>
                   <div className="flex flex-wrap gap-2"><Button type="button" variant="outline" onClick={() => { setCompleting(false); setActionError(null); }} disabled={mutations.complete.isPending}>إلغاء</Button><Button type="button" onClick={handleComplete} disabled={mutations.complete.isPending}>{mutations.complete.isPending ? "جارٍ الحفظ" : "تأكيد الإكمال"}</Button></div>
