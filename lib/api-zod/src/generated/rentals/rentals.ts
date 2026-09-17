@@ -99,7 +99,7 @@ export const CheckRentalAvailabilityResponse = zod.object({
  * @summary Get a rental in the current organization
  */
 export const GetRentalParams = zod.object({
-  "id": zod.coerce.string().describe('Rental ID')
+  "id": zod.coerce.string().uuid().describe('Rental ID')
 })
 
 export const GetRentalResponse = zod.object({
@@ -124,7 +124,7 @@ export const GetRentalResponse = zod.object({
  * @summary Update a rental in the current organization
  */
 export const UpdateRentalParams = zod.object({
-  "id": zod.coerce.string().describe('Rental ID')
+  "id": zod.coerce.string().uuid().describe('Rental ID')
 })
 
 export const updateRentalBodyDailyRateMin = 0;
@@ -167,7 +167,7 @@ export const UpdateRentalResponse = zod.object({
  * @summary Soft delete a rental in the current organization
  */
 export const DeleteRentalParams = zod.object({
-  "id": zod.coerce.string().describe('Rental ID')
+  "id": zod.coerce.string().uuid().describe('Rental ID')
 })
 
 export const DeleteRentalResponse = zod.void()
@@ -176,7 +176,7 @@ export const DeleteRentalResponse = zod.void()
  * @summary Record vehicle pickup and activate a reserved rental
  */
 export const PickupRentalParams = zod.object({
-  "id": zod.coerce.string().describe('Rental ID')
+  "id": zod.coerce.string().uuid().describe('Rental ID')
 })
 
 export const PickupRentalBody = zod.object({
@@ -205,7 +205,7 @@ export const PickupRentalResponse = zod.object({
  * @summary Complete a vehicle return and mark the rental as returned
  */
 export const ReturnRentalParams = zod.object({
-  "id": zod.coerce.string().describe('Rental ID')
+  "id": zod.coerce.string().uuid().describe('Rental ID')
 })
 
 export const ReturnRentalBody = zod.object({
@@ -234,7 +234,7 @@ export const ReturnRentalResponse = zod.object({
  * @summary Extend a rental's expected return date
  */
 export const ExtendRentalParams = zod.object({
-  "id": zod.coerce.string().describe('Rental ID')
+  "id": zod.coerce.string().uuid().describe('Rental ID')
 })
 
 export const ExtendRentalBody = zod.object({
@@ -263,7 +263,7 @@ export const ExtendRentalResponse = zod.object({
  * @summary Cancel a rental and release the vehicle
  */
 export const CancelRentalParams = zod.object({
-  "id": zod.coerce.string().describe('Rental ID')
+  "id": zod.coerce.string().uuid().describe('Rental ID')
 })
 
 export const CancelRentalResponse = zod.object({

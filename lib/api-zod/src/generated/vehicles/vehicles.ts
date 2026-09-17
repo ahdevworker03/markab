@@ -118,7 +118,7 @@ export const ListAvailableVehiclesResponse = zod.object({
  * @summary Get a vehicle in the current organization
  */
 export const GetVehicleParams = zod.object({
-  "id": zod.coerce.string().describe('Vehicle ID')
+  "id": zod.coerce.string().uuid().describe('Vehicle ID')
 })
 
 export const GetVehicleResponse = zod.object({
@@ -144,7 +144,7 @@ export const GetVehicleResponse = zod.object({
  * @summary Update a vehicle in the current organization
  */
 export const UpdateVehicleParams = zod.object({
-  "id": zod.coerce.string().describe('Vehicle ID')
+  "id": zod.coerce.string().uuid().describe('Vehicle ID')
 })
 
 
@@ -197,7 +197,7 @@ export const UpdateVehicleResponse = zod.object({
  * @summary Soft delete a vehicle in the current organization
  */
 export const DeleteVehicleParams = zod.object({
-  "id": zod.coerce.string().describe('Vehicle ID')
+  "id": zod.coerce.string().uuid().describe('Vehicle ID')
 })
 
 export const DeleteVehicleResponse = zod.void()
@@ -206,7 +206,7 @@ export const DeleteVehicleResponse = zod.void()
  * @summary List photos for a vehicle
  */
 export const ListVehiclePhotosParams = zod.object({
-  "vehicleId": zod.coerce.string()
+  "vehicleId": zod.coerce.string().uuid()
 })
 
 export const ListVehiclePhotosResponse = zod.object({
@@ -228,7 +228,7 @@ export const ListVehiclePhotosResponse = zod.object({
  * @summary Upload a photo for a vehicle
  */
 export const UploadVehiclePhotoParams = zod.object({
-  "vehicleId": zod.coerce.string()
+  "vehicleId": zod.coerce.string().uuid()
 })
 
 export const UploadVehiclePhotoResponse = zod.object({
@@ -250,8 +250,8 @@ export const UploadVehiclePhotoResponse = zod.object({
  * @summary Serve a vehicle photo's image bytes
  */
 export const ServeVehiclePhotoParams = zod.object({
-  "vehicleId": zod.coerce.string(),
-  "id": zod.coerce.string()
+  "vehicleId": zod.coerce.string().uuid(),
+  "id": zod.coerce.string().uuid()
 })
 
 export const ServeVehiclePhotoResponse = zod.unknown()
@@ -260,8 +260,8 @@ export const ServeVehiclePhotoResponse = zod.unknown()
  * @summary Get a vehicle photo
  */
 export const GetVehiclePhotoParams = zod.object({
-  "vehicleId": zod.coerce.string(),
-  "id": zod.coerce.string()
+  "vehicleId": zod.coerce.string().uuid(),
+  "id": zod.coerce.string().uuid()
 })
 
 export const GetVehiclePhotoResponse = zod.object({
@@ -283,8 +283,8 @@ export const GetVehiclePhotoResponse = zod.object({
  * @summary Soft delete a vehicle photo
  */
 export const DeleteVehiclePhotoParams = zod.object({
-  "vehicleId": zod.coerce.string(),
-  "id": zod.coerce.string()
+  "vehicleId": zod.coerce.string().uuid(),
+  "id": zod.coerce.string().uuid()
 })
 
 export const DeleteVehiclePhotoResponse = zod.void()
@@ -293,7 +293,7 @@ export const DeleteVehiclePhotoResponse = zod.void()
  * @summary List documents for a vehicle
  */
 export const ListVehicleDocumentsParams = zod.object({
-  "vehicleId": zod.coerce.string()
+  "vehicleId": zod.coerce.string().uuid()
 })
 
 export const ListVehicleDocumentsResponse = zod.object({
@@ -316,7 +316,7 @@ export const ListVehicleDocumentsResponse = zod.object({
  * @summary Upload a document for a vehicle
  */
 export const UploadVehicleDocumentParams = zod.object({
-  "vehicleId": zod.coerce.string()
+  "vehicleId": zod.coerce.string().uuid()
 })
 
 export const UploadVehicleDocumentResponse = zod.object({
@@ -339,8 +339,8 @@ export const UploadVehicleDocumentResponse = zod.object({
  * @summary Get a vehicle document
  */
 export const GetVehicleDocumentParams = zod.object({
-  "vehicleId": zod.coerce.string(),
-  "id": zod.coerce.string()
+  "vehicleId": zod.coerce.string().uuid(),
+  "id": zod.coerce.string().uuid()
 })
 
 export const GetVehicleDocumentResponse = zod.object({
@@ -363,8 +363,8 @@ export const GetVehicleDocumentResponse = zod.object({
  * @summary Update vehicle document metadata
  */
 export const UpdateVehicleDocumentParams = zod.object({
-  "vehicleId": zod.coerce.string(),
-  "id": zod.coerce.string()
+  "vehicleId": zod.coerce.string().uuid(),
+  "id": zod.coerce.string().uuid()
 })
 
 export const UpdateVehicleDocumentBody = zod.object({
@@ -391,8 +391,8 @@ export const UpdateVehicleDocumentResponse = zod.object({
  * @summary Soft delete a vehicle document
  */
 export const DeleteVehicleDocumentParams = zod.object({
-  "vehicleId": zod.coerce.string(),
-  "id": zod.coerce.string()
+  "vehicleId": zod.coerce.string().uuid(),
+  "id": zod.coerce.string().uuid()
 })
 
 export const DeleteVehicleDocumentResponse = zod.void()
@@ -401,8 +401,8 @@ export const DeleteVehicleDocumentResponse = zod.void()
  * @summary Download a vehicle document
  */
 export const DownloadVehicleDocumentParams = zod.object({
-  "vehicleId": zod.coerce.string(),
-  "id": zod.coerce.string()
+  "vehicleId": zod.coerce.string().uuid(),
+  "id": zod.coerce.string().uuid()
 })
 
 export const DownloadVehicleDocumentResponse = zod.unknown()

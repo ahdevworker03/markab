@@ -12,7 +12,7 @@ import * as zod from 'zod';
  * @summary Get the contract for a rental in the current organization
  */
 export const GetRentalContractParams = zod.object({
-  "id": zod.coerce.string().describe('Rental ID')
+  "id": zod.coerce.string().uuid().describe('Rental ID')
 })
 
 export const GetRentalContractResponse = zod.object({
@@ -39,7 +39,7 @@ export const GetRentalContractResponse = zod.object({
  * @summary Generate a contract for a rental in the current organization
  */
 export const GenerateRentalContractParams = zod.object({
-  "id": zod.coerce.string().describe('Rental ID')
+  "id": zod.coerce.string().uuid().describe('Rental ID')
 })
 
 export const GenerateRentalContractResponse = zod.object({
@@ -66,7 +66,7 @@ export const GenerateRentalContractResponse = zod.object({
  * @summary Soft delete the contract for a rental in the current organization
  */
 export const DeleteRentalContractParams = zod.object({
-  "id": zod.coerce.string().describe('Rental ID')
+  "id": zod.coerce.string().uuid().describe('Rental ID')
 })
 
 export const DeleteRentalContractResponse = zod.void()
@@ -75,7 +75,7 @@ export const DeleteRentalContractResponse = zod.void()
  * @summary Get the printable HTML representation of a rental contract
  */
 export const GetRentalContractPrintableParams = zod.object({
-  "id": zod.coerce.string().describe('Rental ID')
+  "id": zod.coerce.string().uuid().describe('Rental ID')
 })
 
 export const GetRentalContractPrintableResponse = zod.unknown()
@@ -84,7 +84,7 @@ export const GetRentalContractPrintableResponse = zod.unknown()
  * @summary Export a rental contract as a PDF
  */
 export const GetRentalContractPdfParams = zod.object({
-  "id": zod.coerce.string().describe('Rental ID')
+  "id": zod.coerce.string().uuid().describe('Rental ID')
 })
 
 export const GetRentalContractPdfResponse = zod.unknown()
@@ -93,7 +93,7 @@ export const GetRentalContractPdfResponse = zod.unknown()
  * @summary List signed documents for a rental contract
  */
 export const ListRentalContractSignedDocumentsParams = zod.object({
-  "id": zod.coerce.string().describe('Rental ID')
+  "id": zod.coerce.string().uuid().describe('Rental ID')
 })
 
 export const ListRentalContractSignedDocumentsResponse = zod.object({
@@ -116,7 +116,7 @@ export const ListRentalContractSignedDocumentsResponse = zod.object({
  * @summary Upload a signed contract document
  */
 export const UploadRentalContractSignedDocumentParams = zod.object({
-  "id": zod.coerce.string().describe('Rental ID')
+  "id": zod.coerce.string().uuid().describe('Rental ID')
 })
 
 export const UploadRentalContractSignedDocumentResponse = zod.object({
@@ -139,8 +139,8 @@ export const UploadRentalContractSignedDocumentResponse = zod.object({
  * @summary Get a signed contract document
  */
 export const GetRentalContractSignedDocumentParams = zod.object({
-  "id": zod.coerce.string().describe('Rental ID'),
-  "documentId": zod.coerce.string().describe('Document ID')
+  "id": zod.coerce.string().uuid().describe('Rental ID'),
+  "documentId": zod.coerce.string().uuid().describe('Document ID')
 })
 
 export const GetRentalContractSignedDocumentResponse = zod.object({
@@ -163,8 +163,8 @@ export const GetRentalContractSignedDocumentResponse = zod.object({
  * @summary Update signed contract document metadata
  */
 export const UpdateRentalContractSignedDocumentParams = zod.object({
-  "id": zod.coerce.string(),
-  "documentId": zod.coerce.string()
+  "id": zod.coerce.string().uuid(),
+  "documentId": zod.coerce.string().uuid()
 })
 
 export const UpdateRentalContractSignedDocumentBody = zod.object({
@@ -191,8 +191,8 @@ export const UpdateRentalContractSignedDocumentResponse = zod.object({
  * @summary Soft delete a signed contract document
  */
 export const DeleteRentalContractSignedDocumentParams = zod.object({
-  "id": zod.coerce.string().describe('Rental ID'),
-  "documentId": zod.coerce.string().describe('Document ID')
+  "id": zod.coerce.string().uuid().describe('Rental ID'),
+  "documentId": zod.coerce.string().uuid().describe('Document ID')
 })
 
 export const DeleteRentalContractSignedDocumentResponse = zod.void()
@@ -201,8 +201,8 @@ export const DeleteRentalContractSignedDocumentResponse = zod.void()
  * @summary Download a signed contract document
  */
 export const DownloadRentalContractSignedDocumentParams = zod.object({
-  "id": zod.coerce.string().describe('Rental ID'),
-  "documentId": zod.coerce.string().describe('Document ID')
+  "id": zod.coerce.string().uuid().describe('Rental ID'),
+  "documentId": zod.coerce.string().uuid().describe('Document ID')
 })
 
 export const DownloadRentalContractSignedDocumentResponse = zod.unknown()

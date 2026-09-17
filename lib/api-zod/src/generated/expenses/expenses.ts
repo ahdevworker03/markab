@@ -60,7 +60,7 @@ export const CreateExpenseResponse = zod.object({
  * @summary Get an expense in the current organization
  */
 export const GetExpenseParams = zod.object({
-  "id": zod.coerce.string().describe('Expense ID')
+  "id": zod.coerce.string().uuid().describe('Expense ID')
 })
 
 export const GetExpenseResponse = zod.object({
@@ -80,7 +80,7 @@ export const GetExpenseResponse = zod.object({
  * @summary Update an expense in the current organization
  */
 export const UpdateExpenseParams = zod.object({
-  "id": zod.coerce.string().describe('Expense ID')
+  "id": zod.coerce.string().uuid().describe('Expense ID')
 })
 
 export const updateExpenseBodyAmountMin = 0;
@@ -112,7 +112,7 @@ export const UpdateExpenseResponse = zod.object({
  * @summary Soft delete an expense in the current organization
  */
 export const DeleteExpenseParams = zod.object({
-  "id": zod.coerce.string().describe('Expense ID')
+  "id": zod.coerce.string().uuid().describe('Expense ID')
 })
 
 export const DeleteExpenseResponse = zod.void()

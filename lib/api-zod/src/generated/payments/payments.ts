@@ -27,7 +27,7 @@ export const ListPaymentsResponse = zod.object({
  * @summary List payments for a rental in the current organization
  */
 export const ListRentalPaymentsParams = zod.object({
-  "rentalId": zod.coerce.string().describe('Rental ID')
+  "rentalId": zod.coerce.string().uuid().describe('Rental ID')
 })
 
 export const ListRentalPaymentsResponse = zod.object({
@@ -49,7 +49,7 @@ export const ListRentalPaymentsResponse = zod.object({
  * @summary Record a payment for a rental in the current organization
  */
 export const CreatePaymentParams = zod.object({
-  "rentalId": zod.coerce.string().describe('Rental ID')
+  "rentalId": zod.coerce.string().uuid().describe('Rental ID')
 })
 
 export const createPaymentBodyAmountExclusiveMin = 0;

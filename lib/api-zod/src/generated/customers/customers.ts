@@ -74,7 +74,7 @@ export const CreateCustomerResponse = zod.object({
  * @summary Get a customer in the current organization
  */
 export const GetCustomerParams = zod.object({
-  "id": zod.coerce.string().describe('Customer ID')
+  "id": zod.coerce.string().uuid().describe('Customer ID')
 })
 
 export const GetCustomerResponse = zod.object({
@@ -96,7 +96,7 @@ export const GetCustomerResponse = zod.object({
  * @summary Update a customer in the current organization
  */
 export const UpdateCustomerParams = zod.object({
-  "id": zod.coerce.string().describe('Customer ID')
+  "id": zod.coerce.string().uuid().describe('Customer ID')
 })
 
 
@@ -136,7 +136,7 @@ export const UpdateCustomerResponse = zod.object({
  * @summary Soft delete a customer in the current organization
  */
 export const DeleteCustomerParams = zod.object({
-  "id": zod.coerce.string().describe('Customer ID')
+  "id": zod.coerce.string().uuid().describe('Customer ID')
 })
 
 export const DeleteCustomerResponse = zod.void()
@@ -145,7 +145,7 @@ export const DeleteCustomerResponse = zod.void()
  * @summary List documents for a customer
  */
 export const ListCustomerDocumentsParams = zod.object({
-  "customerId": zod.coerce.string()
+  "customerId": zod.coerce.string().uuid()
 })
 
 export const ListCustomerDocumentsResponse = zod.object({
@@ -168,7 +168,7 @@ export const ListCustomerDocumentsResponse = zod.object({
  * @summary Upload a document for a customer
  */
 export const UploadCustomerDocumentParams = zod.object({
-  "customerId": zod.coerce.string()
+  "customerId": zod.coerce.string().uuid()
 })
 
 export const UploadCustomerDocumentResponse = zod.object({
@@ -191,8 +191,8 @@ export const UploadCustomerDocumentResponse = zod.object({
  * @summary Get a customer document
  */
 export const GetCustomerDocumentParams = zod.object({
-  "customerId": zod.coerce.string(),
-  "id": zod.coerce.string()
+  "customerId": zod.coerce.string().uuid(),
+  "id": zod.coerce.string().uuid()
 })
 
 export const GetCustomerDocumentResponse = zod.object({
@@ -215,8 +215,8 @@ export const GetCustomerDocumentResponse = zod.object({
  * @summary Update customer document metadata
  */
 export const UpdateCustomerDocumentParams = zod.object({
-  "customerId": zod.coerce.string(),
-  "id": zod.coerce.string()
+  "customerId": zod.coerce.string().uuid(),
+  "id": zod.coerce.string().uuid()
 })
 
 export const UpdateCustomerDocumentBody = zod.object({
@@ -243,8 +243,8 @@ export const UpdateCustomerDocumentResponse = zod.object({
  * @summary Soft delete a customer document
  */
 export const DeleteCustomerDocumentParams = zod.object({
-  "customerId": zod.coerce.string(),
-  "id": zod.coerce.string()
+  "customerId": zod.coerce.string().uuid(),
+  "id": zod.coerce.string().uuid()
 })
 
 export const DeleteCustomerDocumentResponse = zod.void()
@@ -253,8 +253,8 @@ export const DeleteCustomerDocumentResponse = zod.void()
  * @summary Download a customer document
  */
 export const DownloadCustomerDocumentParams = zod.object({
-  "customerId": zod.coerce.string(),
-  "id": zod.coerce.string()
+  "customerId": zod.coerce.string().uuid(),
+  "id": zod.coerce.string().uuid()
 })
 
 export const DownloadCustomerDocumentResponse = zod.unknown()
