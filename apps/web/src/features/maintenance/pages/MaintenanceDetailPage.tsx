@@ -103,15 +103,17 @@ export default function MaintenanceDetailPage({ params }: DetailPageParams) {
             </DetailSection>
 
         <DetailSection title="إجراءات الصيانة" description="ابدأ السجل ثم أكمله عند انتهاء العمل.">
-          {actionError && !completing && <InlineFeedback variant="error">{actionError}</InlineFeedback>}
-          {isOwner && record.status !== "COMPLETED" && (completing ? (
+          <div className="space-y-4">
+            {actionError && !completing && <InlineFeedback variant="error">{actionError}</InlineFeedback>}
+            {isOwner && record.status !== "COMPLETED" && (completing ? (
                 <div className="max-w-xl space-y-3">
                   <FormField label="التكلفة النهائية" required hint="USD · رقم غير سالب" error={actionError ?? undefined} htmlFor="maintenance-completion-cost"><input id="maintenance-completion-cost" type="number" dir="ltr" inputMode="decimal" min={0} placeholder="150" value={cost} onChange={(event) => { setCost(event.target.value); setActionError(null); }} className={actionError ? `${inputClass} border-destructive focus:ring-destructive/30` : inputClass} /></FormField>
                   <div className="flex flex-wrap gap-2"><Button type="button" variant="outline" onClick={() => { setCompleting(false); setActionError(null); }} disabled={mutations.complete.isPending}>إلغاء</Button><Button type="button" onClick={handleComplete} disabled={mutations.complete.isPending}>{mutations.complete.isPending ? "جارٍ الحفظ" : "تأكيد الإكمال"}</Button></div>
                 </div>
               ) : <div className="flex flex-wrap gap-2">{record.status === "SCHEDULED" && <Button type="button" onClick={handleStart} disabled={mutations.update.isPending}>{mutations.update.isPending ? "جارٍ البدء" : "بدء الصيانة"}</Button>}<Button type="button" variant="outline" onClick={() => { setCompleting(true); setActionError(null); }}><CheckCircle2 className="size-4" aria-hidden="true" />إكمال الصيانة</Button></div>)}
-              {!isOwner && record.status !== "COMPLETED" && <InlineFeedback variant="info">لا تملك صلاحية إكمال الصيانة.</InlineFeedback>}
-              {record.status === "COMPLETED" && <p className="ui-secondary-text">تم إكمال هذا السجل.</p>}
+            {!isOwner && record.status !== "COMPLETED" && <InlineFeedback variant="info">لا تملك صلاحية إكمال الصيانة.</InlineFeedback>}
+            {record.status === "COMPLETED" && <p className="ui-secondary-text">تم إكمال هذا السجل.</p>}
+          </div>
             </DetailSection>
 
             {record.replacedParts && record.replacedParts.length > 0 && <DetailSection title="القطع المبدلة" description="القطع المسجّلة ضمن أعمال الصيانة."><div className="divide-y divide-border">{record.replacedParts.map((part, index) => <div key={`${part.name}-${index}`} className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"><div className="min-w-0"><div className="flex items-center gap-2 text-sm font-semibold text-foreground"><Package className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />{part.name}</div><div className="mt-1 text-xs text-muted-foreground">{part.brand || "من دون ماركة"}{part.quantity ? ` · الكمية ${part.quantity}` : ""}</div></div><span className="number-ltr text-sm font-semibold text-foreground">{part.unitCost == null ? "—" : formatUsd(part.unitCost)}</span></div>)}</div></DetailSection>}
