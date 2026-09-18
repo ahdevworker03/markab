@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { prisma } from "../../database";
+import { prisma, type TxClient } from "../../database";
 import { authConfig } from "./auth.config";
 
 function generateRefreshTokenValue(): string {
@@ -10,12 +10,15 @@ function hashToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
-async function storeRefreshToken(userId: string): Promise<string> {
+async function storeRefreshToken(
+  userId: string,
+  tx?: TxClient,
+): Promise<string> {
   const rawToken = generateRefreshTokenValue();
   const hashedToken = hashToken(rawToken);
   const expiresAt = new Date(Date.now() + authConfig.REFRESH_TOKEN_EXPIRY_MS);
 
-  await prisma.refreshToken.create({
+  await (tx ?? prisma).refreshToken.create({
     data: {
       token: hashedToken,
       user_id: userId,
@@ -56,5 +59,6 @@ export {
   findRefreshToken,
   deleteRefreshToken,
   generateRefreshTokenValue,
+  hashToken,
   isTokenExpired,
 };

@@ -34,7 +34,9 @@ describe("employee invitation routes", () => {
     });
   });
 
-  async function createInvitation(email = `employee-${Date.now()}@example.com`) {
+  async function createInvitation(
+    email = `employee-${Date.now()}@example.com`,
+  ) {
     return request(app)
       .post("/api/users/invitations")
       .set("Authorization", `Bearer ${ownerToken}`)
@@ -70,14 +72,27 @@ describe("employee invitation routes", () => {
     ).resolves.toBeTruthy();
   });
 
+  it("normalizes invitation email identity", async () => {
+    const email = `normalized-invitation-${Date.now()}@example.com`;
+    const first = await createInvitation(`  ${email.toUpperCase()}  `);
+    const duplicate = await createInvitation(email);
+
+    expect(first.status).toBe(201);
+    expect(first.body.data.email).toBe(email);
+    expect(duplicate.status).toBe(201);
+    expect(duplicate.body.data.id).toBe(first.body.data.id);
+  });
+
   it("accepts a valid invitation once and creates an employee in the invited organization", async () => {
     const email = `accepted-${Date.now()}@example.com`;
     const invited = await createInvitation(email);
 
-    const accepted = await request(app).post("/api/auth/invitations/accept").send({
-      token: invited.body.data.acceptanceToken,
-      password: "Password123!",
-    });
+    const accepted = await request(app)
+      .post("/api/auth/invitations/accept")
+      .send({
+        token: invited.body.data.acceptanceToken,
+        password: "Password123!",
+      });
 
     expect(accepted.status).toBe(201);
     expect(accepted.body.data.accessToken).toEqual(expect.any(String));
@@ -86,12 +101,17 @@ describe("employee invitation routes", () => {
       where: { email },
       select: { organization_id: true, role: true },
     });
-    expect(employee).toEqual({ organization_id: organizationId, role: "EMPLOYEE" });
-
-    const replay = await request(app).post("/api/auth/invitations/accept").send({
-      token: invited.body.data.acceptanceToken,
-      password: "Password123!",
+    expect(employee).toEqual({
+      organization_id: organizationId,
+      role: "EMPLOYEE",
     });
+
+    const replay = await request(app)
+      .post("/api/auth/invitations/accept")
+      .send({
+        token: invited.body.data.acceptanceToken,
+        password: "Password123!",
+      });
     expect(replay.status).toBe(409);
     expect(replay.body.error.code).toBe("INVALID_OR_EXPIRED_INVITATION");
 
@@ -113,19 +133,25 @@ describe("employee invitation routes", () => {
       first.body.data.acceptanceToken,
     );
     await expect(
-      prisma.employeeInvitation.count({ where: { organization_id: organizationId, email } }),
+      prisma.employeeInvitation.count({
+        where: { organization_id: organizationId, email },
+      }),
     ).resolves.toBe(1);
 
-    const oldToken = await request(app).post("/api/auth/invitations/accept").send({
-      token: first.body.data.acceptanceToken,
-      password: "Password123!",
-    });
+    const oldToken = await request(app)
+      .post("/api/auth/invitations/accept")
+      .send({
+        token: first.body.data.acceptanceToken,
+        password: "Password123!",
+      });
     expect(oldToken.status).toBe(409);
 
-    const accepted = await request(app).post("/api/auth/invitations/accept").send({
-      token: second.body.data.acceptanceToken,
-      password: "Password123!",
-    });
+    const accepted = await request(app)
+      .post("/api/auth/invitations/accept")
+      .send({
+        token: second.body.data.acceptanceToken,
+        password: "Password123!",
+      });
     expect(accepted.status).toBe(201);
   });
 
@@ -137,14 +163,18 @@ describe("employee invitation routes", () => {
       data: { expires_at: new Date(Date.now() - 1) },
     });
 
-    const response = await request(app).post("/api/auth/invitations/accept").send({
-      token: invited.body.data.acceptanceToken,
-      password: "Password123!",
-    });
+    const response = await request(app)
+      .post("/api/auth/invitations/accept")
+      .send({
+        token: invited.body.data.acceptanceToken,
+        password: "Password123!",
+      });
 
     expect(response.status).toBe(409);
     expect(response.body.error.code).toBe("INVALID_OR_EXPIRED_INVITATION");
-    await expect(prisma.user.findUnique({ where: { email } })).resolves.toBeNull();
+    await expect(
+      prisma.user.findUnique({ where: { email } }),
+    ).resolves.toBeNull();
   });
 
   it("does not allow employees or platform owners to issue tenant invitations", async () => {
@@ -194,8 +224,12 @@ describe("employee invitation routes", () => {
       request(app).post("/api/auth/invitations/accept").send(payload),
     ]);
 
-    expect(responses.filter((response) => response.status === 201)).toHaveLength(1);
-    expect(responses.filter((response) => response.status === 409)).toHaveLength(1);
+    expect(
+      responses.filter((response) => response.status === 201),
+    ).toHaveLength(1);
+    expect(
+      responses.filter((response) => response.status === 409),
+    ).toHaveLength(1);
     await expect(prisma.user.count({ where: { email } })).resolves.toBe(1);
   });
 });

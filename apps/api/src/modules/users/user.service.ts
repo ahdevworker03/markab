@@ -1,4 +1,5 @@
-import { hashPassword } from "../auth";
+import { hashPassword, revokeAllUserTokens } from "../auth";
+import { transaction } from "../../database";
 import { AppError } from "../../shared";
 import * as repo from "./user.repository";
 import type {
@@ -71,6 +72,14 @@ async function updateUser(
     throw new AppError(404, "USER_NOT_FOUND", "User not found.");
   }
 
+  if (user.role === "OWNER") {
+    throw new AppError(
+      409,
+      "OWNER_ROLE_CHANGE_NOT_SUPPORTED",
+      "Owner role changes are not supported.",
+    );
+  }
+
   const updated = await repo.update(userId, input);
 
   return toResponse(updated);
@@ -81,12 +90,6 @@ async function deleteUser(
   orgId: string,
   actorUserId: string,
 ): Promise<void> {
-  const user = await repo.findById(userId, orgId);
-
-  if (!user || user.deleted_at) {
-    throw new AppError(404, "USER_NOT_FOUND", "User not found.");
-  }
-
   if (userId === actorUserId) {
     throw new AppError(
       409,
@@ -95,7 +98,16 @@ async function deleteUser(
     );
   }
 
-  await repo.softDelete(userId);
+  await transaction(async (tx) => {
+    const user = await repo.findById(userId, orgId, tx);
+
+    if (!user || user.deleted_at) {
+      throw new AppError(404, "USER_NOT_FOUND", "User not found.");
+    }
+
+    await repo.softDelete(userId, tx);
+    await revokeAllUserTokens(userId, tx);
+  });
 }
 
 export { listUsers, getUser, createUser, updateUser, deleteUser };

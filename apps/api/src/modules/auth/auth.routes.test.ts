@@ -37,6 +37,28 @@ describe("auth routes", () => {
     expect(response.body.data.refreshToken).toEqual(expect.any(String));
   });
 
+  it("normalizes registration email identity and accepts case-variant login", async () => {
+    const email = `normalized-${Date.now()}@example.com`;
+    const registration = await request(app)
+      .post("/api/auth/register")
+      .send({
+        email: `  ${email.toUpperCase()}  `,
+        password: "Password123!",
+        organizationName: "Normalized registration organization",
+      });
+
+    expect(registration.status).toBe(201);
+    await expect(
+      prisma.user.findUniqueOrThrow({ where: { email } }),
+    ).resolves.toMatchObject({ email });
+
+    const login = await request(app).post("/api/auth/login").send({
+      email: email.toUpperCase(),
+      password: "Password123!",
+    });
+    expect(login.status).toBe(200);
+  });
+
   it("rejects a duplicate email without creating another organization", async () => {
     const email = `duplicate-${Date.now()}@example.com`;
     const first = await request(app).post("/api/auth/register").send({
@@ -72,8 +94,12 @@ describe("auth routes", () => {
       }),
     ]);
 
-    expect(responses.filter((response) => response.status === 201)).toHaveLength(1);
-    expect(responses.filter((response) => response.status === 409)).toHaveLength(1);
+    expect(
+      responses.filter((response) => response.status === 201),
+    ).toHaveLength(1);
+    expect(
+      responses.filter((response) => response.status === 409),
+    ).toHaveLength(1);
     expect(
       responses.find((response) => response.status === 409)?.body.error.code,
     ).toBe("EMAIL_ALREADY_EXISTS");
@@ -86,8 +112,6 @@ describe("auth routes", () => {
       }),
     ]);
     expect(organizationCount).toBe(1);
-    expect(owners).toEqual([
-      expect.objectContaining({ role: "OWNER" }),
-    ]);
+    expect(owners).toEqual([expect.objectContaining({ role: "OWNER" })]);
   });
 });

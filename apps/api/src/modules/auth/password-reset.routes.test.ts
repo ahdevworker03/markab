@@ -56,6 +56,15 @@ describe("password reset routes", () => {
     expect(getLatestPasswordResetDeliveryForTest(email)).toBeDefined();
   });
 
+  it("finds the active account using normalized email identity", async () => {
+    const response = await request(app)
+      .post("/api/auth/password-reset/request")
+      .send({ email: `  ${email.toUpperCase()}  ` });
+
+    expect(response.status).toBe(204);
+    expect(getLatestPasswordResetDeliveryForTest(email)).toBeDefined();
+  });
+
   it("stores only a token hash and resets the password atomically", async () => {
     const token = await requestReset();
     const stored = await prisma.passwordResetToken.findFirstOrThrow({
@@ -155,7 +164,11 @@ describe("password reset routes", () => {
       request(app).post("/api/auth/password-reset/confirm").send(payload),
     ]);
 
-    expect(responses.filter((response) => response.status === 204)).toHaveLength(1);
-    expect(responses.filter((response) => response.status === 409)).toHaveLength(1);
+    expect(
+      responses.filter((response) => response.status === 204),
+    ).toHaveLength(1);
+    expect(
+      responses.filter((response) => response.status === 409),
+    ).toHaveLength(1);
   });
 });

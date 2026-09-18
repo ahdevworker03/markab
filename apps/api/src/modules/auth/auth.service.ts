@@ -4,9 +4,15 @@ import {
   storeRefreshToken,
   findRefreshToken,
   deleteRefreshToken,
+  hashToken,
   isTokenExpired,
 } from "./auth.refresh";
-import { prisma, transaction, isUniqueConstraintError } from "../../database";
+import {
+  prisma,
+  transaction,
+  isUniqueConstraintError,
+  type TxClient,
+} from "../../database";
 import { AppError } from "../../shared";
 import type { AuthTokens, AccessTokenPayload } from "./auth.types";
 import type { UserRole } from "../users/user.types";
@@ -121,17 +127,26 @@ async function login(email: string, password: string): Promise<AuthTokens> {
 async function getCurrentUser(accessToken: string) {
   const payload = verifyAccessToken(accessToken);
 
-  const user = await prisma.user.findUniqueOrThrow({
+  const user = await prisma.user.findUnique({
     where: { id: payload.sub },
     select: {
       id: true,
       email: true,
       role: true,
       organization_id: true,
+      deleted_at: true,
       created_at: true,
       organization: { select: { status: true } },
     },
   });
+
+  if (!user || user.deleted_at) {
+    throw new AppError(
+      401,
+      "ACCOUNT_DEACTIVATED",
+      "This account has been deactivated.",
+    );
+  }
 
   return user;
 }
@@ -140,6 +155,7 @@ async function issueTokens(
   userId: string,
   organizationId: string,
   role: UserRole,
+  tx?: TxClient,
 ): Promise<AuthTokens> {
   const accessToken = generateAccessToken({
     sub: userId,
@@ -147,7 +163,7 @@ async function issueTokens(
     role,
   });
 
-  const refreshToken = await storeRefreshToken(userId);
+  const refreshToken = await storeRefreshToken(userId, tx);
 
   return {
     accessToken,
@@ -157,18 +173,50 @@ async function issueTokens(
 }
 
 async function rotateRefreshToken(oldToken: string): Promise<AuthTokens> {
-  const stored = await findRefreshToken(oldToken);
+  const result = await transaction(async (tx) => {
+    const stored = await tx.refreshToken.findUnique({
+      where: { token: hashToken(oldToken) },
+      select: { id: true, user_id: true, expires_at: true },
+    });
 
-  if (!stored) {
-    throw new AppError(
-      401,
-      "INVALID_REFRESH_TOKEN",
-      "Refresh token not found or already used.",
-    );
+    if (!stored) {
+      return { kind: "invalid" as const };
+    }
+
+    if (isTokenExpired(stored.expires_at)) {
+      await tx.refreshToken.deleteMany({ where: { id: stored.id } });
+      return { kind: "expired" as const };
+    }
+
+    const user = await tx.user.findUnique({
+      where: { id: stored.user_id },
+      select: { id: true, organization_id: true, role: true, deleted_at: true },
+    });
+
+    if (!user || user.deleted_at) {
+      await tx.refreshToken.deleteMany({ where: { id: stored.id } });
+      return { kind: "invalid" as const };
+    }
+
+    const consumed = await tx.refreshToken.deleteMany({
+      where: { id: stored.id, token: hashToken(oldToken) },
+    });
+
+    if (consumed.count !== 1) {
+      return { kind: "invalid" as const };
+    }
+
+    return {
+      kind: "tokens" as const,
+      tokens: await issueTokens(user.id, user.organization_id, user.role, tx),
+    };
+  });
+
+  if (result.kind === "tokens") {
+    return result.tokens;
   }
 
-  if (isTokenExpired(stored.expires_at)) {
-    await deleteRefreshToken(oldToken);
+  if (result.kind === "expired") {
     throw new AppError(
       401,
       "EXPIRED_REFRESH_TOKEN",
@@ -176,14 +224,11 @@ async function rotateRefreshToken(oldToken: string): Promise<AuthTokens> {
     );
   }
 
-  const user = await prisma.user.findUniqueOrThrow({
-    where: { id: stored.user_id },
-    select: { id: true, organization_id: true, role: true },
-  });
-
-  await deleteRefreshToken(oldToken);
-
-  return issueTokens(user.id, user.organization_id, user.role);
+  throw new AppError(
+    401,
+    "INVALID_REFRESH_TOKEN",
+    "Refresh token not found or already used.",
+  );
 }
 
 async function revokeRefreshToken(token: string): Promise<void> {
@@ -196,8 +241,11 @@ async function revokeRefreshToken(token: string): Promise<void> {
   await deleteRefreshToken(token);
 }
 
-async function revokeAllUserTokens(userId: string): Promise<void> {
-  await prisma.refreshToken.deleteMany({
+async function revokeAllUserTokens(
+  userId: string,
+  tx?: TxClient,
+): Promise<void> {
+  await (tx ?? prisma).refreshToken.deleteMany({
     where: { user_id: userId },
   });
 }
