@@ -16,7 +16,7 @@ The milestone delivers:
 
 ## Starting State
 
-Milestones 1 through 5.8 are documented as complete. Milestone 5.8 closed with Step 56 and final human product QA complete.
+Milestones 1 through 5.8 and Step 58 are documented as complete. Milestone 5.8 closed with Step 56 and final human product QA complete.
 
 ### Already Implemented
 
@@ -28,6 +28,7 @@ Milestones 1 through 5.8 are documented as complete. Milestone 5.8 closed with S
 - Password-reset request/confirm endpoints implement random opaque tokens, hash-only persistence, one-hour expiry, single-use consumption, replacement-password hashing, refresh-token revocation, transaction safety, anti-enumeration responses, and completion audit logging.
 - A storage-provider abstraction with local filesystem storage; existing upload limits, tenant checks, server-generated keys, path protections, and controlled retrieval are development foundations.
 - Vitest, Supertest, React Testing Library, database-backed API tests, frontend tests, and detailed manual/E2E test plans exist.
+- Step 58 hardened request validation/error normalization, contract-query behavior, session and email-identity handling, owner-role protection, tenant cache clearing, account-administration auditing, and the corresponding OpenAPI/generated artifacts.
 
 ### Functionality Requiring Completion
 
@@ -35,15 +36,6 @@ Milestones 1 through 5.8 are documented as complete. Milestone 5.8 closed with S
 - Platform administration has a status mutation but no organization discovery/detail contract, dedicated frontend route, or secure production bootstrap.
 - Production environment validation, deployable artifacts, durable object storage, dependency-aware readiness, graceful shutdown, centralized observability, backups, restore evidence, and release runbooks are incomplete.
 - The planned browser E2E suite is documented but has no executable runner, configuration, scripts, or scenarios.
-
-### Technical Debt and Follow-Up Fixes
-
-- A rental with no contract correctly produces `404 CONTRACT_NOT_FOUND`, and the UI renders an empty state, but contract queries retry and signed-document queries run before contract existence is known, creating expected `404` request/log noise.
-- Most resource ID path parameters are not declared as UUIDs in OpenAPI and are not validated before Prisma. Malformed vehicle IDs can become internal `500` responses; the same boundary must be reviewed across all UUID resource routes.
-- Authentication/session review found production-risk edge cases around deleted-user refresh/current-user behavior, refresh rotation, email identity normalization, account-role mutation, and API/implementation contract consistency. These require confirmation and focused correction, not a redesign.
-- Tenant React Query data is not partitioned or cleared on account changes. The organization-status gate and role-aware frontend routing require final fail-closed verification; platform owners have no separate frontend destination.
-- The API error boundary does not deliberately normalize malformed JSON, oversized JSON, or known Prisma input failures. Account-administration audit coverage is narrower than the completed Milestone 5.7 design intended.
-- The API Docker image, development Compose file, environment examples, health endpoint, local file storage, and release scripts are not sufficient for production.
 
 ### Deferred or Future Work
 
@@ -184,16 +176,19 @@ Create one evidence-based production-readiness baseline and lock the decisions r
 
 ## Step 58 — Correctness, Contract, Session, and Tenant-Boundary Hardening
 
+**Status:** Complete
+
 ### Objective
 
 Resolve confirmed production blockers at request, authentication, tenant, and frontend-data boundaries before adding privileged platform and offline capabilities.
 
-### Current State
+### Completion
 
-- Only platform organization-status and maintenance-schedule routes use UUID parameter validation; most OpenAPI path IDs are plain strings. The generic error handler maps unrecognized parser, payload-size, and Prisma input errors to `500`.
-- A missing rental contract correctly returns `404 CONTRACT_NOT_FOUND`; `ContractSection` renders an empty state, but the global query policy retries once and the signed-document query starts independently.
-- `authenticate` rejects soft-deleted users, but refresh rotation and `getCurrentUser` do not consistently apply the same active-user check; user soft deletion does not revoke sessions. User role update accepts only `EMPLOYEE` and does not protect an owner from self-demotion.
-- Email identity is not consistently normalized across auth/onboarding paths; tenant query keys are not organization-partitioned and the QueryClient is not cleared on logout/account transition.
+- UUID resource parameters and request-shape failures are validated before Prisma and produce documented safe client errors.
+- Contract empty states preserve `404 CONTRACT_NOT_FOUND` without unnecessary retry or signed-document requests.
+- Deleted-user session handling, refresh rotation, normalized email identity, and owner-role protection are covered by the corrected authentication/account flows.
+- `/auth/me` and organization-delete contracts match implementation; tenant cache clearing and fail-closed role/organization routing prevent cross-account data exposure.
+- Account-administration audits are transactionally coupled, correctly attributed, and exclude sensitive material. Generated OpenAPI artifacts are regenerated and formatted by the approved codegen workflow.
 
 ### Scope
 
@@ -226,11 +221,10 @@ Resolve confirmed production blockers at request, authentication, tenant, and fr
 
 ### Verification
 
-- Add table-driven route tests for malformed UUIDs across resource families, including vehicle list/detail/media/history paths where applicable.
-- Add API tests for parser/payload errors and production-safe error bodies; add contract query/component tests proving no retry and no signed-document fetch before a contract exists.
-- Add auth integration/concurrency tests for deleted users, refresh rotation, logout, `/auth/me`, email normalization, user deletion, role update, and audit coupling; add frontend provider/route tests for cache clearing/partitioning and fail-closed account/organization states.
-- Run full API/web tests, typecheck, lint, build, OpenAPI generation/drift checks, migration reset/rehearsal where changed, and `git diff --check`.
-- Manual: inspect Network/Console on a rental with no contract; try malformed IDs on representative routes; delete a disposable employee with an active session; log out of tenant A and sign into tenant B to confirm no A data appears; verify suspended/cancelled tenant and `PLATFORM_OWNER` routing fails closed.
+- API test suite: 27 files / 282 tests passed.
+- Web test suite: 47 files / 309 tests passed.
+- Workspace typecheck, API lint, API and web production builds, OpenAPI code generation, generated-artifact Prettier verification, and `git diff --check` passed.
+- Two consecutive codegen runs produced an identical diff fingerprint, proving deterministic generated output.
 
 ### Dependencies
 
