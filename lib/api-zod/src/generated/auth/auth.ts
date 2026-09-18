@@ -84,7 +84,7 @@ export const LogoutBody = zod.object({
 export const LogoutResponse = zod.void()
 
 /**
- * Returns the current authenticated user, or null when no valid access token is provided.
+ * Returns the current authenticated user when a valid active bearer token is supplied. Returns null only when the Authorization header is absent or does not use the supported Bearer format. A suspended or cancelled organization still returns its current status. Invalid, expired, and deleted-user bearer tokens are rejected.
  * @summary Get current user
  */
 export const GetCurrentUserResponse = zod.object({

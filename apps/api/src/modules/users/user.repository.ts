@@ -25,8 +25,11 @@ async function findById(
   });
 }
 
-async function findByEmail(email: string): Promise<UserRecord | null> {
-  return prisma.user.findUnique({
+async function findByEmail(
+  email: string,
+  db: DbClient = prisma,
+): Promise<UserRecord | null> {
+  return db.user.findUnique({
     where: { email },
   });
 }
@@ -35,8 +38,9 @@ async function create(
   data: CreateUserInput,
   passwordHash: string,
   orgId: string,
+  db: DbClient = prisma,
 ): Promise<UserRecord> {
-  return prisma.user.create({
+  return db.user.create({
     data: {
       email: data.email,
       password_hash: passwordHash,
