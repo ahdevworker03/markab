@@ -9,11 +9,12 @@
 /**
  * Must be provided with recurrence_interval, or both must be null/absent.
  */
-export type CreateTaskRequestRecurrenceUnit = typeof CreateTaskRequestRecurrenceUnit[keyof typeof CreateTaskRequestRecurrenceUnit] | null;
-
+export type CreateTaskRequestRecurrenceUnit =
+  | (typeof CreateTaskRequestRecurrenceUnit)[keyof typeof CreateTaskRequestRecurrenceUnit]
+  | null;
 
 export const CreateTaskRequestRecurrenceUnit = {
-  DAY: 'DAY',
-  WEEK: 'WEEK',
-  MONTH: 'MONTH',
+  DAY: "DAY",
+  WEEK: "WEEK",
+  MONTH: "MONTH",
 } as const;

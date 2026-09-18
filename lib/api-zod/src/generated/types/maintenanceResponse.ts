@@ -5,9 +5,9 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { MaintenanceResponseReplacedPartsItem } from './maintenanceResponseReplacedPartsItem';
-import type { MaintenanceResponseStatus } from './maintenanceResponseStatus';
-import type { MaintenanceResponseType } from './maintenanceResponseType';
+import type { MaintenanceResponseReplacedPartsItem } from "./maintenanceResponseReplacedPartsItem";
+import type { MaintenanceResponseStatus } from "./maintenanceResponseStatus";
+import type { MaintenanceResponseType } from "./maintenanceResponseType";
 
 export interface MaintenanceResponse {
   id: string;

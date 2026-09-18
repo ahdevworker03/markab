@@ -5,205 +5,205 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import * as zod from 'zod';
-
+import * as zod from "zod";
 
 /**
  * @summary Get the contract for a rental in the current organization
  */
 export const GetRentalContractParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('Rental ID')
-})
+  id: zod.coerce.string().uuid().describe("Rental ID"),
+});
 
 export const GetRentalContractResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "rentalId": zod.string(),
-  "pickupDate": zod.coerce.date(),
-  "expectedReturnDate": zod.coerce.date(),
-  "dailyRate": zod.number(),
-  "totalAmount": zod.number(),
-  "depositAmount": zod.number(),
-  "customerFirstName": zod.string(),
-  "customerLastName": zod.string(),
-  "customerNationalId": zod.string(),
-  "vehicleMake": zod.string(),
-  "vehicleModel": zod.string(),
-  "vehiclePlateNumber": zod.string(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    rentalId: zod.string(),
+    pickupDate: zod.coerce.date(),
+    expectedReturnDate: zod.coerce.date(),
+    dailyRate: zod.number(),
+    totalAmount: zod.number(),
+    depositAmount: zod.number(),
+    customerFirstName: zod.string(),
+    customerLastName: zod.string(),
+    customerNationalId: zod.string(),
+    vehicleMake: zod.string(),
+    vehicleModel: zod.string(),
+    vehiclePlateNumber: zod.string(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Generate a contract for a rental in the current organization
  */
 export const GenerateRentalContractParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('Rental ID')
-})
+  id: zod.coerce.string().uuid().describe("Rental ID"),
+});
 
 export const GenerateRentalContractResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "rentalId": zod.string(),
-  "pickupDate": zod.coerce.date(),
-  "expectedReturnDate": zod.coerce.date(),
-  "dailyRate": zod.number(),
-  "totalAmount": zod.number(),
-  "depositAmount": zod.number(),
-  "customerFirstName": zod.string(),
-  "customerLastName": zod.string(),
-  "customerNationalId": zod.string(),
-  "vehicleMake": zod.string(),
-  "vehicleModel": zod.string(),
-  "vehiclePlateNumber": zod.string(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    rentalId: zod.string(),
+    pickupDate: zod.coerce.date(),
+    expectedReturnDate: zod.coerce.date(),
+    dailyRate: zod.number(),
+    totalAmount: zod.number(),
+    depositAmount: zod.number(),
+    customerFirstName: zod.string(),
+    customerLastName: zod.string(),
+    customerNationalId: zod.string(),
+    vehicleMake: zod.string(),
+    vehicleModel: zod.string(),
+    vehiclePlateNumber: zod.string(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Soft delete the contract for a rental in the current organization
  */
 export const DeleteRentalContractParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('Rental ID')
-})
+  id: zod.coerce.string().uuid().describe("Rental ID"),
+});
 
-export const DeleteRentalContractResponse = zod.void()
+export const DeleteRentalContractResponse = zod.void();
 
 /**
  * @summary Get the printable HTML representation of a rental contract
  */
 export const GetRentalContractPrintableParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('Rental ID')
-})
+  id: zod.coerce.string().uuid().describe("Rental ID"),
+});
 
-export const GetRentalContractPrintableResponse = zod.unknown()
+export const GetRentalContractPrintableResponse = zod.unknown();
 
 /**
  * @summary Export a rental contract as a PDF
  */
 export const GetRentalContractPdfParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('Rental ID')
-})
+  id: zod.coerce.string().uuid().describe("Rental ID"),
+});
 
-export const GetRentalContractPdfResponse = zod.unknown()
+export const GetRentalContractPdfResponse = zod.unknown();
 
 /**
  * @summary List signed documents for a rental contract
  */
 export const ListRentalContractSignedDocumentsParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('Rental ID')
-})
+  id: zod.coerce.string().uuid().describe("Rental ID"),
+});
 
 export const ListRentalContractSignedDocumentsResponse = zod.object({
-  "data": zod.array(zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string().nullish(),
-  "customerId": zod.string().nullish(),
-  "category": zod.enum(['REGISTRATION', 'INSURANCE', 'OTHER']),
-  "expiryDate": zod.coerce.date().nullable(),
-  "originalFilename": zod.string(),
-  "mimeType": zod.string(),
-  "fileSize": zod.number(),
-  "url": zod.string(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-}))
-})
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      vehicleId: zod.string().nullish(),
+      customerId: zod.string().nullish(),
+      category: zod.enum(["REGISTRATION", "INSURANCE", "OTHER"]),
+      expiryDate: zod.coerce.date().nullable(),
+      originalFilename: zod.string(),
+      mimeType: zod.string(),
+      fileSize: zod.number(),
+      url: zod.string(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+});
 
 /**
  * @summary Upload a signed contract document
  */
 export const UploadRentalContractSignedDocumentParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('Rental ID')
-})
+  id: zod.coerce.string().uuid().describe("Rental ID"),
+});
 
 export const UploadRentalContractSignedDocumentResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string().nullish(),
-  "customerId": zod.string().nullish(),
-  "category": zod.enum(['REGISTRATION', 'INSURANCE', 'OTHER']),
-  "expiryDate": zod.coerce.date().nullable(),
-  "originalFilename": zod.string(),
-  "mimeType": zod.string(),
-  "fileSize": zod.number(),
-  "url": zod.string(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    vehicleId: zod.string().nullish(),
+    customerId: zod.string().nullish(),
+    category: zod.enum(["REGISTRATION", "INSURANCE", "OTHER"]),
+    expiryDate: zod.coerce.date().nullable(),
+    originalFilename: zod.string(),
+    mimeType: zod.string(),
+    fileSize: zod.number(),
+    url: zod.string(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Get a signed contract document
  */
 export const GetRentalContractSignedDocumentParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('Rental ID'),
-  "documentId": zod.coerce.string().uuid().describe('Document ID')
-})
+  id: zod.coerce.string().uuid().describe("Rental ID"),
+  documentId: zod.coerce.string().uuid().describe("Document ID"),
+});
 
 export const GetRentalContractSignedDocumentResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string().nullish(),
-  "customerId": zod.string().nullish(),
-  "category": zod.enum(['REGISTRATION', 'INSURANCE', 'OTHER']),
-  "expiryDate": zod.coerce.date().nullable(),
-  "originalFilename": zod.string(),
-  "mimeType": zod.string(),
-  "fileSize": zod.number(),
-  "url": zod.string(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    vehicleId: zod.string().nullish(),
+    customerId: zod.string().nullish(),
+    category: zod.enum(["REGISTRATION", "INSURANCE", "OTHER"]),
+    expiryDate: zod.coerce.date().nullable(),
+    originalFilename: zod.string(),
+    mimeType: zod.string(),
+    fileSize: zod.number(),
+    url: zod.string(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Update signed contract document metadata
  */
 export const UpdateRentalContractSignedDocumentParams = zod.object({
-  "id": zod.coerce.string().uuid(),
-  "documentId": zod.coerce.string().uuid()
-})
+  id: zod.coerce.string().uuid(),
+  documentId: zod.coerce.string().uuid(),
+});
 
 export const UpdateRentalContractSignedDocumentBody = zod.object({
-  "expiryDate": zod.coerce.date().nullable()
-})
+  expiryDate: zod.coerce.date().nullable(),
+});
 
 export const UpdateRentalContractSignedDocumentResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string().nullish(),
-  "customerId": zod.string().nullish(),
-  "category": zod.enum(['REGISTRATION', 'INSURANCE', 'OTHER']),
-  "expiryDate": zod.coerce.date().nullable(),
-  "originalFilename": zod.string(),
-  "mimeType": zod.string(),
-  "fileSize": zod.number(),
-  "url": zod.string(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    vehicleId: zod.string().nullish(),
+    customerId: zod.string().nullish(),
+    category: zod.enum(["REGISTRATION", "INSURANCE", "OTHER"]),
+    expiryDate: zod.coerce.date().nullable(),
+    originalFilename: zod.string(),
+    mimeType: zod.string(),
+    fileSize: zod.number(),
+    url: zod.string(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Soft delete a signed contract document
  */
 export const DeleteRentalContractSignedDocumentParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('Rental ID'),
-  "documentId": zod.coerce.string().uuid().describe('Document ID')
-})
+  id: zod.coerce.string().uuid().describe("Rental ID"),
+  documentId: zod.coerce.string().uuid().describe("Document ID"),
+});
 
-export const DeleteRentalContractSignedDocumentResponse = zod.void()
+export const DeleteRentalContractSignedDocumentResponse = zod.void();
 
 /**
  * @summary Download a signed contract document
  */
 export const DownloadRentalContractSignedDocumentParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('Rental ID'),
-  "documentId": zod.coerce.string().uuid().describe('Document ID')
-})
+  id: zod.coerce.string().uuid().describe("Rental ID"),
+  documentId: zod.coerce.string().uuid().describe("Document ID"),
+});
 
-export const DownloadRentalContractSignedDocumentResponse = zod.unknown()
-
+export const DownloadRentalContractSignedDocumentResponse = zod.unknown();

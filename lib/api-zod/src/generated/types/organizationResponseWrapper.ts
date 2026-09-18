@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { OrganizationResponse } from './organizationResponse';
+import type { OrganizationResponse } from "./organizationResponse";
 
 export interface OrganizationResponseWrapper {
   data: OrganizationResponse;

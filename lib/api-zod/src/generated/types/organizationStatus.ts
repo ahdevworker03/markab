@@ -6,12 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type OrganizationStatus = typeof OrganizationStatus[keyof typeof OrganizationStatus];
-
+export type OrganizationStatus =
+  (typeof OrganizationStatus)[keyof typeof OrganizationStatus];
 
 export const OrganizationStatus = {
-  TRIAL: 'TRIAL',
-  ACTIVE: 'ACTIVE',
-  SUSPENDED: 'SUSPENDED',
-  CANCELLED: 'CANCELLED',
+  TRIAL: "TRIAL",
+  ACTIVE: "ACTIVE",
+  SUSPENDED: "SUSPENDED",
+  CANCELLED: "CANCELLED",
 } as const;

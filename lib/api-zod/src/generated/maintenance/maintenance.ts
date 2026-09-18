@@ -5,37 +5,42 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import * as zod from 'zod';
-
+import * as zod from "zod";
 
 /**
  * @summary List maintenance records in the current organization
  */
 export const ListMaintenanceQueryParams = zod.object({
-  "vehicleId": zod.coerce.string().optional().describe('Filter by vehicle ID')
-})
+  vehicleId: zod.coerce.string().optional().describe("Filter by vehicle ID"),
+});
 
 export const ListMaintenanceResponse = zod.object({
-  "data": zod.array(zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string(),
-  "type": zod.enum(['PREVENTIVE_SERVICE', 'INSPECTION', 'REPAIR', 'OTHER']),
-  "status": zod.enum(['SCHEDULED', 'IN_PROGRESS', 'COMPLETED']),
-  "maintenanceDate": zod.coerce.date(),
-  "completedAt": zod.coerce.date().nullish(),
-  "cost": zod.number().nullish(),
-  "vendor": zod.string().nullish(),
-  "notes": zod.string().nullish(),
-  "replacedParts": zod.array(zod.object({
-  "name": zod.string(),
-  "brand": zod.string().optional(),
-  "quantity": zod.number().optional(),
-  "unitCost": zod.number().optional()
-})).nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-}))
-})
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      vehicleId: zod.string(),
+      type: zod.enum(["PREVENTIVE_SERVICE", "INSPECTION", "REPAIR", "OTHER"]),
+      status: zod.enum(["SCHEDULED", "IN_PROGRESS", "COMPLETED"]),
+      maintenanceDate: zod.coerce.date(),
+      completedAt: zod.coerce.date().nullish(),
+      cost: zod.number().nullish(),
+      vendor: zod.string().nullish(),
+      notes: zod.string().nullish(),
+      replacedParts: zod
+        .array(
+          zod.object({
+            name: zod.string(),
+            brand: zod.string().optional(),
+            quantity: zod.number().optional(),
+            unitCost: zod.number().optional(),
+          }),
+        )
+        .nullish(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+});
 
 /**
  * @summary Create a maintenance record in the current organization
@@ -43,333 +48,387 @@ export const ListMaintenanceResponse = zod.object({
 
 export const createMaintenanceBodyCostMin = 0;
 
-
-
 export const createMaintenanceBodyReplacedPartsItemUnitCostMin = 0;
 
-
-
 export const CreateMaintenanceBody = zod.object({
-  "vehicle_id": zod.string().min(1),
-  "type": zod.enum(['PREVENTIVE_SERVICE', 'INSPECTION', 'REPAIR', 'OTHER']),
-  "maintenance_date": zod.coerce.date(),
-  "cost": zod.number().min(createMaintenanceBodyCostMin).optional(),
-  "vendor": zod.string().optional(),
-  "notes": zod.string().optional(),
-  "replaced_parts": zod.array(zod.object({
-  "name": zod.string().min(1),
-  "brand": zod.string().optional(),
-  "quantity": zod.number().min(1).optional(),
-  "unitCost": zod.number().min(createMaintenanceBodyReplacedPartsItemUnitCostMin).optional()
-})).optional()
-})
+  vehicle_id: zod.string().min(1),
+  type: zod.enum(["PREVENTIVE_SERVICE", "INSPECTION", "REPAIR", "OTHER"]),
+  maintenance_date: zod.coerce.date(),
+  cost: zod.number().min(createMaintenanceBodyCostMin).optional(),
+  vendor: zod.string().optional(),
+  notes: zod.string().optional(),
+  replaced_parts: zod
+    .array(
+      zod.object({
+        name: zod.string().min(1),
+        brand: zod.string().optional(),
+        quantity: zod.number().min(1).optional(),
+        unitCost: zod
+          .number()
+          .min(createMaintenanceBodyReplacedPartsItemUnitCostMin)
+          .optional(),
+      }),
+    )
+    .optional(),
+});
 
 export const CreateMaintenanceResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string(),
-  "type": zod.enum(['PREVENTIVE_SERVICE', 'INSPECTION', 'REPAIR', 'OTHER']),
-  "status": zod.enum(['SCHEDULED', 'IN_PROGRESS', 'COMPLETED']),
-  "maintenanceDate": zod.coerce.date(),
-  "completedAt": zod.coerce.date().nullish(),
-  "cost": zod.number().nullish(),
-  "vendor": zod.string().nullish(),
-  "notes": zod.string().nullish(),
-  "replacedParts": zod.array(zod.object({
-  "name": zod.string(),
-  "brand": zod.string().optional(),
-  "quantity": zod.number().optional(),
-  "unitCost": zod.number().optional()
-})).nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    vehicleId: zod.string(),
+    type: zod.enum(["PREVENTIVE_SERVICE", "INSPECTION", "REPAIR", "OTHER"]),
+    status: zod.enum(["SCHEDULED", "IN_PROGRESS", "COMPLETED"]),
+    maintenanceDate: zod.coerce.date(),
+    completedAt: zod.coerce.date().nullish(),
+    cost: zod.number().nullish(),
+    vendor: zod.string().nullish(),
+    notes: zod.string().nullish(),
+    replacedParts: zod
+      .array(
+        zod.object({
+          name: zod.string(),
+          brand: zod.string().optional(),
+          quantity: zod.number().optional(),
+          unitCost: zod.number().optional(),
+        }),
+      )
+      .nullish(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Get a maintenance record in the current organization
  */
 export const GetMaintenanceParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('Maintenance ID')
-})
+  id: zod.coerce.string().uuid().describe("Maintenance ID"),
+});
 
 export const GetMaintenanceResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string(),
-  "type": zod.enum(['PREVENTIVE_SERVICE', 'INSPECTION', 'REPAIR', 'OTHER']),
-  "status": zod.enum(['SCHEDULED', 'IN_PROGRESS', 'COMPLETED']),
-  "maintenanceDate": zod.coerce.date(),
-  "completedAt": zod.coerce.date().nullish(),
-  "cost": zod.number().nullish(),
-  "vendor": zod.string().nullish(),
-  "notes": zod.string().nullish(),
-  "replacedParts": zod.array(zod.object({
-  "name": zod.string(),
-  "brand": zod.string().optional(),
-  "quantity": zod.number().optional(),
-  "unitCost": zod.number().optional()
-})).nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    vehicleId: zod.string(),
+    type: zod.enum(["PREVENTIVE_SERVICE", "INSPECTION", "REPAIR", "OTHER"]),
+    status: zod.enum(["SCHEDULED", "IN_PROGRESS", "COMPLETED"]),
+    maintenanceDate: zod.coerce.date(),
+    completedAt: zod.coerce.date().nullish(),
+    cost: zod.number().nullish(),
+    vendor: zod.string().nullish(),
+    notes: zod.string().nullish(),
+    replacedParts: zod
+      .array(
+        zod.object({
+          name: zod.string(),
+          brand: zod.string().optional(),
+          quantity: zod.number().optional(),
+          unitCost: zod.number().optional(),
+        }),
+      )
+      .nullish(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Update a maintenance record in the current organization
  */
 export const UpdateMaintenanceParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('Maintenance ID')
-})
+  id: zod.coerce.string().uuid().describe("Maintenance ID"),
+});
 
 export const updateMaintenanceBodyCostMin = 0;
 
-
-
 export const updateMaintenanceBodyReplacedPartsItemUnitCostMin = 0;
 
-
-
 export const UpdateMaintenanceBody = zod.object({
-  "type": zod.enum(['PREVENTIVE_SERVICE', 'INSPECTION', 'REPAIR', 'OTHER']).optional(),
-  "status": zod.enum(['SCHEDULED', 'IN_PROGRESS', 'COMPLETED']).optional(),
-  "maintenance_date": zod.coerce.date().optional(),
-  "cost": zod.number().min(updateMaintenanceBodyCostMin).nullish(),
-  "vendor": zod.string().nullish(),
-  "notes": zod.string().nullish(),
-  "replaced_parts": zod.array(zod.object({
-  "name": zod.string().min(1),
-  "brand": zod.string().optional(),
-  "quantity": zod.number().min(1).optional(),
-  "unitCost": zod.number().min(updateMaintenanceBodyReplacedPartsItemUnitCostMin).optional()
-})).nullish()
-})
+  type: zod
+    .enum(["PREVENTIVE_SERVICE", "INSPECTION", "REPAIR", "OTHER"])
+    .optional(),
+  status: zod.enum(["SCHEDULED", "IN_PROGRESS", "COMPLETED"]).optional(),
+  maintenance_date: zod.coerce.date().optional(),
+  cost: zod.number().min(updateMaintenanceBodyCostMin).nullish(),
+  vendor: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  replaced_parts: zod
+    .array(
+      zod.object({
+        name: zod.string().min(1),
+        brand: zod.string().optional(),
+        quantity: zod.number().min(1).optional(),
+        unitCost: zod
+          .number()
+          .min(updateMaintenanceBodyReplacedPartsItemUnitCostMin)
+          .optional(),
+      }),
+    )
+    .nullish(),
+});
 
 export const UpdateMaintenanceResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string(),
-  "type": zod.enum(['PREVENTIVE_SERVICE', 'INSPECTION', 'REPAIR', 'OTHER']),
-  "status": zod.enum(['SCHEDULED', 'IN_PROGRESS', 'COMPLETED']),
-  "maintenanceDate": zod.coerce.date(),
-  "completedAt": zod.coerce.date().nullish(),
-  "cost": zod.number().nullish(),
-  "vendor": zod.string().nullish(),
-  "notes": zod.string().nullish(),
-  "replacedParts": zod.array(zod.object({
-  "name": zod.string(),
-  "brand": zod.string().optional(),
-  "quantity": zod.number().optional(),
-  "unitCost": zod.number().optional()
-})).nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    vehicleId: zod.string(),
+    type: zod.enum(["PREVENTIVE_SERVICE", "INSPECTION", "REPAIR", "OTHER"]),
+    status: zod.enum(["SCHEDULED", "IN_PROGRESS", "COMPLETED"]),
+    maintenanceDate: zod.coerce.date(),
+    completedAt: zod.coerce.date().nullish(),
+    cost: zod.number().nullish(),
+    vendor: zod.string().nullish(),
+    notes: zod.string().nullish(),
+    replacedParts: zod
+      .array(
+        zod.object({
+          name: zod.string(),
+          brand: zod.string().optional(),
+          quantity: zod.number().optional(),
+          unitCost: zod.number().optional(),
+        }),
+      )
+      .nullish(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Soft delete a maintenance record in the current organization
  */
 export const DeleteMaintenanceParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('Maintenance ID')
-})
+  id: zod.coerce.string().uuid().describe("Maintenance ID"),
+});
 
-export const DeleteMaintenanceResponse = zod.void()
+export const DeleteMaintenanceResponse = zod.void();
 
 /**
  * @summary Complete a maintenance record in the current organization
  */
 export const CompleteMaintenanceParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('Maintenance ID')
-})
+  id: zod.coerce.string().uuid().describe("Maintenance ID"),
+});
 
 export const completeMaintenanceBodyCostMin = 0;
 
-
-
 export const CompleteMaintenanceBody = zod.object({
-  "cost": zod.number().min(completeMaintenanceBodyCostMin)
-})
+  cost: zod.number().min(completeMaintenanceBodyCostMin),
+});
 
 export const CompleteMaintenanceResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string(),
-  "type": zod.enum(['PREVENTIVE_SERVICE', 'INSPECTION', 'REPAIR', 'OTHER']),
-  "status": zod.enum(['SCHEDULED', 'IN_PROGRESS', 'COMPLETED']),
-  "maintenanceDate": zod.coerce.date(),
-  "completedAt": zod.coerce.date().nullish(),
-  "cost": zod.number().nullish(),
-  "vendor": zod.string().nullish(),
-  "notes": zod.string().nullish(),
-  "replacedParts": zod.array(zod.object({
-  "name": zod.string(),
-  "brand": zod.string().optional(),
-  "quantity": zod.number().optional(),
-  "unitCost": zod.number().optional()
-})).nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    vehicleId: zod.string(),
+    type: zod.enum(["PREVENTIVE_SERVICE", "INSPECTION", "REPAIR", "OTHER"]),
+    status: zod.enum(["SCHEDULED", "IN_PROGRESS", "COMPLETED"]),
+    maintenanceDate: zod.coerce.date(),
+    completedAt: zod.coerce.date().nullish(),
+    cost: zod.number().nullish(),
+    vendor: zod.string().nullish(),
+    notes: zod.string().nullish(),
+    replacedParts: zod
+      .array(
+        zod.object({
+          name: zod.string(),
+          brand: zod.string().optional(),
+          quantity: zod.number().optional(),
+          unitCost: zod.number().optional(),
+        }),
+      )
+      .nullish(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary List maintenance schedules in the current organization
  */
 export const ListMaintenanceSchedulesQueryParams = zod.object({
-  "vehicleId": zod.coerce.string().optional().describe('Filter by vehicle ID')
-})
+  vehicleId: zod.coerce.string().optional().describe("Filter by vehicle ID"),
+});
 
 export const ListMaintenanceSchedulesResponse = zod.object({
-  "data": zod.array(zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string(),
-  "maintenanceType": zod.enum(['PREVENTIVE_SERVICE', 'INSPECTION', 'REPAIR', 'OTHER']),
-  "scheduleType": zod.enum(['DATE', 'MILEAGE', 'DATE_OR_MILEAGE']),
-  "dateIntervalDays": zod.number().nullable(),
-  "nextDueDate": zod.coerce.date().nullable(),
-  "mileageInterval": zod.number().nullable(),
-  "nextDueMileage": zod.number().nullable(),
-  "isActive": zod.boolean(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-}))
-})
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      vehicleId: zod.string(),
+      maintenanceType: zod.enum([
+        "PREVENTIVE_SERVICE",
+        "INSPECTION",
+        "REPAIR",
+        "OTHER",
+      ]),
+      scheduleType: zod.enum(["DATE", "MILEAGE", "DATE_OR_MILEAGE"]),
+      dateIntervalDays: zod.number().nullable(),
+      nextDueDate: zod.coerce.date().nullable(),
+      mileageInterval: zod.number().nullable(),
+      nextDueMileage: zod.number().nullable(),
+      isActive: zod.boolean(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+});
 
 /**
  * @summary Create a maintenance schedule in the current organization
  */
 
-
-
 export const createMaintenanceScheduleBodyNextDueMileageMin = 0;
 
-
-
 export const CreateMaintenanceScheduleBody = zod.object({
-  "vehicle_id": zod.string().min(1),
-  "maintenance_type": zod.enum(['PREVENTIVE_SERVICE', 'INSPECTION', 'REPAIR', 'OTHER']),
-  "schedule_type": zod.enum(['DATE', 'MILEAGE', 'DATE_OR_MILEAGE']),
-  "date_interval_days": zod.number().min(1).nullish(),
-  "next_due_date": zod.coerce.date().nullish(),
-  "mileage_interval": zod.number().min(1).nullish(),
-  "next_due_mileage": zod.number().min(createMaintenanceScheduleBodyNextDueMileageMin).nullish(),
-  "is_active": zod.boolean().optional()
-})
+  vehicle_id: zod.string().min(1),
+  maintenance_type: zod.enum([
+    "PREVENTIVE_SERVICE",
+    "INSPECTION",
+    "REPAIR",
+    "OTHER",
+  ]),
+  schedule_type: zod.enum(["DATE", "MILEAGE", "DATE_OR_MILEAGE"]),
+  date_interval_days: zod.number().min(1).nullish(),
+  next_due_date: zod.coerce.date().nullish(),
+  mileage_interval: zod.number().min(1).nullish(),
+  next_due_mileage: zod
+    .number()
+    .min(createMaintenanceScheduleBodyNextDueMileageMin)
+    .nullish(),
+  is_active: zod.boolean().optional(),
+});
 
 export const CreateMaintenanceScheduleResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string(),
-  "maintenanceType": zod.enum(['PREVENTIVE_SERVICE', 'INSPECTION', 'REPAIR', 'OTHER']),
-  "scheduleType": zod.enum(['DATE', 'MILEAGE', 'DATE_OR_MILEAGE']),
-  "dateIntervalDays": zod.number().nullable(),
-  "nextDueDate": zod.coerce.date().nullable(),
-  "mileageInterval": zod.number().nullable(),
-  "nextDueMileage": zod.number().nullable(),
-  "isActive": zod.boolean(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    vehicleId: zod.string(),
+    maintenanceType: zod.enum([
+      "PREVENTIVE_SERVICE",
+      "INSPECTION",
+      "REPAIR",
+      "OTHER",
+    ]),
+    scheduleType: zod.enum(["DATE", "MILEAGE", "DATE_OR_MILEAGE"]),
+    dateIntervalDays: zod.number().nullable(),
+    nextDueDate: zod.coerce.date().nullable(),
+    mileageInterval: zod.number().nullable(),
+    nextDueMileage: zod.number().nullable(),
+    isActive: zod.boolean(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Get a maintenance schedule in the current organization
  */
 export const GetMaintenanceScheduleParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('Maintenance schedule ID')
-})
+  id: zod.coerce.string().uuid().describe("Maintenance schedule ID"),
+});
 
 export const GetMaintenanceScheduleResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string(),
-  "maintenanceType": zod.enum(['PREVENTIVE_SERVICE', 'INSPECTION', 'REPAIR', 'OTHER']),
-  "scheduleType": zod.enum(['DATE', 'MILEAGE', 'DATE_OR_MILEAGE']),
-  "dateIntervalDays": zod.number().nullable(),
-  "nextDueDate": zod.coerce.date().nullable(),
-  "mileageInterval": zod.number().nullable(),
-  "nextDueMileage": zod.number().nullable(),
-  "isActive": zod.boolean(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    vehicleId: zod.string(),
+    maintenanceType: zod.enum([
+      "PREVENTIVE_SERVICE",
+      "INSPECTION",
+      "REPAIR",
+      "OTHER",
+    ]),
+    scheduleType: zod.enum(["DATE", "MILEAGE", "DATE_OR_MILEAGE"]),
+    dateIntervalDays: zod.number().nullable(),
+    nextDueDate: zod.coerce.date().nullable(),
+    mileageInterval: zod.number().nullable(),
+    nextDueMileage: zod.number().nullable(),
+    isActive: zod.boolean(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Update a maintenance schedule in the current organization
  */
 export const UpdateMaintenanceScheduleParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('Maintenance schedule ID')
-})
-
-
+  id: zod.coerce.string().uuid().describe("Maintenance schedule ID"),
+});
 
 export const updateMaintenanceScheduleBodyNextDueMileageMin = 0;
 
-
-
 export const UpdateMaintenanceScheduleBody = zod.object({
-  "maintenance_type": zod.enum(['PREVENTIVE_SERVICE', 'INSPECTION', 'REPAIR', 'OTHER']).optional(),
-  "schedule_type": zod.enum(['DATE', 'MILEAGE', 'DATE_OR_MILEAGE']).optional(),
-  "date_interval_days": zod.number().min(1).nullish(),
-  "next_due_date": zod.coerce.date().nullish(),
-  "mileage_interval": zod.number().min(1).nullish(),
-  "next_due_mileage": zod.number().min(updateMaintenanceScheduleBodyNextDueMileageMin).nullish(),
-  "is_active": zod.boolean().optional()
-})
+  maintenance_type: zod
+    .enum(["PREVENTIVE_SERVICE", "INSPECTION", "REPAIR", "OTHER"])
+    .optional(),
+  schedule_type: zod.enum(["DATE", "MILEAGE", "DATE_OR_MILEAGE"]).optional(),
+  date_interval_days: zod.number().min(1).nullish(),
+  next_due_date: zod.coerce.date().nullish(),
+  mileage_interval: zod.number().min(1).nullish(),
+  next_due_mileage: zod
+    .number()
+    .min(updateMaintenanceScheduleBodyNextDueMileageMin)
+    .nullish(),
+  is_active: zod.boolean().optional(),
+});
 
 export const UpdateMaintenanceScheduleResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string(),
-  "maintenanceType": zod.enum(['PREVENTIVE_SERVICE', 'INSPECTION', 'REPAIR', 'OTHER']),
-  "scheduleType": zod.enum(['DATE', 'MILEAGE', 'DATE_OR_MILEAGE']),
-  "dateIntervalDays": zod.number().nullable(),
-  "nextDueDate": zod.coerce.date().nullable(),
-  "mileageInterval": zod.number().nullable(),
-  "nextDueMileage": zod.number().nullable(),
-  "isActive": zod.boolean(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    vehicleId: zod.string(),
+    maintenanceType: zod.enum([
+      "PREVENTIVE_SERVICE",
+      "INSPECTION",
+      "REPAIR",
+      "OTHER",
+    ]),
+    scheduleType: zod.enum(["DATE", "MILEAGE", "DATE_OR_MILEAGE"]),
+    dateIntervalDays: zod.number().nullable(),
+    nextDueDate: zod.coerce.date().nullable(),
+    mileageInterval: zod.number().nullable(),
+    nextDueMileage: zod.number().nullable(),
+    isActive: zod.boolean(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Soft delete a maintenance schedule in the current organization
  */
 export const DeleteMaintenanceScheduleParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('Maintenance schedule ID')
-})
+  id: zod.coerce.string().uuid().describe("Maintenance schedule ID"),
+});
 
-export const DeleteMaintenanceScheduleResponse = zod.void()
+export const DeleteMaintenanceScheduleResponse = zod.void();
 
 /**
  * @summary List maintenance history for a vehicle in the current organization
  */
 export const ListVehicleMaintenanceParams = zod.object({
-  "vehicleId": zod.coerce.string().uuid().describe('Vehicle ID')
-})
+  vehicleId: zod.coerce.string().uuid().describe("Vehicle ID"),
+});
 
 export const ListVehicleMaintenanceResponse = zod.object({
-  "data": zod.array(zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string(),
-  "type": zod.enum(['PREVENTIVE_SERVICE', 'INSPECTION', 'REPAIR', 'OTHER']),
-  "status": zod.enum(['SCHEDULED', 'IN_PROGRESS', 'COMPLETED']),
-  "maintenanceDate": zod.coerce.date(),
-  "completedAt": zod.coerce.date().nullish(),
-  "cost": zod.number().nullish(),
-  "vendor": zod.string().nullish(),
-  "notes": zod.string().nullish(),
-  "replacedParts": zod.array(zod.object({
-  "name": zod.string(),
-  "brand": zod.string().optional(),
-  "quantity": zod.number().optional(),
-  "unitCost": zod.number().optional()
-})).nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-}))
-})
-
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      vehicleId: zod.string(),
+      type: zod.enum(["PREVENTIVE_SERVICE", "INSPECTION", "REPAIR", "OTHER"]),
+      status: zod.enum(["SCHEDULED", "IN_PROGRESS", "COMPLETED"]),
+      maintenanceDate: zod.coerce.date(),
+      completedAt: zod.coerce.date().nullish(),
+      cost: zod.number().nullish(),
+      vendor: zod.string().nullish(),
+      notes: zod.string().nullish(),
+      replacedParts: zod
+        .array(
+          zod.object({
+            name: zod.string(),
+            brand: zod.string().optional(),
+            quantity: zod.number().optional(),
+            unitCost: zod.number().optional(),
+          }),
+        )
+        .nullish(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+});

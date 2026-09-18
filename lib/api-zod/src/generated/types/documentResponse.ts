@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { DocumentResponseCategory } from './documentResponseCategory';
+import type { DocumentResponseCategory } from "./documentResponseCategory";
 
 export interface DocumentResponse {
   id: string;

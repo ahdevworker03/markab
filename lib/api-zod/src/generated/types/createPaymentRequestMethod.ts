@@ -6,12 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type CreatePaymentRequestMethod = typeof CreatePaymentRequestMethod[keyof typeof CreatePaymentRequestMethod];
-
+export type CreatePaymentRequestMethod =
+  (typeof CreatePaymentRequestMethod)[keyof typeof CreatePaymentRequestMethod];
 
 export const CreatePaymentRequestMethod = {
-  CASH: 'CASH',
-  CARD: 'CARD',
-  TRANSFER: 'TRANSFER',
-  OTHER: 'OTHER',
+  CASH: "CASH",
+  CARD: "CARD",
+  TRANSFER: "TRANSFER",
+  OTHER: "OTHER",
 } as const;

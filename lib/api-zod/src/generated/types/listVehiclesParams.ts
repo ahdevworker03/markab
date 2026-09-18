@@ -7,10 +7,10 @@
  */
 
 export type ListVehiclesParams = {
-/**
- * Search vehicles by plate number, make, model, or year
- * @minLength 1
- * @maxLength 200
- */
-search?: string;
+  /**
+   * Search vehicles by plate number, make, model, or year
+   * @minLength 1
+   * @maxLength 200
+   */
+  search?: string;
 };

@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type CreateVehicleRequestTransmission = typeof CreateVehicleRequestTransmission[keyof typeof CreateVehicleRequestTransmission];
-
+export type CreateVehicleRequestTransmission =
+  (typeof CreateVehicleRequestTransmission)[keyof typeof CreateVehicleRequestTransmission];
 
 export const CreateVehicleRequestTransmission = {
-  MANUAL: 'MANUAL',
-  AUTOMATIC: 'AUTOMATIC',
+  MANUAL: "MANUAL",
+  AUTOMATIC: "AUTOMATIC",
 } as const;

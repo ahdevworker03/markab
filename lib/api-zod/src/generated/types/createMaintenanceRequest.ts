@@ -5,8 +5,8 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { CreateMaintenanceRequestType } from './createMaintenanceRequestType';
-import type { MaintenanceReplacedPart } from './maintenanceReplacedPart';
+import type { CreateMaintenanceRequestType } from "./createMaintenanceRequestType";
+import type { MaintenanceReplacedPart } from "./maintenanceReplacedPart";
 
 export interface CreateMaintenanceRequest {
   /** @minLength 1 */

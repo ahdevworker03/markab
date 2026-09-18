@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { EmployeeInvitationResponseRole } from './employeeInvitationResponseRole';
+import type { EmployeeInvitationResponseRole } from "./employeeInvitationResponseRole";
 
 export interface EmployeeInvitationResponse {
   id: string;

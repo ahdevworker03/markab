@@ -7,8 +7,8 @@
  */
 
 export type ListMaintenanceParams = {
-/**
- * Filter by vehicle ID
- */
-vehicleId?: string;
+  /**
+   * Filter by vehicle ID
+   */
+  vehicleId?: string;
 };

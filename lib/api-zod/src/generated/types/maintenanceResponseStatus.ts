@@ -6,11 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type MaintenanceResponseStatus = typeof MaintenanceResponseStatus[keyof typeof MaintenanceResponseStatus];
-
+export type MaintenanceResponseStatus =
+  (typeof MaintenanceResponseStatus)[keyof typeof MaintenanceResponseStatus];
 
 export const MaintenanceResponseStatus = {
-  SCHEDULED: 'SCHEDULED',
-  IN_PROGRESS: 'IN_PROGRESS',
-  COMPLETED: 'COMPLETED',
+  SCHEDULED: "SCHEDULED",
+  IN_PROGRESS: "IN_PROGRESS",
+  COMPLETED: "COMPLETED",
 } as const;

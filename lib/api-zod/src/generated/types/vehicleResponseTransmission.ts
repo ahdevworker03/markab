@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type VehicleResponseTransmission = typeof VehicleResponseTransmission[keyof typeof VehicleResponseTransmission];
-
+export type VehicleResponseTransmission =
+  (typeof VehicleResponseTransmission)[keyof typeof VehicleResponseTransmission];
 
 export const VehicleResponseTransmission = {
-  MANUAL: 'MANUAL',
-  AUTOMATIC: 'AUTOMATIC',
+  MANUAL: "MANUAL",
+  AUTOMATIC: "AUTOMATIC",
 } as const;

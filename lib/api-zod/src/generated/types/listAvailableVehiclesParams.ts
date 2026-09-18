@@ -7,12 +7,12 @@
  */
 
 export type ListAvailableVehiclesParams = {
-/**
- * Pickup date-time
- */
-pickupDate: Date;
-/**
- * Expected return date-time
- */
-expectedReturnDate: Date;
+  /**
+   * Pickup date-time
+   */
+  pickupDate: Date;
+  /**
+   * Expected return date-time
+   */
+  expectedReturnDate: Date;
 };

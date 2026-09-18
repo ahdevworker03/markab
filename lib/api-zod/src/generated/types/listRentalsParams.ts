@@ -7,10 +7,10 @@
  */
 
 export type ListRentalsParams = {
-/**
- * Search rentals by customer or vehicle
- * @minLength 1
- * @maxLength 200
- */
-search?: string;
+  /**
+   * Search rentals by customer or vehicle
+   * @minLength 1
+   * @maxLength 200
+   */
+  search?: string;
 };

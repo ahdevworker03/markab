@@ -6,11 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type UpdateTaskRequestRecurrenceUnit = typeof UpdateTaskRequestRecurrenceUnit[keyof typeof UpdateTaskRequestRecurrenceUnit] | null;
-
+export type UpdateTaskRequestRecurrenceUnit =
+  | (typeof UpdateTaskRequestRecurrenceUnit)[keyof typeof UpdateTaskRequestRecurrenceUnit]
+  | null;
 
 export const UpdateTaskRequestRecurrenceUnit = {
-  DAY: 'DAY',
-  WEEK: 'WEEK',
-  MONTH: 'MONTH',
+  DAY: "DAY",
+  WEEK: "WEEK",
+  MONTH: "MONTH",
 } as const;

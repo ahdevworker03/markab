@@ -5,8 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import * as zod from 'zod';
-
+import * as zod from "zod";
 
 /**
  * Registers an organization with an OWNER user and returns access and refresh tokens.
@@ -14,99 +13,98 @@ import * as zod from 'zod';
  */
 export const registerOrganizationBodyPasswordMin = 8;
 
-
-
-
 export const RegisterOrganizationBody = zod.object({
-  "email": zod.string().email(),
-  "password": zod.string().min(registerOrganizationBodyPasswordMin),
-  "organizationName": zod.string().min(1)
-})
+  email: zod.string().email(),
+  password: zod.string().min(registerOrganizationBodyPasswordMin),
+  organizationName: zod.string().min(1),
+});
 
 export const RegisterOrganizationResponse = zod.object({
-  "data": zod.object({
-  "accessToken": zod.string(),
-  "refreshToken": zod.string(),
-  "expiresAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    accessToken: zod.string(),
+    refreshToken: zod.string(),
+    expiresAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * Authenticates a user and returns access and refresh tokens.
  * @summary Login
  */
 
-
-
 export const LoginBody = zod.object({
-  "email": zod.string().email(),
-  "password": zod.string().min(1)
-})
+  email: zod.string().email(),
+  password: zod.string().min(1),
+});
 
 export const LoginResponse = zod.object({
-  "data": zod.object({
-  "accessToken": zod.string(),
-  "refreshToken": zod.string(),
-  "expiresAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    accessToken: zod.string(),
+    refreshToken: zod.string(),
+    expiresAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * Exchanges a valid refresh token for a new access and refresh token pair. The previous refresh token is invalidated.
  * @summary Refresh access token
  */
 
-
-
 export const RefreshTokenBody = zod.object({
-  "refreshToken": zod.string().min(1)
-})
+  refreshToken: zod.string().min(1),
+});
 
 export const RefreshTokenResponse = zod.object({
-  "data": zod.object({
-  "accessToken": zod.string(),
-  "refreshToken": zod.string(),
-  "expiresAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    accessToken: zod.string(),
+    refreshToken: zod.string(),
+    expiresAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * Revokes the provided refresh token and ends the authenticated session.
  * @summary Logout
  */
 
-
-
 export const LogoutBody = zod.object({
-  "refreshToken": zod.string().min(1)
-})
+  refreshToken: zod.string().min(1),
+});
 
-export const LogoutResponse = zod.void()
+export const LogoutResponse = zod.void();
 
 /**
  * Returns the current authenticated user when a valid active bearer token is supplied. Returns null only when the Authorization header is absent or does not use the supported Bearer format. A suspended or cancelled organization still returns its current status. Invalid, expired, and deleted-user bearer tokens are rejected.
  * @summary Get current user
  */
 export const GetCurrentUserResponse = zod.object({
-  "data": zod.union([zod.object({
-  "id": zod.string(),
-  "email": zod.string(),
-  "role": zod.enum(['PLATFORM_OWNER', 'OWNER', 'EMPLOYEE']),
-  "organizationId": zod.string(),
-  "organizationStatus": zod.enum(['TRIAL', 'ACTIVE', 'SUSPENDED', 'CANCELLED']),
-  "createdAt": zod.coerce.date()
-}),zod.null()])
-})
+  data: zod.union([
+    zod.object({
+      id: zod.string(),
+      email: zod.string(),
+      role: zod.enum(["PLATFORM_OWNER", "OWNER", "EMPLOYEE"]),
+      organizationId: zod.string(),
+      organizationStatus: zod.enum([
+        "TRIAL",
+        "ACTIVE",
+        "SUSPENDED",
+        "CANCELLED",
+      ]),
+      createdAt: zod.coerce.date(),
+    }),
+    zod.null(),
+  ]),
+});
 
 /**
  * Always returns the same response whether or not the email belongs to an active account.
  * @summary Request a password reset
  */
 export const RequestPasswordResetBody = zod.object({
-  "email": zod.string().email()
-})
+  email: zod.string().email(),
+});
 
-export const RequestPasswordResetResponse = zod.void()
+export const RequestPasswordResetResponse = zod.void();
 
 /**
  * @summary Confirm a password reset with a one-time token
@@ -115,14 +113,12 @@ export const confirmPasswordResetBodyTokenMin = 32;
 
 export const confirmPasswordResetBodyPasswordMin = 8;
 
-
-
 export const ConfirmPasswordResetBody = zod.object({
-  "token": zod.string().min(confirmPasswordResetBodyTokenMin),
-  "password": zod.string().min(confirmPasswordResetBodyPasswordMin)
-})
+  token: zod.string().min(confirmPasswordResetBodyTokenMin),
+  password: zod.string().min(confirmPasswordResetBodyPasswordMin),
+});
 
-export const ConfirmPasswordResetResponse = zod.void()
+export const ConfirmPasswordResetResponse = zod.void();
 
 /**
  * @summary Accept an employee invitation and set a password
@@ -131,18 +127,15 @@ export const acceptEmployeeInvitationBodyTokenMin = 32;
 
 export const acceptEmployeeInvitationBodyPasswordMin = 8;
 
-
-
 export const AcceptEmployeeInvitationBody = zod.object({
-  "token": zod.string().min(acceptEmployeeInvitationBodyTokenMin),
-  "password": zod.string().min(acceptEmployeeInvitationBodyPasswordMin)
-})
+  token: zod.string().min(acceptEmployeeInvitationBodyTokenMin),
+  password: zod.string().min(acceptEmployeeInvitationBodyPasswordMin),
+});
 
 export const AcceptEmployeeInvitationResponse = zod.object({
-  "data": zod.object({
-  "accessToken": zod.string(),
-  "refreshToken": zod.string(),
-  "expiresAt": zod.coerce.date()
-})
-})
-
+  data: zod.object({
+    accessToken: zod.string(),
+    refreshToken: zod.string(),
+    expiresAt: zod.coerce.date(),
+  }),
+});

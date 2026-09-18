@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type TaskResponseStatus = typeof TaskResponseStatus[keyof typeof TaskResponseStatus];
-
+export type TaskResponseStatus =
+  (typeof TaskResponseStatus)[keyof typeof TaskResponseStatus];
 
 export const TaskResponseStatus = {
-  PENDING: 'PENDING',
-  COMPLETED: 'COMPLETED',
+  PENDING: "PENDING",
+  COMPLETED: "COMPLETED",
 } as const;

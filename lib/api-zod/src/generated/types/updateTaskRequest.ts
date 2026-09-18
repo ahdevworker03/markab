@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { UpdateTaskRequestRecurrenceUnit } from './updateTaskRequestRecurrenceUnit';
+import type { UpdateTaskRequestRecurrenceUnit } from "./updateTaskRequestRecurrenceUnit";
 
 export interface UpdateTaskRequest {
   /** @minLength 1 */

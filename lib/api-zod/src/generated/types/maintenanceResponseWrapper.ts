@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { MaintenanceResponse } from './maintenanceResponse';
+import type { MaintenanceResponse } from "./maintenanceResponse";
 
 export interface MaintenanceResponseWrapper {
   data: MaintenanceResponse;

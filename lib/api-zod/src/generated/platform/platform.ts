@@ -5,32 +5,31 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import * as zod from 'zod';
-
+import * as zod from "zod";
 
 /**
  * Updates tenant lifecycle status. This endpoint is restricted to PLATFORM_OWNER.
  * @summary Update an organization lifecycle status
  */
 export const UpdateOrganizationStatusParams = zod.object({
-  "organizationId": zod.coerce.string().uuid()
-})
+  organizationId: zod.coerce.string().uuid(),
+});
 
 export const UpdateOrganizationStatusBody = zod.object({
-  "status": zod.enum(['TRIAL', 'ACTIVE', 'SUSPENDED', 'CANCELLED'])
-})
+  status: zod.enum(["TRIAL", "ACTIVE", "SUSPENDED", "CANCELLED"]),
+});
 
 export const UpdateOrganizationStatusResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "name": zod.string(),
-  "status": zod.enum(['TRIAL', 'ACTIVE', 'SUSPENDED', 'CANCELLED']),
-  "legalName": zod.string().nullable(),
-  "phone": zod.string().nullable(),
-  "email": zod.string().email().nullable(),
-  "address": zod.string().nullable(),
-  "contractFooterText": zod.string().nullable(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    name: zod.string(),
+    status: zod.enum(["TRIAL", "ACTIVE", "SUSPENDED", "CANCELLED"]),
+    legalName: zod.string().nullable(),
+    phone: zod.string().nullable(),
+    email: zod.string().email().nullable(),
+    address: zod.string().nullable(),
+    contractFooterText: zod.string().nullable(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});

@@ -6,12 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type MaintenanceResponseType = typeof MaintenanceResponseType[keyof typeof MaintenanceResponseType];
-
+export type MaintenanceResponseType =
+  (typeof MaintenanceResponseType)[keyof typeof MaintenanceResponseType];
 
 export const MaintenanceResponseType = {
-  PREVENTIVE_SERVICE: 'PREVENTIVE_SERVICE',
-  INSPECTION: 'INSPECTION',
-  REPAIR: 'REPAIR',
-  OTHER: 'OTHER',
+  PREVENTIVE_SERVICE: "PREVENTIVE_SERVICE",
+  INSPECTION: "INSPECTION",
+  REPAIR: "REPAIR",
+  OTHER: "OTHER",
 } as const;

@@ -6,11 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type DocumentResponseCategory = typeof DocumentResponseCategory[keyof typeof DocumentResponseCategory];
-
+export type DocumentResponseCategory =
+  (typeof DocumentResponseCategory)[keyof typeof DocumentResponseCategory];
 
 export const DocumentResponseCategory = {
-  REGISTRATION: 'REGISTRATION',
-  INSURANCE: 'INSURANCE',
-  OTHER: 'OTHER',
+  REGISTRATION: "REGISTRATION",
+  INSURANCE: "INSURANCE",
+  OTHER: "OTHER",
 } as const;

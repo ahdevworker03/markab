@@ -5,108 +5,119 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import * as zod from 'zod';
-
+import * as zod from "zod";
 
 /**
  * @summary List users in the current organization
  */
 export const ListUsersResponse = zod.object({
-  "data": zod.array(zod.object({
-  "id": zod.string(),
-  "email": zod.string(),
-  "role": zod.enum(['PLATFORM_OWNER', 'OWNER', 'EMPLOYEE']),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-}))
-})
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      email: zod.string(),
+      role: zod.enum(["PLATFORM_OWNER", "OWNER", "EMPLOYEE"]),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+});
 
 /**
  * @summary Create a user in the current organization
  */
 export const createUserBodyPasswordMin = 8;
 
-
-
 export const CreateUserBody = zod.object({
-  "email": zod.string().email(),
-  "password": zod.string().min(createUserBodyPasswordMin),
-  "role": zod.enum(['EMPLOYEE'])
-})
+  email: zod.string().email(),
+  password: zod.string().min(createUserBodyPasswordMin),
+  role: zod.enum(["EMPLOYEE"]),
+});
 
 export const CreateUserResponse = zod.object({
-  "data": zod.union([zod.object({
-  "id": zod.string(),
-  "email": zod.string(),
-  "role": zod.enum(['PLATFORM_OWNER', 'OWNER', 'EMPLOYEE']),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-}),zod.null()])
-})
+  data: zod.union([
+    zod.object({
+      id: zod.string(),
+      email: zod.string(),
+      role: zod.enum(["PLATFORM_OWNER", "OWNER", "EMPLOYEE"]),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+    zod.null(),
+  ]),
+});
 
 /**
  * @summary Get a user in the current organization
  */
 export const GetUserParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('User ID')
-})
+  id: zod.coerce.string().uuid().describe("User ID"),
+});
 
 export const GetUserResponse = zod.object({
-  "data": zod.union([zod.object({
-  "id": zod.string(),
-  "email": zod.string(),
-  "role": zod.enum(['PLATFORM_OWNER', 'OWNER', 'EMPLOYEE']),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-}),zod.null()])
-})
+  data: zod.union([
+    zod.object({
+      id: zod.string(),
+      email: zod.string(),
+      role: zod.enum(["PLATFORM_OWNER", "OWNER", "EMPLOYEE"]),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+    zod.null(),
+  ]),
+});
 
 /**
  * @summary Update a user role in the current organization
  */
 export const UpdateUserParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('User ID')
-})
+  id: zod.coerce.string().uuid().describe("User ID"),
+});
 
 export const UpdateUserBody = zod.object({
-  "role": zod.enum(['EMPLOYEE'])
-})
+  role: zod.enum(["EMPLOYEE"]),
+});
 
 export const UpdateUserResponse = zod.object({
-  "data": zod.union([zod.object({
-  "id": zod.string(),
-  "email": zod.string(),
-  "role": zod.enum(['PLATFORM_OWNER', 'OWNER', 'EMPLOYEE']),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-}),zod.null()])
-})
+  data: zod.union([
+    zod.object({
+      id: zod.string(),
+      email: zod.string(),
+      role: zod.enum(["PLATFORM_OWNER", "OWNER", "EMPLOYEE"]),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+    zod.null(),
+  ]),
+});
 
 /**
  * @summary Soft delete a user in the current organization
  */
 export const DeleteUserParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('User ID')
-})
+  id: zod.coerce.string().uuid().describe("User ID"),
+});
 
-export const DeleteUserResponse = zod.void()
+export const DeleteUserResponse = zod.void();
 
 /**
  * Creates an EMPLOYEE-only invitation for the authenticated owner's organization. The acceptance token is returned once for manual secure delivery and is never stored in plaintext.
  * @summary Create or resend an employee invitation
  */
 export const CreateEmployeeInvitationBody = zod.object({
-  "email": zod.string().email()
-})
+  email: zod.string().email(),
+});
 
 export const CreateEmployeeInvitationResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "email": zod.string().email(),
-  "role": zod.enum(['EMPLOYEE']),
-  "expiresAt": zod.coerce.date(),
-  "acceptanceToken": zod.string().describe('One-time token for secure manual delivery. It is never stored in plaintext and is not returned by later reads.'),
-  "createdAt": zod.coerce.date()
-})
-})
-
+  data: zod.object({
+    id: zod.string(),
+    email: zod.string().email(),
+    role: zod.enum(["EMPLOYEE"]),
+    expiresAt: zod.coerce.date(),
+    acceptanceToken: zod
+      .string()
+      .describe(
+        "One-time token for secure manual delivery. It is never stored in plaintext and is not returned by later reads.",
+      ),
+    createdAt: zod.coerce.date(),
+  }),
+});

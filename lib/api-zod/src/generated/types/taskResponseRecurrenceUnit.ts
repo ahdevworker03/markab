@@ -6,11 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type TaskResponseRecurrenceUnit = typeof TaskResponseRecurrenceUnit[keyof typeof TaskResponseRecurrenceUnit] | null;
-
+export type TaskResponseRecurrenceUnit =
+  | (typeof TaskResponseRecurrenceUnit)[keyof typeof TaskResponseRecurrenceUnit]
+  | null;
 
 export const TaskResponseRecurrenceUnit = {
-  DAY: 'DAY',
-  WEEK: 'WEEK',
-  MONTH: 'MONTH',
+  DAY: "DAY",
+  WEEK: "WEEK",
+  MONTH: "MONTH",
 } as const;

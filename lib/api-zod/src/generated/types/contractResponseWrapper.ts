@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { ContractResponse } from './contractResponse';
+import type { ContractResponse } from "./contractResponse";
 
 export interface ContractResponseWrapper {
   data: ContractResponse;
