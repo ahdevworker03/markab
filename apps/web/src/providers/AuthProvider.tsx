@@ -1,7 +1,27 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { getCurrentUser, login as apiLogin, logout as apiLogout, refreshToken as apiRefreshToken, setAuthRefreshHandler } from "@workspace/api-client-react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  getCurrentUser,
+  login as apiLogin,
+  logout as apiLogout,
+  refreshToken as apiRefreshToken,
+  setAuthRefreshHandler,
+} from "@workspace/api-client-react";
 import type { CurrentUserResponse } from "@workspace/api-client-react";
-import { getAccessToken, getRefreshToken, setTokens, clearTokens } from "@/lib/auth-token";
+import {
+  getAccessToken,
+  getRefreshToken,
+  setTokens,
+  clearTokens,
+} from "@/lib/auth-token";
 
 interface LoginParams {
   email: string;
@@ -19,22 +39,35 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<CurrentUserResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const clearSession = useCallback(() => {
+    queryClient.clear();
+    clearTokens();
+    setUser(null);
+  }, [queryClient]);
+
   const refreshSession = useCallback(async (): Promise<boolean> => {
     const refreshToken = getRefreshToken();
-    if (!refreshToken) return false;
-    try {
-      const refreshed = await apiRefreshToken({ refreshToken });
-      setTokens(refreshed.data.accessToken, refreshed.data.refreshToken, refreshed.data.expiresAt);
-      return true;
-    } catch {
-      clearTokens();
-      setUser(null);
+    if (!refreshToken) {
+      clearSession();
       return false;
     }
-  }, []);
+    try {
+      const refreshed = await apiRefreshToken({ refreshToken });
+      setTokens(
+        refreshed.data.accessToken,
+        refreshed.data.refreshToken,
+        refreshed.data.expiresAt,
+      );
+      return true;
+    } catch {
+      clearSession();
+      return false;
+    }
+  }, [clearSession]);
 
   useEffect(() => {
     setAuthRefreshHandler(refreshSession);
@@ -60,16 +93,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (result?.data) {
           setUser(result.data);
         } else {
-          clearTokens();
-          setUser(null);
+          clearSession();
         }
       } catch {
         if (await refreshSession()) {
-          const result = await getCurrentUser();
-          if (!cancelled) setUser(result?.data ?? null);
-        } else if (!cancelled) {
-          clearTokens();
-          setUser(null);
+          try {
+            const result = await getCurrentUser();
+            if (cancelled) return;
+
+            if (result?.data) {
+              setUser(result.data);
+            } else {
+              clearSession();
+            }
+          } catch {
+            if (!cancelled) clearSession();
+          }
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -81,19 +120,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [refreshSession]);
+  }, [clearSession, refreshSession]);
 
-  const login = useCallback(async ({ email, password }: LoginParams) => {
-    const result = await apiLogin({ email, password });
+  const login = useCallback(
+    async ({ email, password }: LoginParams) => {
+      clearSession();
 
-    setTokens(result.data.accessToken, result.data.refreshToken, result.data.expiresAt);
+      try {
+        const result = await apiLogin({ email, password });
+        setTokens(
+          result.data.accessToken,
+          result.data.refreshToken,
+          result.data.expiresAt,
+        );
 
-    const me = await getCurrentUser();
-    setUser(me?.data ?? null);
-  }, []);
+        const me = await getCurrentUser();
+        if (!me?.data) throw new Error("Invalid current user response.");
+
+        setUser(me.data);
+      } catch (error) {
+        clearSession();
+        throw error;
+      }
+    },
+    [clearSession],
+  );
 
   const logout = useCallback(async () => {
     const refreshToken = getRefreshToken();
+
+    clearSession();
 
     if (refreshToken) {
       try {
@@ -102,10 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Ignore logout errors — clear local session regardless.
       }
     }
-
-    clearTokens();
-    setUser(null);
-  }, []);
+  }, [clearSession]);
 
   const value = useMemo(
     () => ({
