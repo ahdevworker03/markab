@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { CurrentUserResponse } from './currentUserResponse';
+import type { CurrentUserResponse } from "./currentUserResponse";
 
 export interface CurrentUserResponseWrapper {
   data: CurrentUserResponse | null;

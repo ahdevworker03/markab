@@ -6,12 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type CreateMaintenanceScheduleRequestMaintenanceType = typeof CreateMaintenanceScheduleRequestMaintenanceType[keyof typeof CreateMaintenanceScheduleRequestMaintenanceType];
-
+export type CreateMaintenanceScheduleRequestMaintenanceType =
+  (typeof CreateMaintenanceScheduleRequestMaintenanceType)[keyof typeof CreateMaintenanceScheduleRequestMaintenanceType];
 
 export const CreateMaintenanceScheduleRequestMaintenanceType = {
-  PREVENTIVE_SERVICE: 'PREVENTIVE_SERVICE',
-  INSPECTION: 'INSPECTION',
-  REPAIR: 'REPAIR',
-  OTHER: 'OTHER',
+  PREVENTIVE_SERVICE: "PREVENTIVE_SERVICE",
+  INSPECTION: "INSPECTION",
+  REPAIR: "REPAIR",
+  OTHER: "OTHER",
 } as const;

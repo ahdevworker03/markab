@@ -6,11 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type UpdateMaintenanceScheduleRequestScheduleType = typeof UpdateMaintenanceScheduleRequestScheduleType[keyof typeof UpdateMaintenanceScheduleRequestScheduleType];
-
+export type UpdateMaintenanceScheduleRequestScheduleType =
+  (typeof UpdateMaintenanceScheduleRequestScheduleType)[keyof typeof UpdateMaintenanceScheduleRequestScheduleType];
 
 export const UpdateMaintenanceScheduleRequestScheduleType = {
-  DATE: 'DATE',
-  MILEAGE: 'MILEAGE',
-  DATE_OR_MILEAGE: 'DATE_OR_MILEAGE',
+  DATE: "DATE",
+  MILEAGE: "MILEAGE",
+  DATE_OR_MILEAGE: "DATE_OR_MILEAGE",
 } as const;

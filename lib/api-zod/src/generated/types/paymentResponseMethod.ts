@@ -6,12 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type PaymentResponseMethod = typeof PaymentResponseMethod[keyof typeof PaymentResponseMethod];
-
+export type PaymentResponseMethod =
+  (typeof PaymentResponseMethod)[keyof typeof PaymentResponseMethod];
 
 export const PaymentResponseMethod = {
-  CASH: 'CASH',
-  CARD: 'CARD',
-  TRANSFER: 'TRANSFER',
-  OTHER: 'OTHER',
+  CASH: "CASH",
+  CARD: "CARD",
+  TRANSFER: "TRANSFER",
+  OTHER: "OTHER",
 } as const;

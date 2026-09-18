@@ -5,8 +5,8 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { UpdateMaintenanceScheduleRequestMaintenanceType } from './updateMaintenanceScheduleRequestMaintenanceType';
-import type { UpdateMaintenanceScheduleRequestScheduleType } from './updateMaintenanceScheduleRequestScheduleType';
+import type { UpdateMaintenanceScheduleRequestMaintenanceType } from "./updateMaintenanceScheduleRequestMaintenanceType";
+import type { UpdateMaintenanceScheduleRequestScheduleType } from "./updateMaintenanceScheduleRequestScheduleType";
 
 export interface UpdateMaintenanceScheduleRequest {
   maintenance_type?: UpdateMaintenanceScheduleRequestMaintenanceType;

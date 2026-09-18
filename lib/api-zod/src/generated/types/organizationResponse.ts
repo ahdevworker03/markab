@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { OrganizationStatus } from './organizationStatus';
+import type { OrganizationStatus } from "./organizationStatus";
 
 export interface OrganizationResponse {
   id: string;

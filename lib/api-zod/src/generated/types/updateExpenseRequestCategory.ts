@@ -6,13 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type UpdateExpenseRequestCategory = typeof UpdateExpenseRequestCategory[keyof typeof UpdateExpenseRequestCategory];
-
+export type UpdateExpenseRequestCategory =
+  (typeof UpdateExpenseRequestCategory)[keyof typeof UpdateExpenseRequestCategory];
 
 export const UpdateExpenseRequestCategory = {
-  FUEL: 'FUEL',
-  INSURANCE: 'INSURANCE',
-  REGISTRATION: 'REGISTRATION',
-  CLEANING: 'CLEANING',
-  OTHER: 'OTHER',
+  FUEL: "FUEL",
+  INSURANCE: "INSURANCE",
+  REGISTRATION: "REGISTRATION",
+  CLEANING: "CLEANING",
+  OTHER: "OTHER",
 } as const;

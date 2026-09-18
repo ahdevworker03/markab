@@ -6,9 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type CreateUserRequestRole = typeof CreateUserRequestRole[keyof typeof CreateUserRequestRole];
-
+export type CreateUserRequestRole =
+  (typeof CreateUserRequestRole)[keyof typeof CreateUserRequestRole];
 
 export const CreateUserRequestRole = {
-  EMPLOYEE: 'EMPLOYEE',
+  EMPLOYEE: "EMPLOYEE",
 } as const;

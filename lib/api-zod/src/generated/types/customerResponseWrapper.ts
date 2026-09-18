@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { CustomerResponse } from './customerResponse';
+import type { CustomerResponse } from "./customerResponse";
 
 export interface CustomerResponseWrapper {
   data: CustomerResponse;

@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { ExpenseResponseCategory } from './expenseResponseCategory';
+import type { ExpenseResponseCategory } from "./expenseResponseCategory";
 
 export interface ExpenseResponse {
   id: string;

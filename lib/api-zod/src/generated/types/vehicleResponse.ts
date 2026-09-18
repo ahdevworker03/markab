@@ -5,9 +5,9 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { VehicleResponseFuelType } from './vehicleResponseFuelType';
-import type { VehicleResponseStatus } from './vehicleResponseStatus';
-import type { VehicleResponseTransmission } from './vehicleResponseTransmission';
+import type { VehicleResponseFuelType } from "./vehicleResponseFuelType";
+import type { VehicleResponseStatus } from "./vehicleResponseStatus";
+import type { VehicleResponseTransmission } from "./vehicleResponseTransmission";
 
 export interface VehicleResponse {
   id: string;

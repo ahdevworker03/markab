@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { DocumentResponse } from './documentResponse';
+import type { DocumentResponse } from "./documentResponse";
 
 export interface DocumentListResponse {
   data: DocumentResponse[];

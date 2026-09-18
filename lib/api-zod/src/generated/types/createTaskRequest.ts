@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { CreateTaskRequestRecurrenceUnit } from './createTaskRequestRecurrenceUnit';
+import type { CreateTaskRequestRecurrenceUnit } from "./createTaskRequestRecurrenceUnit";
 
 export interface CreateTaskRequest {
   /** @minLength 1 */
@@ -13,17 +13,17 @@ export interface CreateTaskRequest {
   due_date: Date;
   notes?: string;
   /**
-     * Must be provided with recurrence_unit, or both must be null/absent.
-     * @minimum 1
-     */
+   * Must be provided with recurrence_unit, or both must be null/absent.
+   * @minimum 1
+   */
   recurrence_interval?: number | null;
   /** Must be provided with recurrence_interval, or both must be null/absent. */
   recurrence_unit?: CreateTaskRequestRecurrenceUnit;
   /** Inclusive Beirut-local business date; requires recurrence and is mutually exclusive with recurrence_end_count. */
   recurrence_end_date?: Date | null;
   /**
-     * Total occurrences including the original; requires recurrence and is mutually exclusive with recurrence_end_date.
-     * @minimum 1
-     */
+   * Total occurrences including the original; requires recurrence and is mutually exclusive with recurrence_end_date.
+   * @minimum 1
+   */
   recurrence_end_count?: number | null;
 }

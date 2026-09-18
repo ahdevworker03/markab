@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { VehicleResponse } from './vehicleResponse';
+import type { VehicleResponse } from "./vehicleResponse";
 
 export interface VehicleResponseWrapper {
   data: VehicleResponse;

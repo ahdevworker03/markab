@@ -6,12 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type CreateVehicleRequestFuelType = typeof CreateVehicleRequestFuelType[keyof typeof CreateVehicleRequestFuelType];
-
+export type CreateVehicleRequestFuelType =
+  (typeof CreateVehicleRequestFuelType)[keyof typeof CreateVehicleRequestFuelType];
 
 export const CreateVehicleRequestFuelType = {
-  PETROL: 'PETROL',
-  DIESEL: 'DIESEL',
-  ELECTRIC: 'ELECTRIC',
-  HYBRID: 'HYBRID',
+  PETROL: "PETROL",
+  DIESEL: "DIESEL",
+  ELECTRIC: "ELECTRIC",
+  HYBRID: "HYBRID",
 } as const;

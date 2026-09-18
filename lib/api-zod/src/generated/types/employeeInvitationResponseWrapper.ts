@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { EmployeeInvitationResponse } from './employeeInvitationResponse';
+import type { EmployeeInvitationResponse } from "./employeeInvitationResponse";
 
 export interface EmployeeInvitationResponseWrapper {
   data: EmployeeInvitationResponse;

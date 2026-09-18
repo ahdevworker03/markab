@@ -5,9 +5,9 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { CreateVehicleRequestFuelType } from './createVehicleRequestFuelType';
-import type { CreateVehicleRequestStatus } from './createVehicleRequestStatus';
-import type { CreateVehicleRequestTransmission } from './createVehicleRequestTransmission';
+import type { CreateVehicleRequestFuelType } from "./createVehicleRequestFuelType";
+import type { CreateVehicleRequestStatus } from "./createVehicleRequestStatus";
+import type { CreateVehicleRequestTransmission } from "./createVehicleRequestTransmission";
 
 export interface CreateVehicleRequest {
   /** @minLength 1 */
@@ -17,9 +17,9 @@ export interface CreateVehicleRequest {
   /** @minLength 1 */
   plate_number: string;
   /**
-     * @minimum 1900
-     * @maximum 2100
-     */
+   * @minimum 1900
+   * @maximum 2100
+   */
   year: number;
   /** @minLength 1 */
   color: string;

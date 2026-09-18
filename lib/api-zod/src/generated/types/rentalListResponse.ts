@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { RentalResponse } from './rentalResponse';
+import type { RentalResponse } from "./rentalResponse";
 
 export interface RentalListResponse {
   data: RentalResponse[];

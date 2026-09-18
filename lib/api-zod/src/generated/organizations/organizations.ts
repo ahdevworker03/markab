@@ -5,63 +5,55 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import * as zod from 'zod';
-
+import * as zod from "zod";
 
 /**
  * @summary Get current organization
  */
 export const GetMyOrganizationResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "name": zod.string(),
-  "status": zod.enum(['TRIAL', 'ACTIVE', 'SUSPENDED', 'CANCELLED']),
-  "legalName": zod.string().nullable(),
-  "phone": zod.string().nullable(),
-  "email": zod.string().email().nullable(),
-  "address": zod.string().nullable(),
-  "contractFooterText": zod.string().nullable(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    name: zod.string(),
+    status: zod.enum(["TRIAL", "ACTIVE", "SUSPENDED", "CANCELLED"]),
+    legalName: zod.string().nullable(),
+    phone: zod.string().nullable(),
+    email: zod.string().email().nullable(),
+    address: zod.string().nullable(),
+    contractFooterText: zod.string().nullable(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Update current organization
  */
 
-
-
-
-
-
-
 export const UpdateMyOrganizationBody = zod.object({
-  "name": zod.string().min(1).optional(),
-  "legalName": zod.string().min(1).nullish(),
-  "phone": zod.string().min(1).nullish(),
-  "email": zod.string().email().nullish(),
-  "address": zod.string().min(1).nullish(),
-  "contractFooterText": zod.string().min(1).nullish()
-})
+  name: zod.string().min(1).optional(),
+  legalName: zod.string().min(1).nullish(),
+  phone: zod.string().min(1).nullish(),
+  email: zod.string().email().nullish(),
+  address: zod.string().min(1).nullish(),
+  contractFooterText: zod.string().min(1).nullish(),
+});
 
 export const UpdateMyOrganizationResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "name": zod.string(),
-  "status": zod.enum(['TRIAL', 'ACTIVE', 'SUSPENDED', 'CANCELLED']),
-  "legalName": zod.string().nullable(),
-  "phone": zod.string().nullable(),
-  "email": zod.string().email().nullable(),
-  "address": zod.string().nullable(),
-  "contractFooterText": zod.string().nullable(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    name: zod.string(),
+    status: zod.enum(["TRIAL", "ACTIVE", "SUSPENDED", "CANCELLED"]),
+    legalName: zod.string().nullable(),
+    phone: zod.string().nullable(),
+    email: zod.string().email().nullable(),
+    address: zod.string().nullable(),
+    contractFooterText: zod.string().nullable(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Organization deletion is not supported
  */
-export const DeleteMyOrganizationResponse = zod.void()
-
+export const DeleteMyOrganizationResponse = zod.void();

@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { TaskResponse } from './taskResponse';
+import type { TaskResponse } from "./taskResponse";
 
 export interface TaskListResponse {
   data: TaskResponse[];

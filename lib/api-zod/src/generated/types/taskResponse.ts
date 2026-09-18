@@ -5,8 +5,8 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { TaskResponseRecurrenceUnit } from './taskResponseRecurrenceUnit';
-import type { TaskResponseStatus } from './taskResponseStatus';
+import type { TaskResponseRecurrenceUnit } from "./taskResponseRecurrenceUnit";
+import type { TaskResponseStatus } from "./taskResponseStatus";
 
 export interface TaskResponse {
   id: string;

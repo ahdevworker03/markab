@@ -6,9 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type EmployeeInvitationResponseRole = typeof EmployeeInvitationResponseRole[keyof typeof EmployeeInvitationResponseRole];
-
+export type EmployeeInvitationResponseRole =
+  (typeof EmployeeInvitationResponseRole)[keyof typeof EmployeeInvitationResponseRole];
 
 export const EmployeeInvitationResponseRole = {
-  EMPLOYEE: 'EMPLOYEE',
+  EMPLOYEE: "EMPLOYEE",
 } as const;

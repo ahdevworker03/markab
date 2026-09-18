@@ -7,20 +7,20 @@
  */
 
 export type CheckRentalAvailabilityParams = {
-/**
- * Vehicle ID
- */
-vehicleId: string;
-/**
- * Pickup date-time
- */
-pickupDate: Date;
-/**
- * Expected return date-time
- */
-expectedReturnDate: Date;
-/**
- * Rental ID to exclude (used when checking extension availability)
- */
-excludeRentalId?: string;
+  /**
+   * Vehicle ID
+   */
+  vehicleId: string;
+  /**
+   * Pickup date-time
+   */
+  pickupDate: Date;
+  /**
+   * Expected return date-time
+   */
+  expectedReturnDate: Date;
+  /**
+   * Rental ID to exclude (used when checking extension availability)
+   */
+  excludeRentalId?: string;
 };

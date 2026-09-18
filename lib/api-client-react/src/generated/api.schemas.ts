@@ -54,13 +54,12 @@ export interface AuthTokensResponse {
   data: AuthTokens;
 }
 
-export type UserRole = typeof UserRole[keyof typeof UserRole];
-
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export const UserRole = {
-  PLATFORM_OWNER: 'PLATFORM_OWNER',
-  OWNER: 'OWNER',
-  EMPLOYEE: 'EMPLOYEE',
+  PLATFORM_OWNER: "PLATFORM_OWNER",
+  OWNER: "OWNER",
+  EMPLOYEE: "EMPLOYEE",
 } as const;
 
 export interface UserResponse {
@@ -71,14 +70,14 @@ export interface UserResponse {
   updatedAt: string;
 }
 
-export type OrganizationStatus = typeof OrganizationStatus[keyof typeof OrganizationStatus];
-
+export type OrganizationStatus =
+  (typeof OrganizationStatus)[keyof typeof OrganizationStatus];
 
 export const OrganizationStatus = {
-  TRIAL: 'TRIAL',
-  ACTIVE: 'ACTIVE',
-  SUSPENDED: 'SUSPENDED',
-  CANCELLED: 'CANCELLED',
+  TRIAL: "TRIAL",
+  ACTIVE: "ACTIVE",
+  SUSPENDED: "SUSPENDED",
+  CANCELLED: "CANCELLED",
 } as const;
 
 export interface CurrentUserResponse {
@@ -102,11 +101,11 @@ export interface UserListResponse {
   data: UserResponse[];
 }
 
-export type CreateUserRequestRole = typeof CreateUserRequestRole[keyof typeof CreateUserRequestRole];
-
+export type CreateUserRequestRole =
+  (typeof CreateUserRequestRole)[keyof typeof CreateUserRequestRole];
 
 export const CreateUserRequestRole = {
-  EMPLOYEE: 'EMPLOYEE',
+  EMPLOYEE: "EMPLOYEE",
 } as const;
 
 export interface CreateUserRequest {
@@ -116,11 +115,11 @@ export interface CreateUserRequest {
   role: CreateUserRequestRole;
 }
 
-export type UpdateUserRequestRole = typeof UpdateUserRequestRole[keyof typeof UpdateUserRequestRole];
-
+export type UpdateUserRequestRole =
+  (typeof UpdateUserRequestRole)[keyof typeof UpdateUserRequestRole];
 
 export const UpdateUserRequestRole = {
-  EMPLOYEE: 'EMPLOYEE',
+  EMPLOYEE: "EMPLOYEE",
 } as const;
 
 export interface UpdateUserRequest {
@@ -138,11 +137,11 @@ export interface AcceptEmployeeInvitationRequest {
   password: string;
 }
 
-export type EmployeeInvitationResponseRole = typeof EmployeeInvitationResponseRole[keyof typeof EmployeeInvitationResponseRole];
-
+export type EmployeeInvitationResponseRole =
+  (typeof EmployeeInvitationResponseRole)[keyof typeof EmployeeInvitationResponseRole];
 
 export const EmployeeInvitationResponseRole = {
-  EMPLOYEE: 'EMPLOYEE',
+  EMPLOYEE: "EMPLOYEE",
 } as const;
 
 export interface EmployeeInvitationResponse {
@@ -249,34 +248,34 @@ export interface UpdateCustomerRequest {
   license_expiry_date: string;
 }
 
-export type VehicleResponseTransmission = typeof VehicleResponseTransmission[keyof typeof VehicleResponseTransmission];
-
+export type VehicleResponseTransmission =
+  (typeof VehicleResponseTransmission)[keyof typeof VehicleResponseTransmission];
 
 export const VehicleResponseTransmission = {
-  MANUAL: 'MANUAL',
-  AUTOMATIC: 'AUTOMATIC',
+  MANUAL: "MANUAL",
+  AUTOMATIC: "AUTOMATIC",
 } as const;
 
-export type VehicleResponseFuelType = typeof VehicleResponseFuelType[keyof typeof VehicleResponseFuelType];
-
+export type VehicleResponseFuelType =
+  (typeof VehicleResponseFuelType)[keyof typeof VehicleResponseFuelType];
 
 export const VehicleResponseFuelType = {
-  PETROL: 'PETROL',
-  DIESEL: 'DIESEL',
-  ELECTRIC: 'ELECTRIC',
-  HYBRID: 'HYBRID',
+  PETROL: "PETROL",
+  DIESEL: "DIESEL",
+  ELECTRIC: "ELECTRIC",
+  HYBRID: "HYBRID",
 } as const;
 
-export type VehicleResponseStatus = typeof VehicleResponseStatus[keyof typeof VehicleResponseStatus];
-
+export type VehicleResponseStatus =
+  (typeof VehicleResponseStatus)[keyof typeof VehicleResponseStatus];
 
 export const VehicleResponseStatus = {
-  AVAILABLE: 'AVAILABLE',
-  RESERVED: 'RESERVED',
-  RENTED: 'RENTED',
-  MAINTENANCE: 'MAINTENANCE',
-  OUT_OF_SERVICE: 'OUT_OF_SERVICE',
-  ARCHIVED: 'ARCHIVED',
+  AVAILABLE: "AVAILABLE",
+  RESERVED: "RESERVED",
+  RENTED: "RENTED",
+  MAINTENANCE: "MAINTENANCE",
+  OUT_OF_SERVICE: "OUT_OF_SERVICE",
+  ARCHIVED: "ARCHIVED",
 } as const;
 
 export interface VehicleResponse {
@@ -304,34 +303,34 @@ export interface VehicleListResponse {
   data: VehicleResponse[];
 }
 
-export type CreateVehicleRequestTransmission = typeof CreateVehicleRequestTransmission[keyof typeof CreateVehicleRequestTransmission];
-
+export type CreateVehicleRequestTransmission =
+  (typeof CreateVehicleRequestTransmission)[keyof typeof CreateVehicleRequestTransmission];
 
 export const CreateVehicleRequestTransmission = {
-  MANUAL: 'MANUAL',
-  AUTOMATIC: 'AUTOMATIC',
+  MANUAL: "MANUAL",
+  AUTOMATIC: "AUTOMATIC",
 } as const;
 
-export type CreateVehicleRequestFuelType = typeof CreateVehicleRequestFuelType[keyof typeof CreateVehicleRequestFuelType];
-
+export type CreateVehicleRequestFuelType =
+  (typeof CreateVehicleRequestFuelType)[keyof typeof CreateVehicleRequestFuelType];
 
 export const CreateVehicleRequestFuelType = {
-  PETROL: 'PETROL',
-  DIESEL: 'DIESEL',
-  ELECTRIC: 'ELECTRIC',
-  HYBRID: 'HYBRID',
+  PETROL: "PETROL",
+  DIESEL: "DIESEL",
+  ELECTRIC: "ELECTRIC",
+  HYBRID: "HYBRID",
 } as const;
 
-export type CreateVehicleRequestStatus = typeof CreateVehicleRequestStatus[keyof typeof CreateVehicleRequestStatus];
-
+export type CreateVehicleRequestStatus =
+  (typeof CreateVehicleRequestStatus)[keyof typeof CreateVehicleRequestStatus];
 
 export const CreateVehicleRequestStatus = {
-  AVAILABLE: 'AVAILABLE',
-  RESERVED: 'RESERVED',
-  RENTED: 'RENTED',
-  MAINTENANCE: 'MAINTENANCE',
-  OUT_OF_SERVICE: 'OUT_OF_SERVICE',
-  ARCHIVED: 'ARCHIVED',
+  AVAILABLE: "AVAILABLE",
+  RESERVED: "RESERVED",
+  RENTED: "RENTED",
+  MAINTENANCE: "MAINTENANCE",
+  OUT_OF_SERVICE: "OUT_OF_SERVICE",
+  ARCHIVED: "ARCHIVED",
 } as const;
 
 export interface CreateVehicleRequest {
@@ -342,9 +341,9 @@ export interface CreateVehicleRequest {
   /** @minLength 1 */
   plate_number: string;
   /**
-     * @minimum 1900
-     * @maximum 2100
-     */
+   * @minimum 1900
+   * @maximum 2100
+   */
   year: number;
   /** @minLength 1 */
   color: string;
@@ -359,34 +358,34 @@ export interface CreateVehicleRequest {
   status: CreateVehicleRequestStatus;
 }
 
-export type UpdateVehicleRequestTransmission = typeof UpdateVehicleRequestTransmission[keyof typeof UpdateVehicleRequestTransmission];
-
+export type UpdateVehicleRequestTransmission =
+  (typeof UpdateVehicleRequestTransmission)[keyof typeof UpdateVehicleRequestTransmission];
 
 export const UpdateVehicleRequestTransmission = {
-  MANUAL: 'MANUAL',
-  AUTOMATIC: 'AUTOMATIC',
+  MANUAL: "MANUAL",
+  AUTOMATIC: "AUTOMATIC",
 } as const;
 
-export type UpdateVehicleRequestFuelType = typeof UpdateVehicleRequestFuelType[keyof typeof UpdateVehicleRequestFuelType];
-
+export type UpdateVehicleRequestFuelType =
+  (typeof UpdateVehicleRequestFuelType)[keyof typeof UpdateVehicleRequestFuelType];
 
 export const UpdateVehicleRequestFuelType = {
-  PETROL: 'PETROL',
-  DIESEL: 'DIESEL',
-  ELECTRIC: 'ELECTRIC',
-  HYBRID: 'HYBRID',
+  PETROL: "PETROL",
+  DIESEL: "DIESEL",
+  ELECTRIC: "ELECTRIC",
+  HYBRID: "HYBRID",
 } as const;
 
-export type UpdateVehicleRequestStatus = typeof UpdateVehicleRequestStatus[keyof typeof UpdateVehicleRequestStatus];
-
+export type UpdateVehicleRequestStatus =
+  (typeof UpdateVehicleRequestStatus)[keyof typeof UpdateVehicleRequestStatus];
 
 export const UpdateVehicleRequestStatus = {
-  AVAILABLE: 'AVAILABLE',
-  RESERVED: 'RESERVED',
-  RENTED: 'RENTED',
-  MAINTENANCE: 'MAINTENANCE',
-  OUT_OF_SERVICE: 'OUT_OF_SERVICE',
-  ARCHIVED: 'ARCHIVED',
+  AVAILABLE: "AVAILABLE",
+  RESERVED: "RESERVED",
+  RENTED: "RENTED",
+  MAINTENANCE: "MAINTENANCE",
+  OUT_OF_SERVICE: "OUT_OF_SERVICE",
+  ARCHIVED: "ARCHIVED",
 } as const;
 
 export interface UpdateVehicleRequest {
@@ -397,9 +396,9 @@ export interface UpdateVehicleRequest {
   /** @minLength 1 */
   plate_number: string;
   /**
-     * @minimum 1900
-     * @maximum 2100
-     */
+   * @minimum 1900
+   * @maximum 2100
+   */
   year: number;
   /** @minLength 1 */
   color: string;
@@ -435,13 +434,13 @@ export interface PhotoListResponse {
   data: PhotoResponse[];
 }
 
-export type DocumentResponseCategory = typeof DocumentResponseCategory[keyof typeof DocumentResponseCategory];
-
+export type DocumentResponseCategory =
+  (typeof DocumentResponseCategory)[keyof typeof DocumentResponseCategory];
 
 export const DocumentResponseCategory = {
-  REGISTRATION: 'REGISTRATION',
-  INSURANCE: 'INSURANCE',
-  OTHER: 'OTHER',
+  REGISTRATION: "REGISTRATION",
+  INSURANCE: "INSURANCE",
+  OTHER: "OTHER",
 } as const;
 
 export interface DocumentResponse {
@@ -470,14 +469,14 @@ export interface DocumentListResponse {
   data: DocumentResponse[];
 }
 
-export type RentalResponseStatus = typeof RentalResponseStatus[keyof typeof RentalResponseStatus];
-
+export type RentalResponseStatus =
+  (typeof RentalResponseStatus)[keyof typeof RentalResponseStatus];
 
 export const RentalResponseStatus = {
-  RESERVED: 'RESERVED',
-  ACTIVE: 'ACTIVE',
-  RETURNED: 'RETURNED',
-  CANCELLED: 'CANCELLED',
+  RESERVED: "RESERVED",
+  ACTIVE: "ACTIVE",
+  RETURNED: "RETURNED",
+  CANCELLED: "CANCELLED",
 } as const;
 
 export interface RentalResponse {
@@ -526,23 +525,23 @@ export interface ContractResponseWrapper {
   data: ContractResponse;
 }
 
-export type MaintenanceScheduleResponseMaintenanceType = typeof MaintenanceScheduleResponseMaintenanceType[keyof typeof MaintenanceScheduleResponseMaintenanceType];
-
+export type MaintenanceScheduleResponseMaintenanceType =
+  (typeof MaintenanceScheduleResponseMaintenanceType)[keyof typeof MaintenanceScheduleResponseMaintenanceType];
 
 export const MaintenanceScheduleResponseMaintenanceType = {
-  PREVENTIVE_SERVICE: 'PREVENTIVE_SERVICE',
-  INSPECTION: 'INSPECTION',
-  REPAIR: 'REPAIR',
-  OTHER: 'OTHER',
+  PREVENTIVE_SERVICE: "PREVENTIVE_SERVICE",
+  INSPECTION: "INSPECTION",
+  REPAIR: "REPAIR",
+  OTHER: "OTHER",
 } as const;
 
-export type MaintenanceScheduleResponseScheduleType = typeof MaintenanceScheduleResponseScheduleType[keyof typeof MaintenanceScheduleResponseScheduleType];
-
+export type MaintenanceScheduleResponseScheduleType =
+  (typeof MaintenanceScheduleResponseScheduleType)[keyof typeof MaintenanceScheduleResponseScheduleType];
 
 export const MaintenanceScheduleResponseScheduleType = {
-  DATE: 'DATE',
-  MILEAGE: 'MILEAGE',
-  DATE_OR_MILEAGE: 'DATE_OR_MILEAGE',
+  DATE: "DATE",
+  MILEAGE: "MILEAGE",
+  DATE_OR_MILEAGE: "DATE_OR_MILEAGE",
 } as const;
 
 export interface MaintenanceScheduleResponse {
@@ -567,23 +566,23 @@ export interface MaintenanceScheduleListResponse {
   data: MaintenanceScheduleResponse[];
 }
 
-export type CreateMaintenanceScheduleRequestMaintenanceType = typeof CreateMaintenanceScheduleRequestMaintenanceType[keyof typeof CreateMaintenanceScheduleRequestMaintenanceType];
-
+export type CreateMaintenanceScheduleRequestMaintenanceType =
+  (typeof CreateMaintenanceScheduleRequestMaintenanceType)[keyof typeof CreateMaintenanceScheduleRequestMaintenanceType];
 
 export const CreateMaintenanceScheduleRequestMaintenanceType = {
-  PREVENTIVE_SERVICE: 'PREVENTIVE_SERVICE',
-  INSPECTION: 'INSPECTION',
-  REPAIR: 'REPAIR',
-  OTHER: 'OTHER',
+  PREVENTIVE_SERVICE: "PREVENTIVE_SERVICE",
+  INSPECTION: "INSPECTION",
+  REPAIR: "REPAIR",
+  OTHER: "OTHER",
 } as const;
 
-export type CreateMaintenanceScheduleRequestScheduleType = typeof CreateMaintenanceScheduleRequestScheduleType[keyof typeof CreateMaintenanceScheduleRequestScheduleType];
-
+export type CreateMaintenanceScheduleRequestScheduleType =
+  (typeof CreateMaintenanceScheduleRequestScheduleType)[keyof typeof CreateMaintenanceScheduleRequestScheduleType];
 
 export const CreateMaintenanceScheduleRequestScheduleType = {
-  DATE: 'DATE',
-  MILEAGE: 'MILEAGE',
-  DATE_OR_MILEAGE: 'DATE_OR_MILEAGE',
+  DATE: "DATE",
+  MILEAGE: "MILEAGE",
+  DATE_OR_MILEAGE: "DATE_OR_MILEAGE",
 } as const;
 
 export interface CreateMaintenanceScheduleRequest {
@@ -601,23 +600,23 @@ export interface CreateMaintenanceScheduleRequest {
   is_active?: boolean;
 }
 
-export type UpdateMaintenanceScheduleRequestMaintenanceType = typeof UpdateMaintenanceScheduleRequestMaintenanceType[keyof typeof UpdateMaintenanceScheduleRequestMaintenanceType];
-
+export type UpdateMaintenanceScheduleRequestMaintenanceType =
+  (typeof UpdateMaintenanceScheduleRequestMaintenanceType)[keyof typeof UpdateMaintenanceScheduleRequestMaintenanceType];
 
 export const UpdateMaintenanceScheduleRequestMaintenanceType = {
-  PREVENTIVE_SERVICE: 'PREVENTIVE_SERVICE',
-  INSPECTION: 'INSPECTION',
-  REPAIR: 'REPAIR',
-  OTHER: 'OTHER',
+  PREVENTIVE_SERVICE: "PREVENTIVE_SERVICE",
+  INSPECTION: "INSPECTION",
+  REPAIR: "REPAIR",
+  OTHER: "OTHER",
 } as const;
 
-export type UpdateMaintenanceScheduleRequestScheduleType = typeof UpdateMaintenanceScheduleRequestScheduleType[keyof typeof UpdateMaintenanceScheduleRequestScheduleType];
-
+export type UpdateMaintenanceScheduleRequestScheduleType =
+  (typeof UpdateMaintenanceScheduleRequestScheduleType)[keyof typeof UpdateMaintenanceScheduleRequestScheduleType];
 
 export const UpdateMaintenanceScheduleRequestScheduleType = {
-  DATE: 'DATE',
-  MILEAGE: 'MILEAGE',
-  DATE_OR_MILEAGE: 'DATE_OR_MILEAGE',
+  DATE: "DATE",
+  MILEAGE: "MILEAGE",
+  DATE_OR_MILEAGE: "DATE_OR_MILEAGE",
 } as const;
 
 export interface UpdateMaintenanceScheduleRequest {
@@ -633,23 +632,23 @@ export interface UpdateMaintenanceScheduleRequest {
   is_active?: boolean;
 }
 
-export type MaintenanceResponseType = typeof MaintenanceResponseType[keyof typeof MaintenanceResponseType];
-
+export type MaintenanceResponseType =
+  (typeof MaintenanceResponseType)[keyof typeof MaintenanceResponseType];
 
 export const MaintenanceResponseType = {
-  PREVENTIVE_SERVICE: 'PREVENTIVE_SERVICE',
-  INSPECTION: 'INSPECTION',
-  REPAIR: 'REPAIR',
-  OTHER: 'OTHER',
+  PREVENTIVE_SERVICE: "PREVENTIVE_SERVICE",
+  INSPECTION: "INSPECTION",
+  REPAIR: "REPAIR",
+  OTHER: "OTHER",
 } as const;
 
-export type MaintenanceResponseStatus = typeof MaintenanceResponseStatus[keyof typeof MaintenanceResponseStatus];
-
+export type MaintenanceResponseStatus =
+  (typeof MaintenanceResponseStatus)[keyof typeof MaintenanceResponseStatus];
 
 export const MaintenanceResponseStatus = {
-  SCHEDULED: 'SCHEDULED',
-  IN_PROGRESS: 'IN_PROGRESS',
-  COMPLETED: 'COMPLETED',
+  SCHEDULED: "SCHEDULED",
+  IN_PROGRESS: "IN_PROGRESS",
+  COMPLETED: "COMPLETED",
 } as const;
 
 export type MaintenanceResponseReplacedPartsItem = {
@@ -692,14 +691,14 @@ export interface MaintenanceReplacedPart {
   unitCost?: number;
 }
 
-export type CreateMaintenanceRequestType = typeof CreateMaintenanceRequestType[keyof typeof CreateMaintenanceRequestType];
-
+export type CreateMaintenanceRequestType =
+  (typeof CreateMaintenanceRequestType)[keyof typeof CreateMaintenanceRequestType];
 
 export const CreateMaintenanceRequestType = {
-  PREVENTIVE_SERVICE: 'PREVENTIVE_SERVICE',
-  INSPECTION: 'INSPECTION',
-  REPAIR: 'REPAIR',
-  OTHER: 'OTHER',
+  PREVENTIVE_SERVICE: "PREVENTIVE_SERVICE",
+  INSPECTION: "INSPECTION",
+  REPAIR: "REPAIR",
+  OTHER: "OTHER",
 } as const;
 
 export interface CreateMaintenanceRequest {
@@ -714,23 +713,23 @@ export interface CreateMaintenanceRequest {
   replaced_parts?: MaintenanceReplacedPart[];
 }
 
-export type UpdateMaintenanceRequestType = typeof UpdateMaintenanceRequestType[keyof typeof UpdateMaintenanceRequestType];
-
+export type UpdateMaintenanceRequestType =
+  (typeof UpdateMaintenanceRequestType)[keyof typeof UpdateMaintenanceRequestType];
 
 export const UpdateMaintenanceRequestType = {
-  PREVENTIVE_SERVICE: 'PREVENTIVE_SERVICE',
-  INSPECTION: 'INSPECTION',
-  REPAIR: 'REPAIR',
-  OTHER: 'OTHER',
+  PREVENTIVE_SERVICE: "PREVENTIVE_SERVICE",
+  INSPECTION: "INSPECTION",
+  REPAIR: "REPAIR",
+  OTHER: "OTHER",
 } as const;
 
-export type UpdateMaintenanceRequestStatus = typeof UpdateMaintenanceRequestStatus[keyof typeof UpdateMaintenanceRequestStatus];
-
+export type UpdateMaintenanceRequestStatus =
+  (typeof UpdateMaintenanceRequestStatus)[keyof typeof UpdateMaintenanceRequestStatus];
 
 export const UpdateMaintenanceRequestStatus = {
-  SCHEDULED: 'SCHEDULED',
-  IN_PROGRESS: 'IN_PROGRESS',
-  COMPLETED: 'COMPLETED',
+  SCHEDULED: "SCHEDULED",
+  IN_PROGRESS: "IN_PROGRESS",
+  COMPLETED: "COMPLETED",
 } as const;
 
 export interface UpdateMaintenanceRequest {
@@ -749,15 +748,15 @@ export interface CompleteMaintenanceRequest {
   cost: number;
 }
 
-export type ExpenseResponseCategory = typeof ExpenseResponseCategory[keyof typeof ExpenseResponseCategory];
-
+export type ExpenseResponseCategory =
+  (typeof ExpenseResponseCategory)[keyof typeof ExpenseResponseCategory];
 
 export const ExpenseResponseCategory = {
-  FUEL: 'FUEL',
-  INSURANCE: 'INSURANCE',
-  REGISTRATION: 'REGISTRATION',
-  CLEANING: 'CLEANING',
-  OTHER: 'OTHER',
+  FUEL: "FUEL",
+  INSURANCE: "INSURANCE",
+  REGISTRATION: "REGISTRATION",
+  CLEANING: "CLEANING",
+  OTHER: "OTHER",
 } as const;
 
 export interface ExpenseResponse {
@@ -779,15 +778,15 @@ export interface ExpenseListResponse {
   data: ExpenseResponse[];
 }
 
-export type CreateExpenseRequestCategory = typeof CreateExpenseRequestCategory[keyof typeof CreateExpenseRequestCategory];
-
+export type CreateExpenseRequestCategory =
+  (typeof CreateExpenseRequestCategory)[keyof typeof CreateExpenseRequestCategory];
 
 export const CreateExpenseRequestCategory = {
-  FUEL: 'FUEL',
-  INSURANCE: 'INSURANCE',
-  REGISTRATION: 'REGISTRATION',
-  CLEANING: 'CLEANING',
-  OTHER: 'OTHER',
+  FUEL: "FUEL",
+  INSURANCE: "INSURANCE",
+  REGISTRATION: "REGISTRATION",
+  CLEANING: "CLEANING",
+  OTHER: "OTHER",
 } as const;
 
 export interface CreateExpenseRequest {
@@ -799,15 +798,15 @@ export interface CreateExpenseRequest {
   description?: string;
 }
 
-export type UpdateExpenseRequestCategory = typeof UpdateExpenseRequestCategory[keyof typeof UpdateExpenseRequestCategory];
-
+export type UpdateExpenseRequestCategory =
+  (typeof UpdateExpenseRequestCategory)[keyof typeof UpdateExpenseRequestCategory];
 
 export const UpdateExpenseRequestCategory = {
-  FUEL: 'FUEL',
-  INSURANCE: 'INSURANCE',
-  REGISTRATION: 'REGISTRATION',
-  CLEANING: 'CLEANING',
-  OTHER: 'OTHER',
+  FUEL: "FUEL",
+  INSURANCE: "INSURANCE",
+  REGISTRATION: "REGISTRATION",
+  CLEANING: "CLEANING",
+  OTHER: "OTHER",
 } as const;
 
 export interface UpdateExpenseRequest {
@@ -819,14 +818,14 @@ export interface UpdateExpenseRequest {
   description?: string | null;
 }
 
-export type PaymentResponseMethod = typeof PaymentResponseMethod[keyof typeof PaymentResponseMethod];
-
+export type PaymentResponseMethod =
+  (typeof PaymentResponseMethod)[keyof typeof PaymentResponseMethod];
 
 export const PaymentResponseMethod = {
-  CASH: 'CASH',
-  CARD: 'CARD',
-  TRANSFER: 'TRANSFER',
-  OTHER: 'OTHER',
+  CASH: "CASH",
+  CARD: "CARD",
+  TRANSFER: "TRANSFER",
+  OTHER: "OTHER",
 } as const;
 
 export interface PaymentResponse {
@@ -856,14 +855,14 @@ export interface RentalPaymentsResponse {
   data: RentalPaymentsResponseData;
 }
 
-export type CreatePaymentRequestMethod = typeof CreatePaymentRequestMethod[keyof typeof CreatePaymentRequestMethod];
-
+export type CreatePaymentRequestMethod =
+  (typeof CreatePaymentRequestMethod)[keyof typeof CreatePaymentRequestMethod];
 
 export const CreatePaymentRequestMethod = {
-  CASH: 'CASH',
-  CARD: 'CARD',
-  TRANSFER: 'TRANSFER',
-  OTHER: 'OTHER',
+  CASH: "CASH",
+  CARD: "CARD",
+  TRANSFER: "TRANSFER",
+  OTHER: "OTHER",
 } as const;
 
 export interface CreatePaymentRequest {
@@ -873,21 +872,22 @@ export interface CreatePaymentRequest {
   method: CreatePaymentRequestMethod;
 }
 
-export type TaskResponseStatus = typeof TaskResponseStatus[keyof typeof TaskResponseStatus];
-
+export type TaskResponseStatus =
+  (typeof TaskResponseStatus)[keyof typeof TaskResponseStatus];
 
 export const TaskResponseStatus = {
-  PENDING: 'PENDING',
-  COMPLETED: 'COMPLETED',
+  PENDING: "PENDING",
+  COMPLETED: "COMPLETED",
 } as const;
 
-export type TaskResponseRecurrenceUnit = typeof TaskResponseRecurrenceUnit[keyof typeof TaskResponseRecurrenceUnit] | null;
-
+export type TaskResponseRecurrenceUnit =
+  | (typeof TaskResponseRecurrenceUnit)[keyof typeof TaskResponseRecurrenceUnit]
+  | null;
 
 export const TaskResponseRecurrenceUnit = {
-  DAY: 'DAY',
-  WEEK: 'WEEK',
-  MONTH: 'MONTH',
+  DAY: "DAY",
+  WEEK: "WEEK",
+  MONTH: "MONTH",
 } as const;
 
 export interface TaskResponse {
@@ -921,13 +921,14 @@ export interface TaskListResponse {
 /**
  * Must be provided with recurrence_interval, or both must be null/absent.
  */
-export type CreateTaskRequestRecurrenceUnit = typeof CreateTaskRequestRecurrenceUnit[keyof typeof CreateTaskRequestRecurrenceUnit] | null;
-
+export type CreateTaskRequestRecurrenceUnit =
+  | (typeof CreateTaskRequestRecurrenceUnit)[keyof typeof CreateTaskRequestRecurrenceUnit]
+  | null;
 
 export const CreateTaskRequestRecurrenceUnit = {
-  DAY: 'DAY',
-  WEEK: 'WEEK',
-  MONTH: 'MONTH',
+  DAY: "DAY",
+  WEEK: "WEEK",
+  MONTH: "MONTH",
 } as const;
 
 export interface CreateTaskRequest {
@@ -936,28 +937,29 @@ export interface CreateTaskRequest {
   due_date: string;
   notes?: string;
   /**
-     * Must be provided with recurrence_unit, or both must be null/absent.
-     * @minimum 1
-     */
+   * Must be provided with recurrence_unit, or both must be null/absent.
+   * @minimum 1
+   */
   recurrence_interval?: number | null;
   /** Must be provided with recurrence_interval, or both must be null/absent. */
   recurrence_unit?: CreateTaskRequestRecurrenceUnit;
   /** Inclusive Beirut-local business date; requires recurrence and is mutually exclusive with recurrence_end_count. */
   recurrence_end_date?: string | null;
   /**
-     * Total occurrences including the original; requires recurrence and is mutually exclusive with recurrence_end_date.
-     * @minimum 1
-     */
+   * Total occurrences including the original; requires recurrence and is mutually exclusive with recurrence_end_date.
+   * @minimum 1
+   */
   recurrence_end_count?: number | null;
 }
 
-export type UpdateTaskRequestRecurrenceUnit = typeof UpdateTaskRequestRecurrenceUnit[keyof typeof UpdateTaskRequestRecurrenceUnit] | null;
-
+export type UpdateTaskRequestRecurrenceUnit =
+  | (typeof UpdateTaskRequestRecurrenceUnit)[keyof typeof UpdateTaskRequestRecurrenceUnit]
+  | null;
 
 export const UpdateTaskRequestRecurrenceUnit = {
-  DAY: 'DAY',
-  WEEK: 'WEEK',
-  MONTH: 'MONTH',
+  DAY: "DAY",
+  WEEK: "WEEK",
+  MONTH: "MONTH",
 } as const;
 
 export interface UpdateTaskRequest {
@@ -1032,32 +1034,32 @@ export interface ErrorResponse {
 }
 
 export type ListCustomersParams = {
-/**
- * Search customers by name, national ID, license number, or phone
- * @minLength 1
- * @maxLength 200
- */
-search?: string;
+  /**
+   * Search customers by name, national ID, license number, or phone
+   * @minLength 1
+   * @maxLength 200
+   */
+  search?: string;
 };
 
 export type ListVehiclesParams = {
-/**
- * Search vehicles by plate number, make, model, or year
- * @minLength 1
- * @maxLength 200
- */
-search?: string;
+  /**
+   * Search vehicles by plate number, make, model, or year
+   * @minLength 1
+   * @maxLength 200
+   */
+  search?: string;
 };
 
 export type ListAvailableVehiclesParams = {
-/**
- * Pickup date-time
- */
-pickupDate: string;
-/**
- * Expected return date-time
- */
-expectedReturnDate: string;
+  /**
+   * Pickup date-time
+   */
+  pickupDate: string;
+  /**
+   * Expected return date-time
+   */
+  expectedReturnDate: string;
 };
 
 export type UploadVehiclePhotoBody = {
@@ -1066,13 +1068,13 @@ export type UploadVehiclePhotoBody = {
   sort_order?: number;
 };
 
-export type UploadVehicleDocumentBodyCategory = typeof UploadVehicleDocumentBodyCategory[keyof typeof UploadVehicleDocumentBodyCategory];
-
+export type UploadVehicleDocumentBodyCategory =
+  (typeof UploadVehicleDocumentBodyCategory)[keyof typeof UploadVehicleDocumentBodyCategory];
 
 export const UploadVehicleDocumentBodyCategory = {
-  REGISTRATION: 'REGISTRATION',
-  INSURANCE: 'INSURANCE',
-  OTHER: 'OTHER',
+  REGISTRATION: "REGISTRATION",
+  INSURANCE: "INSURANCE",
+  OTHER: "OTHER",
 } as const;
 
 export type UploadVehicleDocumentBody = {
@@ -1081,13 +1083,13 @@ export type UploadVehicleDocumentBody = {
   expiryDate?: string | null;
 };
 
-export type UploadCustomerDocumentBodyCategory = typeof UploadCustomerDocumentBodyCategory[keyof typeof UploadCustomerDocumentBodyCategory];
-
+export type UploadCustomerDocumentBodyCategory =
+  (typeof UploadCustomerDocumentBodyCategory)[keyof typeof UploadCustomerDocumentBodyCategory];
 
 export const UploadCustomerDocumentBodyCategory = {
-  REGISTRATION: 'REGISTRATION',
-  INSURANCE: 'INSURANCE',
-  OTHER: 'OTHER',
+  REGISTRATION: "REGISTRATION",
+  INSURANCE: "INSURANCE",
+  OTHER: "OTHER",
 } as const;
 
 export type UploadCustomerDocumentBody = {
@@ -1097,31 +1099,31 @@ export type UploadCustomerDocumentBody = {
 };
 
 export type ListRentalsParams = {
-/**
- * Search rentals by customer or vehicle
- * @minLength 1
- * @maxLength 200
- */
-search?: string;
+  /**
+   * Search rentals by customer or vehicle
+   * @minLength 1
+   * @maxLength 200
+   */
+  search?: string;
 };
 
 export type CheckRentalAvailabilityParams = {
-/**
- * Vehicle ID
- */
-vehicleId: string;
-/**
- * Pickup date-time
- */
-pickupDate: string;
-/**
- * Expected return date-time
- */
-expectedReturnDate: string;
-/**
- * Rental ID to exclude (used when checking extension availability)
- */
-excludeRentalId?: string;
+  /**
+   * Vehicle ID
+   */
+  vehicleId: string;
+  /**
+   * Pickup date-time
+   */
+  pickupDate: string;
+  /**
+   * Expected return date-time
+   */
+  expectedReturnDate: string;
+  /**
+   * Rental ID to exclude (used when checking extension availability)
+   */
+  excludeRentalId?: string;
 };
 
 export type UploadRentalContractSignedDocumentBody = {
@@ -1129,23 +1131,22 @@ export type UploadRentalContractSignedDocumentBody = {
 };
 
 export type ListMaintenanceParams = {
-/**
- * Filter by vehicle ID
- */
-vehicleId?: string;
+  /**
+   * Filter by vehicle ID
+   */
+  vehicleId?: string;
 };
 
 export type ListMaintenanceSchedulesParams = {
-/**
- * Filter by vehicle ID
- */
-vehicleId?: string;
+  /**
+   * Filter by vehicle ID
+   */
+  vehicleId?: string;
 };
 
 export type ListExpensesParams = {
-/**
- * Filter by vehicle ID
- */
-vehicleId?: string;
+  /**
+   * Filter by vehicle ID
+   */
+  vehicleId?: string;
 };
-

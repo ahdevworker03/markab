@@ -6,12 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type RentalResponseStatus = typeof RentalResponseStatus[keyof typeof RentalResponseStatus];
-
+export type RentalResponseStatus =
+  (typeof RentalResponseStatus)[keyof typeof RentalResponseStatus];
 
 export const RentalResponseStatus = {
-  RESERVED: 'RESERVED',
-  ACTIVE: 'ACTIVE',
-  RETURNED: 'RETURNED',
-  CANCELLED: 'CANCELLED',
+  RESERVED: "RESERVED",
+  ACTIVE: "ACTIVE",
+  RETURNED: "RETURNED",
+  CANCELLED: "CANCELLED",
 } as const;

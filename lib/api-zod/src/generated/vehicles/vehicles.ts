@@ -5,405 +5,454 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import * as zod from 'zod';
-
+import * as zod from "zod";
 
 /**
  * @summary List vehicles in the current organization
  */
 export const listVehiclesQuerySearchMax = 200;
 
-
-
 export const ListVehiclesQueryParams = zod.object({
-  "search": zod.coerce.string().min(1).max(listVehiclesQuerySearchMax).optional().describe('Search vehicles by plate number, make, model, or year')
-})
+  search: zod.coerce
+    .string()
+    .min(1)
+    .max(listVehiclesQuerySearchMax)
+    .optional()
+    .describe("Search vehicles by plate number, make, model, or year"),
+});
 
 export const ListVehiclesResponse = zod.object({
-  "data": zod.array(zod.object({
-  "id": zod.string(),
-  "make": zod.string(),
-  "model": zod.string(),
-  "plateNumber": zod.string(),
-  "year": zod.number(),
-  "color": zod.string(),
-  "notes": zod.string().nullish(),
-  "transmission": zod.enum(['MANUAL', 'AUTOMATIC']),
-  "fuelType": zod.enum(['PETROL', 'DIESEL', 'ELECTRIC', 'HYBRID']),
-  "seats": zod.number(),
-  "currentMileage": zod.number(),
-  "status": zod.enum(['AVAILABLE', 'RESERVED', 'RENTED', 'MAINTENANCE', 'OUT_OF_SERVICE', 'ARCHIVED']),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-}))
-})
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      make: zod.string(),
+      model: zod.string(),
+      plateNumber: zod.string(),
+      year: zod.number(),
+      color: zod.string(),
+      notes: zod.string().nullish(),
+      transmission: zod.enum(["MANUAL", "AUTOMATIC"]),
+      fuelType: zod.enum(["PETROL", "DIESEL", "ELECTRIC", "HYBRID"]),
+      seats: zod.number(),
+      currentMileage: zod.number(),
+      status: zod.enum([
+        "AVAILABLE",
+        "RESERVED",
+        "RENTED",
+        "MAINTENANCE",
+        "OUT_OF_SERVICE",
+        "ARCHIVED",
+      ]),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+});
 
 /**
  * @summary Create a vehicle in the current organization
  */
 
-
-
 export const createVehicleBodyYearMin = 1900;
 export const createVehicleBodyYearMax = 2100;
 
-
-
-
 export const createVehicleBodyCurrentMileageMin = 0;
 
-
-
 export const CreateVehicleBody = zod.object({
-  "make": zod.string().min(1),
-  "model": zod.string().min(1),
-  "plate_number": zod.string().min(1),
-  "year": zod.number().min(createVehicleBodyYearMin).max(createVehicleBodyYearMax),
-  "color": zod.string().min(1),
-  "notes": zod.string().min(1).optional(),
-  "transmission": zod.enum(['MANUAL', 'AUTOMATIC']),
-  "fuel_type": zod.enum(['PETROL', 'DIESEL', 'ELECTRIC', 'HYBRID']),
-  "seats": zod.number().min(1),
-  "current_mileage": zod.number().min(createVehicleBodyCurrentMileageMin),
-  "status": zod.enum(['AVAILABLE', 'RESERVED', 'RENTED', 'MAINTENANCE', 'OUT_OF_SERVICE', 'ARCHIVED'])
-})
+  make: zod.string().min(1),
+  model: zod.string().min(1),
+  plate_number: zod.string().min(1),
+  year: zod
+    .number()
+    .min(createVehicleBodyYearMin)
+    .max(createVehicleBodyYearMax),
+  color: zod.string().min(1),
+  notes: zod.string().min(1).optional(),
+  transmission: zod.enum(["MANUAL", "AUTOMATIC"]),
+  fuel_type: zod.enum(["PETROL", "DIESEL", "ELECTRIC", "HYBRID"]),
+  seats: zod.number().min(1),
+  current_mileage: zod.number().min(createVehicleBodyCurrentMileageMin),
+  status: zod.enum([
+    "AVAILABLE",
+    "RESERVED",
+    "RENTED",
+    "MAINTENANCE",
+    "OUT_OF_SERVICE",
+    "ARCHIVED",
+  ]),
+});
 
 export const CreateVehicleResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "make": zod.string(),
-  "model": zod.string(),
-  "plateNumber": zod.string(),
-  "year": zod.number(),
-  "color": zod.string(),
-  "notes": zod.string().nullish(),
-  "transmission": zod.enum(['MANUAL', 'AUTOMATIC']),
-  "fuelType": zod.enum(['PETROL', 'DIESEL', 'ELECTRIC', 'HYBRID']),
-  "seats": zod.number(),
-  "currentMileage": zod.number(),
-  "status": zod.enum(['AVAILABLE', 'RESERVED', 'RENTED', 'MAINTENANCE', 'OUT_OF_SERVICE', 'ARCHIVED']),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    make: zod.string(),
+    model: zod.string(),
+    plateNumber: zod.string(),
+    year: zod.number(),
+    color: zod.string(),
+    notes: zod.string().nullish(),
+    transmission: zod.enum(["MANUAL", "AUTOMATIC"]),
+    fuelType: zod.enum(["PETROL", "DIESEL", "ELECTRIC", "HYBRID"]),
+    seats: zod.number(),
+    currentMileage: zod.number(),
+    status: zod.enum([
+      "AVAILABLE",
+      "RESERVED",
+      "RENTED",
+      "MAINTENANCE",
+      "OUT_OF_SERVICE",
+      "ARCHIVED",
+    ]),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary List vehicles available for a date range in the current organization
  */
 export const ListAvailableVehiclesQueryParams = zod.object({
-  "pickupDate": zod.coerce.date().describe('Pickup date-time'),
-  "expectedReturnDate": zod.coerce.date().describe('Expected return date-time')
-})
+  pickupDate: zod.coerce.date().describe("Pickup date-time"),
+  expectedReturnDate: zod.coerce.date().describe("Expected return date-time"),
+});
 
 export const ListAvailableVehiclesResponse = zod.object({
-  "data": zod.array(zod.object({
-  "id": zod.string(),
-  "make": zod.string(),
-  "model": zod.string(),
-  "plateNumber": zod.string(),
-  "year": zod.number(),
-  "color": zod.string(),
-  "notes": zod.string().nullish(),
-  "transmission": zod.enum(['MANUAL', 'AUTOMATIC']),
-  "fuelType": zod.enum(['PETROL', 'DIESEL', 'ELECTRIC', 'HYBRID']),
-  "seats": zod.number(),
-  "currentMileage": zod.number(),
-  "status": zod.enum(['AVAILABLE', 'RESERVED', 'RENTED', 'MAINTENANCE', 'OUT_OF_SERVICE', 'ARCHIVED']),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-}))
-})
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      make: zod.string(),
+      model: zod.string(),
+      plateNumber: zod.string(),
+      year: zod.number(),
+      color: zod.string(),
+      notes: zod.string().nullish(),
+      transmission: zod.enum(["MANUAL", "AUTOMATIC"]),
+      fuelType: zod.enum(["PETROL", "DIESEL", "ELECTRIC", "HYBRID"]),
+      seats: zod.number(),
+      currentMileage: zod.number(),
+      status: zod.enum([
+        "AVAILABLE",
+        "RESERVED",
+        "RENTED",
+        "MAINTENANCE",
+        "OUT_OF_SERVICE",
+        "ARCHIVED",
+      ]),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+});
 
 /**
  * @summary Get a vehicle in the current organization
  */
 export const GetVehicleParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('Vehicle ID')
-})
+  id: zod.coerce.string().uuid().describe("Vehicle ID"),
+});
 
 export const GetVehicleResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "make": zod.string(),
-  "model": zod.string(),
-  "plateNumber": zod.string(),
-  "year": zod.number(),
-  "color": zod.string(),
-  "notes": zod.string().nullish(),
-  "transmission": zod.enum(['MANUAL', 'AUTOMATIC']),
-  "fuelType": zod.enum(['PETROL', 'DIESEL', 'ELECTRIC', 'HYBRID']),
-  "seats": zod.number(),
-  "currentMileage": zod.number(),
-  "status": zod.enum(['AVAILABLE', 'RESERVED', 'RENTED', 'MAINTENANCE', 'OUT_OF_SERVICE', 'ARCHIVED']),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    make: zod.string(),
+    model: zod.string(),
+    plateNumber: zod.string(),
+    year: zod.number(),
+    color: zod.string(),
+    notes: zod.string().nullish(),
+    transmission: zod.enum(["MANUAL", "AUTOMATIC"]),
+    fuelType: zod.enum(["PETROL", "DIESEL", "ELECTRIC", "HYBRID"]),
+    seats: zod.number(),
+    currentMileage: zod.number(),
+    status: zod.enum([
+      "AVAILABLE",
+      "RESERVED",
+      "RENTED",
+      "MAINTENANCE",
+      "OUT_OF_SERVICE",
+      "ARCHIVED",
+    ]),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Update a vehicle in the current organization
  */
 export const UpdateVehicleParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('Vehicle ID')
-})
-
-
-
+  id: zod.coerce.string().uuid().describe("Vehicle ID"),
+});
 
 export const updateVehicleBodyYearMin = 1900;
 export const updateVehicleBodyYearMax = 2100;
 
-
-
-
 export const updateVehicleBodyCurrentMileageMin = 0;
 
-
-
 export const UpdateVehicleBody = zod.object({
-  "make": zod.string().min(1),
-  "model": zod.string().min(1),
-  "plate_number": zod.string().min(1),
-  "year": zod.number().min(updateVehicleBodyYearMin).max(updateVehicleBodyYearMax),
-  "color": zod.string().min(1),
-  "notes": zod.string().min(1).nullish(),
-  "transmission": zod.enum(['MANUAL', 'AUTOMATIC']),
-  "fuel_type": zod.enum(['PETROL', 'DIESEL', 'ELECTRIC', 'HYBRID']),
-  "seats": zod.number().min(1),
-  "current_mileage": zod.number().min(updateVehicleBodyCurrentMileageMin),
-  "status": zod.enum(['AVAILABLE', 'RESERVED', 'RENTED', 'MAINTENANCE', 'OUT_OF_SERVICE', 'ARCHIVED'])
-})
+  make: zod.string().min(1),
+  model: zod.string().min(1),
+  plate_number: zod.string().min(1),
+  year: zod
+    .number()
+    .min(updateVehicleBodyYearMin)
+    .max(updateVehicleBodyYearMax),
+  color: zod.string().min(1),
+  notes: zod.string().min(1).nullish(),
+  transmission: zod.enum(["MANUAL", "AUTOMATIC"]),
+  fuel_type: zod.enum(["PETROL", "DIESEL", "ELECTRIC", "HYBRID"]),
+  seats: zod.number().min(1),
+  current_mileage: zod.number().min(updateVehicleBodyCurrentMileageMin),
+  status: zod.enum([
+    "AVAILABLE",
+    "RESERVED",
+    "RENTED",
+    "MAINTENANCE",
+    "OUT_OF_SERVICE",
+    "ARCHIVED",
+  ]),
+});
 
 export const UpdateVehicleResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "make": zod.string(),
-  "model": zod.string(),
-  "plateNumber": zod.string(),
-  "year": zod.number(),
-  "color": zod.string(),
-  "notes": zod.string().nullish(),
-  "transmission": zod.enum(['MANUAL', 'AUTOMATIC']),
-  "fuelType": zod.enum(['PETROL', 'DIESEL', 'ELECTRIC', 'HYBRID']),
-  "seats": zod.number(),
-  "currentMileage": zod.number(),
-  "status": zod.enum(['AVAILABLE', 'RESERVED', 'RENTED', 'MAINTENANCE', 'OUT_OF_SERVICE', 'ARCHIVED']),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    make: zod.string(),
+    model: zod.string(),
+    plateNumber: zod.string(),
+    year: zod.number(),
+    color: zod.string(),
+    notes: zod.string().nullish(),
+    transmission: zod.enum(["MANUAL", "AUTOMATIC"]),
+    fuelType: zod.enum(["PETROL", "DIESEL", "ELECTRIC", "HYBRID"]),
+    seats: zod.number(),
+    currentMileage: zod.number(),
+    status: zod.enum([
+      "AVAILABLE",
+      "RESERVED",
+      "RENTED",
+      "MAINTENANCE",
+      "OUT_OF_SERVICE",
+      "ARCHIVED",
+    ]),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Soft delete a vehicle in the current organization
  */
 export const DeleteVehicleParams = zod.object({
-  "id": zod.coerce.string().uuid().describe('Vehicle ID')
-})
+  id: zod.coerce.string().uuid().describe("Vehicle ID"),
+});
 
-export const DeleteVehicleResponse = zod.void()
+export const DeleteVehicleResponse = zod.void();
 
 /**
  * @summary List photos for a vehicle
  */
 export const ListVehiclePhotosParams = zod.object({
-  "vehicleId": zod.coerce.string().uuid()
-})
+  vehicleId: zod.coerce.string().uuid(),
+});
 
 export const ListVehiclePhotosResponse = zod.object({
-  "data": zod.array(zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string(),
-  "sortOrder": zod.number(),
-  "caption": zod.string().nullish(),
-  "originalFilename": zod.string(),
-  "mimeType": zod.string(),
-  "fileSize": zod.number(),
-  "url": zod.string(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-}))
-})
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      vehicleId: zod.string(),
+      sortOrder: zod.number(),
+      caption: zod.string().nullish(),
+      originalFilename: zod.string(),
+      mimeType: zod.string(),
+      fileSize: zod.number(),
+      url: zod.string(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+});
 
 /**
  * @summary Upload a photo for a vehicle
  */
 export const UploadVehiclePhotoParams = zod.object({
-  "vehicleId": zod.coerce.string().uuid()
-})
+  vehicleId: zod.coerce.string().uuid(),
+});
 
 export const UploadVehiclePhotoResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string(),
-  "sortOrder": zod.number(),
-  "caption": zod.string().nullish(),
-  "originalFilename": zod.string(),
-  "mimeType": zod.string(),
-  "fileSize": zod.number(),
-  "url": zod.string(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    vehicleId: zod.string(),
+    sortOrder: zod.number(),
+    caption: zod.string().nullish(),
+    originalFilename: zod.string(),
+    mimeType: zod.string(),
+    fileSize: zod.number(),
+    url: zod.string(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Serve a vehicle photo's image bytes
  */
 export const ServeVehiclePhotoParams = zod.object({
-  "vehicleId": zod.coerce.string().uuid(),
-  "id": zod.coerce.string().uuid()
-})
+  vehicleId: zod.coerce.string().uuid(),
+  id: zod.coerce.string().uuid(),
+});
 
-export const ServeVehiclePhotoResponse = zod.unknown()
+export const ServeVehiclePhotoResponse = zod.unknown();
 
 /**
  * @summary Get a vehicle photo
  */
 export const GetVehiclePhotoParams = zod.object({
-  "vehicleId": zod.coerce.string().uuid(),
-  "id": zod.coerce.string().uuid()
-})
+  vehicleId: zod.coerce.string().uuid(),
+  id: zod.coerce.string().uuid(),
+});
 
 export const GetVehiclePhotoResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string(),
-  "sortOrder": zod.number(),
-  "caption": zod.string().nullish(),
-  "originalFilename": zod.string(),
-  "mimeType": zod.string(),
-  "fileSize": zod.number(),
-  "url": zod.string(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    vehicleId: zod.string(),
+    sortOrder: zod.number(),
+    caption: zod.string().nullish(),
+    originalFilename: zod.string(),
+    mimeType: zod.string(),
+    fileSize: zod.number(),
+    url: zod.string(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Soft delete a vehicle photo
  */
 export const DeleteVehiclePhotoParams = zod.object({
-  "vehicleId": zod.coerce.string().uuid(),
-  "id": zod.coerce.string().uuid()
-})
+  vehicleId: zod.coerce.string().uuid(),
+  id: zod.coerce.string().uuid(),
+});
 
-export const DeleteVehiclePhotoResponse = zod.void()
+export const DeleteVehiclePhotoResponse = zod.void();
 
 /**
  * @summary List documents for a vehicle
  */
 export const ListVehicleDocumentsParams = zod.object({
-  "vehicleId": zod.coerce.string().uuid()
-})
+  vehicleId: zod.coerce.string().uuid(),
+});
 
 export const ListVehicleDocumentsResponse = zod.object({
-  "data": zod.array(zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string().nullish(),
-  "customerId": zod.string().nullish(),
-  "category": zod.enum(['REGISTRATION', 'INSURANCE', 'OTHER']),
-  "expiryDate": zod.coerce.date().nullable(),
-  "originalFilename": zod.string(),
-  "mimeType": zod.string(),
-  "fileSize": zod.number(),
-  "url": zod.string(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-}))
-})
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      vehicleId: zod.string().nullish(),
+      customerId: zod.string().nullish(),
+      category: zod.enum(["REGISTRATION", "INSURANCE", "OTHER"]),
+      expiryDate: zod.coerce.date().nullable(),
+      originalFilename: zod.string(),
+      mimeType: zod.string(),
+      fileSize: zod.number(),
+      url: zod.string(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+});
 
 /**
  * @summary Upload a document for a vehicle
  */
 export const UploadVehicleDocumentParams = zod.object({
-  "vehicleId": zod.coerce.string().uuid()
-})
+  vehicleId: zod.coerce.string().uuid(),
+});
 
 export const UploadVehicleDocumentResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string().nullish(),
-  "customerId": zod.string().nullish(),
-  "category": zod.enum(['REGISTRATION', 'INSURANCE', 'OTHER']),
-  "expiryDate": zod.coerce.date().nullable(),
-  "originalFilename": zod.string(),
-  "mimeType": zod.string(),
-  "fileSize": zod.number(),
-  "url": zod.string(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    vehicleId: zod.string().nullish(),
+    customerId: zod.string().nullish(),
+    category: zod.enum(["REGISTRATION", "INSURANCE", "OTHER"]),
+    expiryDate: zod.coerce.date().nullable(),
+    originalFilename: zod.string(),
+    mimeType: zod.string(),
+    fileSize: zod.number(),
+    url: zod.string(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Get a vehicle document
  */
 export const GetVehicleDocumentParams = zod.object({
-  "vehicleId": zod.coerce.string().uuid(),
-  "id": zod.coerce.string().uuid()
-})
+  vehicleId: zod.coerce.string().uuid(),
+  id: zod.coerce.string().uuid(),
+});
 
 export const GetVehicleDocumentResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string().nullish(),
-  "customerId": zod.string().nullish(),
-  "category": zod.enum(['REGISTRATION', 'INSURANCE', 'OTHER']),
-  "expiryDate": zod.coerce.date().nullable(),
-  "originalFilename": zod.string(),
-  "mimeType": zod.string(),
-  "fileSize": zod.number(),
-  "url": zod.string(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    vehicleId: zod.string().nullish(),
+    customerId: zod.string().nullish(),
+    category: zod.enum(["REGISTRATION", "INSURANCE", "OTHER"]),
+    expiryDate: zod.coerce.date().nullable(),
+    originalFilename: zod.string(),
+    mimeType: zod.string(),
+    fileSize: zod.number(),
+    url: zod.string(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Update vehicle document metadata
  */
 export const UpdateVehicleDocumentParams = zod.object({
-  "vehicleId": zod.coerce.string().uuid(),
-  "id": zod.coerce.string().uuid()
-})
+  vehicleId: zod.coerce.string().uuid(),
+  id: zod.coerce.string().uuid(),
+});
 
 export const UpdateVehicleDocumentBody = zod.object({
-  "expiryDate": zod.coerce.date().nullable()
-})
+  expiryDate: zod.coerce.date().nullable(),
+});
 
 export const UpdateVehicleDocumentResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "vehicleId": zod.string().nullish(),
-  "customerId": zod.string().nullish(),
-  "category": zod.enum(['REGISTRATION', 'INSURANCE', 'OTHER']),
-  "expiryDate": zod.coerce.date().nullable(),
-  "originalFilename": zod.string(),
-  "mimeType": zod.string(),
-  "fileSize": zod.number(),
-  "url": zod.string(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
+  data: zod.object({
+    id: zod.string(),
+    vehicleId: zod.string().nullish(),
+    customerId: zod.string().nullish(),
+    category: zod.enum(["REGISTRATION", "INSURANCE", "OTHER"]),
+    expiryDate: zod.coerce.date().nullable(),
+    originalFilename: zod.string(),
+    mimeType: zod.string(),
+    fileSize: zod.number(),
+    url: zod.string(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Soft delete a vehicle document
  */
 export const DeleteVehicleDocumentParams = zod.object({
-  "vehicleId": zod.coerce.string().uuid(),
-  "id": zod.coerce.string().uuid()
-})
+  vehicleId: zod.coerce.string().uuid(),
+  id: zod.coerce.string().uuid(),
+});
 
-export const DeleteVehicleDocumentResponse = zod.void()
+export const DeleteVehicleDocumentResponse = zod.void();
 
 /**
  * @summary Download a vehicle document
  */
 export const DownloadVehicleDocumentParams = zod.object({
-  "vehicleId": zod.coerce.string().uuid(),
-  "id": zod.coerce.string().uuid()
-})
+  vehicleId: zod.coerce.string().uuid(),
+  id: zod.coerce.string().uuid(),
+});
 
-export const DownloadVehicleDocumentResponse = zod.unknown()
-
+export const DownloadVehicleDocumentResponse = zod.unknown();

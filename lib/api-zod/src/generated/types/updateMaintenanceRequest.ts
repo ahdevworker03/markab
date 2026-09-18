@@ -5,9 +5,9 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { MaintenanceReplacedPart } from './maintenanceReplacedPart';
-import type { UpdateMaintenanceRequestStatus } from './updateMaintenanceRequestStatus';
-import type { UpdateMaintenanceRequestType } from './updateMaintenanceRequestType';
+import type { MaintenanceReplacedPart } from "./maintenanceReplacedPart";
+import type { UpdateMaintenanceRequestStatus } from "./updateMaintenanceRequestStatus";
+import type { UpdateMaintenanceRequestType } from "./updateMaintenanceRequestType";
 
 export interface UpdateMaintenanceRequest {
   type?: UpdateMaintenanceRequestType;

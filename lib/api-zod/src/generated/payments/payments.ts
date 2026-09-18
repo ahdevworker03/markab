@@ -5,72 +5,72 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import * as zod from 'zod';
-
+import * as zod from "zod";
 
 /**
  * @summary List payments in the current organization
  */
 export const ListPaymentsResponse = zod.object({
-  "data": zod.array(zod.object({
-  "id": zod.string(),
-  "rentalId": zod.string(),
-  "amount": zod.number(),
-  "paymentDate": zod.coerce.date(),
-  "method": zod.enum(['CASH', 'CARD', 'TRANSFER', 'OTHER']),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-}))
-})
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      rentalId: zod.string(),
+      amount: zod.number(),
+      paymentDate: zod.coerce.date(),
+      method: zod.enum(["CASH", "CARD", "TRANSFER", "OTHER"]),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+});
 
 /**
  * @summary List payments for a rental in the current organization
  */
 export const ListRentalPaymentsParams = zod.object({
-  "rentalId": zod.coerce.string().uuid().describe('Rental ID')
-})
+  rentalId: zod.coerce.string().uuid().describe("Rental ID"),
+});
 
 export const ListRentalPaymentsResponse = zod.object({
-  "data": zod.object({
-  "payments": zod.array(zod.object({
-  "id": zod.string(),
-  "rentalId": zod.string(),
-  "amount": zod.number(),
-  "paymentDate": zod.coerce.date(),
-  "method": zod.enum(['CASH', 'CARD', 'TRANSFER', 'OTHER']),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})),
-  "outstandingBalance": zod.number()
-})
-})
+  data: zod.object({
+    payments: zod.array(
+      zod.object({
+        id: zod.string(),
+        rentalId: zod.string(),
+        amount: zod.number(),
+        paymentDate: zod.coerce.date(),
+        method: zod.enum(["CASH", "CARD", "TRANSFER", "OTHER"]),
+        createdAt: zod.coerce.date(),
+        updatedAt: zod.coerce.date(),
+      }),
+    ),
+    outstandingBalance: zod.number(),
+  }),
+});
 
 /**
  * @summary Record a payment for a rental in the current organization
  */
 export const CreatePaymentParams = zod.object({
-  "rentalId": zod.coerce.string().uuid().describe('Rental ID')
-})
+  rentalId: zod.coerce.string().uuid().describe("Rental ID"),
+});
 
 export const createPaymentBodyAmountExclusiveMin = 0;
 
-
-
 export const CreatePaymentBody = zod.object({
-  "amount": zod.number().gt(createPaymentBodyAmountExclusiveMin),
-  "payment_date": zod.coerce.date(),
-  "method": zod.enum(['CASH', 'CARD', 'TRANSFER', 'OTHER'])
-})
+  amount: zod.number().gt(createPaymentBodyAmountExclusiveMin),
+  payment_date: zod.coerce.date(),
+  method: zod.enum(["CASH", "CARD", "TRANSFER", "OTHER"]),
+});
 
 export const CreatePaymentResponse = zod.object({
-  "data": zod.object({
-  "id": zod.string(),
-  "rentalId": zod.string(),
-  "amount": zod.number(),
-  "paymentDate": zod.coerce.date(),
-  "method": zod.enum(['CASH', 'CARD', 'TRANSFER', 'OTHER']),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
-
+  data: zod.object({
+    id: zod.string(),
+    rentalId: zod.string(),
+    amount: zod.number(),
+    paymentDate: zod.coerce.date(),
+    method: zod.enum(["CASH", "CARD", "TRANSFER", "OTHER"]),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});

@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { ExpenseResponse } from './expenseResponse';
+import type { ExpenseResponse } from "./expenseResponse";
 
 export interface ExpenseListResponse {
   data: ExpenseResponse[];

@@ -6,14 +6,14 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type UpdateVehicleRequestStatus = typeof UpdateVehicleRequestStatus[keyof typeof UpdateVehicleRequestStatus];
-
+export type UpdateVehicleRequestStatus =
+  (typeof UpdateVehicleRequestStatus)[keyof typeof UpdateVehicleRequestStatus];
 
 export const UpdateVehicleRequestStatus = {
-  AVAILABLE: 'AVAILABLE',
-  RESERVED: 'RESERVED',
-  RENTED: 'RENTED',
-  MAINTENANCE: 'MAINTENANCE',
-  OUT_OF_SERVICE: 'OUT_OF_SERVICE',
-  ARCHIVED: 'ARCHIVED',
+  AVAILABLE: "AVAILABLE",
+  RESERVED: "RESERVED",
+  RENTED: "RENTED",
+  MAINTENANCE: "MAINTENANCE",
+  OUT_OF_SERVICE: "OUT_OF_SERVICE",
+  ARCHIVED: "ARCHIVED",
 } as const;

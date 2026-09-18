@@ -6,13 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type ExpenseResponseCategory = typeof ExpenseResponseCategory[keyof typeof ExpenseResponseCategory];
-
+export type ExpenseResponseCategory =
+  (typeof ExpenseResponseCategory)[keyof typeof ExpenseResponseCategory];
 
 export const ExpenseResponseCategory = {
-  FUEL: 'FUEL',
-  INSURANCE: 'INSURANCE',
-  REGISTRATION: 'REGISTRATION',
-  CLEANING: 'CLEANING',
-  OTHER: 'OTHER',
+  FUEL: "FUEL",
+  INSURANCE: "INSURANCE",
+  REGISTRATION: "REGISTRATION",
+  CLEANING: "CLEANING",
+  OTHER: "OTHER",
 } as const;

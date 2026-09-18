@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { PaymentResponseMethod } from './paymentResponseMethod';
+import type { PaymentResponseMethod } from "./paymentResponseMethod";
 
 export interface PaymentResponse {
   id: string;

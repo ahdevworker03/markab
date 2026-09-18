@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { RentalResponseStatus } from './rentalResponseStatus';
+import type { RentalResponseStatus } from "./rentalResponseStatus";
 
 export interface RentalResponse {
   id: string;

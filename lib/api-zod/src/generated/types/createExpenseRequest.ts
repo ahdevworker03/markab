@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { CreateExpenseRequestCategory } from './createExpenseRequestCategory';
+import type { CreateExpenseRequestCategory } from "./createExpenseRequestCategory";
 
 export interface CreateExpenseRequest {
   vehicle_id?: string;

@@ -6,12 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type UpdateMaintenanceRequestType = typeof UpdateMaintenanceRequestType[keyof typeof UpdateMaintenanceRequestType];
-
+export type UpdateMaintenanceRequestType =
+  (typeof UpdateMaintenanceRequestType)[keyof typeof UpdateMaintenanceRequestType];
 
 export const UpdateMaintenanceRequestType = {
-  PREVENTIVE_SERVICE: 'PREVENTIVE_SERVICE',
-  INSPECTION: 'INSPECTION',
-  REPAIR: 'REPAIR',
-  OTHER: 'OTHER',
+  PREVENTIVE_SERVICE: "PREVENTIVE_SERVICE",
+  INSPECTION: "INSPECTION",
+  REPAIR: "REPAIR",
+  OTHER: "OTHER",
 } as const;

@@ -5,10 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
   MutationFunction,
   QueryFunction,
@@ -16,33 +13,33 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+} from "@tanstack/react-query";
 
 import type {
   ErrorResponse,
   OrganizationResponseWrapper,
-  UpdateOrganizationRequest
-} from '../api.schemas';
+  UpdateOrganizationRequest,
+} from "../api.schemas";
 
-import { customFetch } from '../../custom-fetch';
-import type { ErrorType , BodyType } from '../../custom-fetch';
+import { customFetch } from "../../custom-fetch";
+import type { ErrorType, BodyType } from "../../custom-fetch";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
-      type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
-
+type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-
-const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
+const withQueryKey = <T extends object, K>(
+  query: T,
+  queryKey: K,
+): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
     // The explicit queryKey always wins, matching the previous
     // `{ ...query, queryKey }` spread where it was set last.
-    if (key === 'queryKey') continue;
+    if (key === "queryKey") continue;
     Object.defineProperty(result, key, {
       enumerable: true,
       configurable: true,
@@ -53,218 +50,246 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 export const getGetMyOrganizationUrl = () => {
-
-
-
-
-  return `/api/organizations/me`
-}
+  return `/api/organizations/me`;
+};
 
 /**
  * @summary Get current organization
  */
-export const getMyOrganization = async ( options?: RequestInit): Promise<OrganizationResponseWrapper> => {
-
-  return customFetch<OrganizationResponseWrapper>(getGetMyOrganizationUrl(),
-  {
+export const getMyOrganization = async (
+  options?: RequestInit,
+): Promise<OrganizationResponseWrapper> => {
+  return customFetch<OrganizationResponseWrapper>(getGetMyOrganizationUrl(), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
+    method: "GET",
+  });
+};
 
 export const getGetMyOrganizationQueryKey = () => {
-    return [
-    `/api/organizations/me`
-    ] as const;
-    }
+  return [`/api/organizations/me`] as const;
+};
 
+export const getGetMyOrganizationQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyOrganization>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMyOrganization>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-export const getGetMyOrganizationQueryOptions = <TData = Awaited<ReturnType<typeof getMyOrganization>>, TError = ErrorType<ErrorResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyOrganization>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-) => {
+  const queryKey = queryOptions?.queryKey ?? getGetMyOrganizationQueryKey();
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMyOrganization>>
+  > = ({ signal }) => getMyOrganization({ signal, ...requestOptions });
 
-  const queryKey =  queryOptions?.queryKey ?? getGetMyOrganizationQueryKey();
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMyOrganization>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
 
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyOrganization>>> = ({ signal }) => getMyOrganization({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyOrganization>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type GetMyOrganizationQueryResult = NonNullable<Awaited<ReturnType<typeof getMyOrganization>>>
-export type GetMyOrganizationQueryError = ErrorType<ErrorResponse>
-
+export type GetMyOrganizationQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMyOrganization>>
+>;
+export type GetMyOrganizationQueryError = ErrorType<ErrorResponse>;
 
 /**
  * @summary Get current organization
  */
 
-export function useGetMyOrganization<TData = Awaited<ReturnType<typeof getMyOrganization>>, TError = ErrorType<ErrorResponse>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyOrganization>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export function useGetMyOrganization<
+  TData = Awaited<ReturnType<typeof getMyOrganization>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMyOrganization>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMyOrganizationQueryOptions(options);
 
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getGetMyOrganizationQueryOptions(options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-
-
-
-
-
 export const getUpdateMyOrganizationUrl = () => {
-
-
-
-
-  return `/api/organizations/me`
-}
+  return `/api/organizations/me`;
+};
 
 /**
  * @summary Update current organization
  */
-export const updateMyOrganization = async (updateOrganizationRequest: UpdateOrganizationRequest, options?: RequestInit): Promise<OrganizationResponseWrapper> => {
+export const updateMyOrganization = async (
+  updateOrganizationRequest: UpdateOrganizationRequest,
+  options?: RequestInit,
+): Promise<OrganizationResponseWrapper> => {
+  return customFetch<OrganizationResponseWrapper>(
+    getUpdateMyOrganizationUrl(),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(updateOrganizationRequest),
+    },
+  );
+};
 
-  return customFetch<OrganizationResponseWrapper>(getUpdateMyOrganizationUrl(),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(updateOrganizationRequest)
-  }
-);}
+export const getUpdateMyOrganizationMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMyOrganization>>,
+    TError,
+    { data: BodyType<UpdateOrganizationRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateMyOrganization>>,
+  TError,
+  { data: BodyType<UpdateOrganizationRequest> },
+  TContext
+> => {
+  const mutationKey = ["updateMyOrganization"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateMyOrganization>>,
+    { data: BodyType<UpdateOrganizationRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
 
+    return updateMyOrganization(data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type UpdateMyOrganizationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateMyOrganization>>
+>;
+export type UpdateMyOrganizationMutationBody =
+  BodyType<UpdateOrganizationRequest>;
+export type UpdateMyOrganizationMutationError = ErrorType<ErrorResponse>;
 
-export const getUpdateMyOrganizationMutationOptions = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMyOrganization>>, TError,{data: BodyType<UpdateOrganizationRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateMyOrganization>>, TError,{data: BodyType<UpdateOrganizationRequest>}, TContext> => {
-
-const mutationKey = ['updateMyOrganization'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMyOrganization>>, {data: BodyType<UpdateOrganizationRequest>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  updateMyOrganization(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateMyOrganizationMutationResult = NonNullable<Awaited<ReturnType<typeof updateMyOrganization>>>
-    export type UpdateMyOrganizationMutationBody = BodyType<UpdateOrganizationRequest>
-    export type UpdateMyOrganizationMutationError = ErrorType<ErrorResponse>
-
-    /**
+/**
  * @summary Update current organization
  */
-export const useUpdateMyOrganization = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMyOrganization>>, TError,{data: BodyType<UpdateOrganizationRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof updateMyOrganization>>,
-        TError,
-        {data: BodyType<UpdateOrganizationRequest>},
-        TContext
-      > => {
-      return useMutation(getUpdateMyOrganizationMutationOptions(options));
-    }
-    export const getDeleteMyOrganizationUrl = () => {
-
-
-
-
-  return `/api/organizations/me`
-}
+export const useUpdateMyOrganization = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMyOrganization>>,
+    TError,
+    { data: BodyType<UpdateOrganizationRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateMyOrganization>>,
+  TError,
+  { data: BodyType<UpdateOrganizationRequest> },
+  TContext
+> => {
+  return useMutation(getUpdateMyOrganizationMutationOptions(options));
+};
+export const getDeleteMyOrganizationUrl = () => {
+  return `/api/organizations/me`;
+};
 
 /**
  * @summary Organization deletion is not supported
  */
-export const deleteMyOrganization = async ( options?: RequestInit): Promise<unknown> => {
-
-  return customFetch<unknown>(getDeleteMyOrganizationUrl(),
-  {
+export const deleteMyOrganization = async (
+  options?: RequestInit,
+): Promise<unknown> => {
+  return customFetch<unknown>(getDeleteMyOrganizationUrl(), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  });
+};
 
+export const getDeleteMyOrganizationMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteMyOrganization>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteMyOrganization>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["deleteMyOrganization"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteMyOrganization>>,
+    void
+  > = () => {
+    return deleteMyOrganization(requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type DeleteMyOrganizationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteMyOrganization>>
+>;
 
+export type DeleteMyOrganizationMutationError = ErrorType<ErrorResponse>;
 
-
-export const getDeleteMyOrganizationMutationOptions = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyOrganization>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteMyOrganization>>, TError,void, TContext> => {
-
-const mutationKey = ['deleteMyOrganization'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMyOrganization>>, void> = () => {
-
-
-          return  deleteMyOrganization(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteMyOrganizationMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMyOrganization>>>
-
-    export type DeleteMyOrganizationMutationError = ErrorType<ErrorResponse>
-
-    /**
+/**
  * @summary Organization deletion is not supported
  */
-export const useDeleteMyOrganization = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyOrganization>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof deleteMyOrganization>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getDeleteMyOrganizationMutationOptions(options));
-    }
+export const useDeleteMyOrganization = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteMyOrganization>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteMyOrganization>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getDeleteMyOrganizationMutationOptions(options));
+};
