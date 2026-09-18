@@ -114,6 +114,16 @@ or production release. Request responses remain generic for known, unknown,
 deactivated, and provider-failure cases. Provider failures are redacted and
 observable without logging raw reset tokens.
 
+Set `RESEND_API_KEY`, `RESEND_FROM`, `PASSWORD_RESET_FRONTEND_ORIGIN`, and
+`PASSWORD_RESET_FRONTEND_PATH` in the staging and production secret stores.
+Production startup rejects missing or invalid reset-email configuration; test
+uses the in-memory delivery sink and sends no email. Verify the sender domain
+in Resend before deployment. Rotate the API key in the secret store, restart
+the API with the replacement key, and revoke the old key only after a
+controlled staging reset succeeds. Investigate delivery failures through the
+redacted `provider: "resend"` diagnostics and Resend delivery records; do not
+add reset URLs, tokens, API keys, or recipient addresses to application logs.
+
 Step 61 implements private Cloudflare R2 through the existing
 `StorageProvider` abstraction. R2 stores production uploads and off-server
 PostgreSQL backups. The application retains authenticated server-side

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import request from "supertest";
 import app from "../../app";
 import { prisma } from "../../database";
@@ -7,7 +7,9 @@ import { hashPassword } from "./auth.hash";
 import {
   clearPasswordResetDeliveriesForTest,
   getLatestPasswordResetDeliveryForTest,
+  setPasswordResetDeliveryForTest,
 } from "./password-reset.delivery";
+import { logger } from "../../config";
 
 describe("password reset routes", () => {
   let email: string;
@@ -16,6 +18,7 @@ describe("password reset routes", () => {
   beforeEach(async () => {
     await cleanup();
     clearPasswordResetDeliveriesForTest();
+    setPasswordResetDeliveryForTest();
 
     const organization = await prisma.organization.create({
       data: { name: "Password reset organization" },
@@ -30,6 +33,10 @@ describe("password reset routes", () => {
       },
     });
     userId = user.id;
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   async function requestReset() {
@@ -63,6 +70,38 @@ describe("password reset routes", () => {
 
     expect(response.status).toBe(204);
     expect(getLatestPasswordResetDeliveryForTest(email)).toBeDefined();
+  });
+
+  it("returns the generic response for deleted accounts", async () => {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { deleted_at: new Date() },
+    });
+
+    const response = await request(app)
+      .post("/api/auth/password-reset/request")
+      .send({ email });
+
+    expect(response.status).toBe(204);
+    expect(getLatestPasswordResetDeliveryForTest(email)).toBeUndefined();
+  });
+
+  it("returns the generic response and redacts provider failures", async () => {
+    const errorLog = vi.spyOn(logger, "error").mockImplementation(() => logger);
+    let token = "";
+    setPasswordResetDeliveryForTest(async (_email, resetToken) => {
+      token = resetToken;
+      throw new Error(resetToken);
+    });
+
+    const response = await request(app)
+      .post("/api/auth/password-reset/request")
+      .send({ email });
+
+    expect(response.status).toBe(204);
+    expect(response.text).toBe("");
+    expect(token).not.toBe("");
+    expect(JSON.stringify(errorLog.mock.calls)).not.toContain(token);
   });
 
   it("stores only a token hash and resets the password atomically", async () => {

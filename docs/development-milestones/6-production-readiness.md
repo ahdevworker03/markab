@@ -32,7 +32,6 @@ Milestones 1 through 5.8 and Step 58 are documented as complete. Milestone 5.8 c
 
 ### Functionality Requiring Completion
 
-- The password-reset delivery boundary is a test sink in `NODE_ENV=test` and otherwise performs no delivery.
 - Platform administration has a status mutation but no organization discovery/detail contract, dedicated frontend route, or secure production bootstrap.
 - Production environment validation, deployable artifacts, durable object storage, dependency-aware readiness, graceful shutdown, centralized observability, backups, restore evidence, and release runbooks are incomplete.
 - The planned browser E2E suite is documented but has no executable runner, configuration, scripts, or scenarios.
@@ -235,15 +234,18 @@ Resolve confirmed production blockers at request, authentication, tenant, and fr
 
 ## Step 59 — Real Password-Reset Delivery
 
+**Status:** Implementation complete; controlled staging delivery verification remains pending.
+
 ### Objective
 
 Connect the existing password-reset domain to a real transactional email delivery path with production configuration, safe failure handling, and end-to-end verification.
 
-### Current State
+### Completion
 
-- Reset request/confirm endpoints, token generation/hash/expiry, previous-token invalidation, one-time consumption, password hashing, session revocation, transaction retry, test delivery sink, and completion audit exist.
-- `deliverPasswordReset` stores plaintext tokens only for tests and does nothing in other environments. The frontend reset screen already consumes the generated API and reads the token from the reset URL.
-- A synchronous provider failure for a known email could currently distinguish that account from an unknown account.
+- Resend delivery uses native `fetch` with a bounded timeout, a verified sender identity, and a server-built reset URL from validated frontend origin/path configuration.
+- Production startup rejects incomplete or unsafe reset-email configuration. Test mode retains the existing in-memory delivery sink and sends no real email.
+- Known, unknown, deleted, and provider-failure reset requests preserve the generic `204` response. Delivery failures produce redacted structured diagnostics and leave the unused token replaceable by a later request.
+- The reset-token lifecycle, password/session revocation, transaction safety, and completion audit remain unchanged.
 
 ### Scope
 
@@ -272,9 +274,9 @@ Connect the existing password-reset domain to a real transactional email deliver
 
 ### Verification
 
-- Preserve existing token lifecycle/concurrency tests; add delivery-adapter unit/integration tests for link construction, correct recipient, expiry copy, safe payload, success, timeout, bounded failure, and redacted logging.
-- Add route tests proving generic responses for known, unknown, deactivated, and provider-failure cases; add an E2E-compatible fake mailbox path for staging/release tests.
-- Manual: request reset in staging using a real controlled mailbox; verify prior sessions are invalid after reset; verify reset URLs use the correct origin; simulate a provider outage and confirm generic response plus redacted operator diagnostics; confirm raw tokens/secrets are absent from logs.
+- Adapter tests cover link construction, sender/recipient payload, expiry copy, provider failure, and timeout with fake fetches; route tests cover generic known, unknown, deleted, and provider-failure responses, redacted diagnostics, token lifecycle, and session revocation.
+- API suite: 29 files / 290 tests passed. Workspace typecheck, API lint, API and web production builds, changed-file formatting, and `git diff --check` passed.
+- Manual staging verification remains required: request a reset through a controlled mailbox, confirm HTTPS link origin/path and session revocation, simulate a provider failure, and confirm redacted diagnostics contain no token or secret material.
 
 ### Dependencies
 

@@ -27,6 +27,12 @@ interface R2Config {
   bucket: string;
 }
 
+export interface PasswordResetEmailConfig {
+  apiKey: string;
+  from: string;
+  resetUrl: URL;
+}
+
 export interface EnvConfig {
   PORT: number;
   NODE_ENV: NodeEnv;
@@ -35,6 +41,7 @@ export interface EnvConfig {
   STORAGE_PROVIDER: StorageProviderName;
   STORAGE_DIR?: string;
   R2?: R2Config;
+  PASSWORD_RESET_EMAIL?: PasswordResetEmailConfig;
 }
 
 function parseCorsOrigins(rawOrigins: string | undefined): string[] {
@@ -74,6 +81,83 @@ function requiredR2Value(environment: NodeJS.ProcessEnv, name: string): string {
   }
 
   return value;
+}
+
+function passwordResetEmailConfig(
+  environment: NodeJS.ProcessEnv,
+  nodeEnv: NodeEnv,
+): PasswordResetEmailConfig | undefined {
+  if (nodeEnv === "test") return undefined;
+
+  const apiKey = environment["RESEND_API_KEY"]?.trim();
+  const from = environment["RESEND_FROM"]?.trim();
+  const origin = environment["PASSWORD_RESET_FRONTEND_ORIGIN"]?.trim();
+  const path = environment["PASSWORD_RESET_FRONTEND_PATH"]?.trim();
+  const values = [apiKey, from, origin, path];
+
+  if (!values.some(Boolean)) {
+    if (nodeEnv === "production") {
+      throw new Error(
+        "Resend password-reset email configuration is required in production.",
+      );
+    }
+    return undefined;
+  }
+
+  if (values.some((value) => !value)) {
+    throw new Error(
+      "Resend password-reset email configuration must be complete.",
+    );
+  }
+
+  if (!/^re_[A-Za-z0-9_]+$/.test(apiKey!)) {
+    throw new Error("RESEND_API_KEY must be a valid Resend API key.");
+  }
+
+  if (
+    !/^[^\r\n]+@[^\s<>]+(?:\.[^\s<>]+)+$|^[^\r\n]+<[^\s<>]+@[^\s<>]+(?:\.[^\s<>]+)+>$/.test(
+      from!,
+    )
+  ) {
+    throw new Error("RESEND_FROM must be a valid sender identity.");
+  }
+
+  let resetOrigin: URL;
+  try {
+    resetOrigin = new URL(origin!);
+    if (
+      resetOrigin.origin !== origin ||
+      (nodeEnv === "production" && resetOrigin.protocol !== "https:")
+    ) {
+      throw new Error();
+    }
+  } catch {
+    throw new Error("PASSWORD_RESET_FRONTEND_ORIGIN must be a valid origin.");
+  }
+
+  if (
+    !path!.startsWith("/") ||
+    path!.startsWith("//") ||
+    path!.includes("?") ||
+    path!.includes("#")
+  ) {
+    throw new Error(
+      "PASSWORD_RESET_FRONTEND_PATH must be an absolute path without query or fragment.",
+    );
+  }
+
+  const resetUrl = new URL(path!, resetOrigin);
+  if (resetUrl.origin !== resetOrigin.origin) {
+    throw new Error(
+      "PASSWORD_RESET_FRONTEND_PATH must remain on the configured origin.",
+    );
+  }
+
+  return {
+    apiKey: apiKey!,
+    from: from!,
+    resetUrl,
+  };
 }
 
 export function loadEnv(
@@ -127,6 +211,10 @@ export function loadEnv(
           bucket: requiredR2Value(environment, "R2_BUCKET"),
         }
       : undefined;
+  const passwordResetEmail = passwordResetEmailConfig(
+    environment,
+    nodeEnv as NodeEnv,
+  );
 
   return {
     PORT: port,
@@ -136,6 +224,7 @@ export function loadEnv(
     STORAGE_PROVIDER: storageProvider,
     STORAGE_DIR: environment["STORAGE_DIR"],
     R2: r2,
+    PASSWORD_RESET_EMAIL: passwordResetEmail,
   };
 }
 
