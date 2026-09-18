@@ -1,9 +1,12 @@
 import { prisma } from "../../database";
+import type { TxClient } from "../../database";
 import type {
   UserRecord,
   CreateUserInput,
   UpdateUserInput,
 } from "./user.types";
+
+type DbClient = typeof prisma | TxClient;
 
 async function findByOrg(orgId: string): Promise<UserRecord[]> {
   return prisma.user.findMany({
@@ -15,8 +18,9 @@ async function findByOrg(orgId: string): Promise<UserRecord[]> {
 async function findById(
   userId: string,
   orgId: string,
+  db: DbClient = prisma,
 ): Promise<UserRecord | null> {
-  return prisma.user.findFirst({
+  return db.user.findFirst({
     where: { id: userId, organization_id: orgId },
   });
 }
@@ -52,8 +56,11 @@ async function update(
   });
 }
 
-async function softDelete(userId: string): Promise<UserRecord> {
-  return prisma.user.update({
+async function softDelete(
+  userId: string,
+  db: DbClient = prisma,
+): Promise<UserRecord> {
+  return db.user.update({
     where: { id: userId },
     data: { deleted_at: new Date() },
   });

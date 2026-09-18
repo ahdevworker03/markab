@@ -7,6 +7,7 @@ import { cleanup } from "../../test/helpers";
 
 describe("user routes", () => {
   let organizationId: string;
+  let ownerId: string;
   let ownerToken: string;
 
   beforeEach(async () => {
@@ -25,6 +26,7 @@ describe("user routes", () => {
         role: "OWNER",
       },
     });
+    ownerId = owner.id;
 
     ownerToken = generateAccessToken({
       sub: owner.id,
@@ -45,6 +47,54 @@ describe("user routes", () => {
 
     expect(response.status).toBe(201);
     expect(response.body.data.role).toBe("EMPLOYEE");
+  });
+
+  it("normalizes employee email identity before enforcing global uniqueness", async () => {
+    const email = `normalized-employee-${Date.now()}@example.com`;
+    const first = await request(app)
+      .post("/api/users")
+      .set("Authorization", `Bearer ${ownerToken}`)
+      .send({
+        email: `  ${email.toUpperCase()}  `,
+        password: "Password123!",
+        role: "EMPLOYEE",
+      });
+    const duplicate = await request(app)
+      .post("/api/users")
+      .set("Authorization", `Bearer ${ownerToken}`)
+      .send({ email, password: "Password123!", role: "EMPLOYEE" });
+
+    expect(first.status).toBe(201);
+    expect(first.body.data.email).toBe(email);
+    expect(duplicate.status).toBe(409);
+    expect(duplicate.body.error.code).toBe("EMAIL_ALREADY_EXISTS");
+  });
+
+  it("rejects OWNER role changes while preserving EMPLOYEE updates", async () => {
+    const employee = await prisma.user.create({
+      data: {
+        organization_id: organizationId,
+        email: `role-employee-${Date.now()}@example.com`,
+        password_hash: "hash",
+        role: "EMPLOYEE",
+      },
+    });
+
+    const [ownerUpdate, employeeUpdate] = await Promise.all([
+      request(app)
+        .patch(`/api/users/${ownerId}`)
+        .set("Authorization", `Bearer ${ownerToken}`)
+        .send({ role: "EMPLOYEE" }),
+      request(app)
+        .patch(`/api/users/${employee.id}`)
+        .set("Authorization", `Bearer ${ownerToken}`)
+        .send({ role: "EMPLOYEE" }),
+    ]);
+
+    expect(ownerUpdate.status).toBe(409);
+    expect(ownerUpdate.body.error.code).toBe("OWNER_ROLE_CHANGE_NOT_SUPPORTED");
+    expect(employeeUpdate.status).toBe(200);
+    expect(employeeUpdate.body.data.role).toBe("EMPLOYEE");
   });
 
   it("rejects legacy and platform roles from tenant user creation", async () => {
@@ -87,5 +137,39 @@ describe("user routes", () => {
       });
 
     expect(response.status).toBe(403);
+  });
+
+  it("does not grant a platform owner tenant role-update access", async () => {
+    const [employee, platformOwner] = await Promise.all([
+      prisma.user.create({
+        data: {
+          organization_id: organizationId,
+          email: `employee-update-${Date.now()}@example.com`,
+          password_hash: "hash",
+          role: "EMPLOYEE",
+        },
+      }),
+      prisma.user.create({
+        data: {
+          organization_id: organizationId,
+          email: `platform-update-${Date.now()}@example.com`,
+          password_hash: "hash",
+          role: "PLATFORM_OWNER",
+        },
+      }),
+    ]);
+    const platformToken = generateAccessToken({
+      sub: platformOwner.id,
+      org: organizationId,
+      role: platformOwner.role,
+    });
+
+    const response = await request(app)
+      .patch(`/api/users/${employee.id}`)
+      .set("Authorization", `Bearer ${platformToken}`)
+      .send({ role: "EMPLOYEE" });
+
+    expect(response.status).toBe(403);
+    expect(response.body.error.code).toBe("TENANT_ACCESS_REQUIRED");
   });
 });
