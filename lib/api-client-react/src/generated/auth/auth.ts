@@ -352,7 +352,7 @@ export const useLogout = <TError = ErrorType<ErrorResponse>,
 }
 
 /**
- * Returns the current authenticated user, or null when no valid access token is provided.
+ * Returns the current authenticated user when a valid active bearer token is supplied. Returns null only when the Authorization header is absent or does not use the supported Bearer format. A suspended or cancelled organization still returns its current status. Invalid, expired, and deleted-user bearer tokens are rejected.
  * @summary Get current user
  */
 export const getCurrentUser = async ( options?: RequestInit): Promise<CurrentUserResponseWrapper> => {
@@ -377,7 +377,7 @@ export const getGetCurrentUserQueryKey = () => {
     }
 
 
-export const getGetCurrentUserQueryOptions = <TData = Awaited<ReturnType<typeof getCurrentUser>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetCurrentUserQueryOptions = <TData = Awaited<ReturnType<typeof getCurrentUser>>, TError = ErrorType<ErrorResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -396,14 +396,14 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetCurrentUserQueryResult = NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>
-export type GetCurrentUserQueryError = ErrorType<unknown>
+export type GetCurrentUserQueryError = ErrorType<ErrorResponse>
 
 
 /**
  * @summary Get current user
  */
 
-export function useGetCurrentUser<TData = Awaited<ReturnType<typeof getCurrentUser>>, TError = ErrorType<unknown>>(
+export function useGetCurrentUser<TData = Awaited<ReturnType<typeof getCurrentUser>>, TError = ErrorType<ErrorResponse>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {

@@ -43,7 +43,7 @@ async function create(
 ): Promise<void> {
   try {
     const input = req.body as CreateUserInput;
-    const user = await createUser(req.user!.org, input);
+    const user = await createUser(req.user!.org, req.user!.sub, input);
     created(res, user);
   } catch (err) {
     next(err);

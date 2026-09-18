@@ -1,6 +1,7 @@
 import { hashPassword, revokeAllUserTokens } from "../auth";
 import { transaction } from "../../database";
 import { AppError } from "../../shared";
+import { recordAuditLog } from "../audit";
 import * as repo from "./user.repository";
 import type {
   UserResponse,
@@ -42,21 +43,34 @@ async function getUser(userId: string, orgId: string): Promise<UserResponse> {
 
 async function createUser(
   orgId: string,
+  actorUserId: string,
   input: CreateUserInput,
 ): Promise<UserResponse> {
-  const existing = await repo.findByEmail(input.email);
-
-  if (existing) {
-    throw new AppError(
-      409,
-      "EMAIL_ALREADY_EXISTS",
-      "A user with this email already exists.",
-    );
-  }
-
   const passwordHash = await hashPassword(input.password);
 
-  const user = await repo.create(input, passwordHash, orgId);
+  const user = await transaction(async (tx) => {
+    const existing = await repo.findByEmail(input.email, tx);
+
+    if (existing) {
+      throw new AppError(
+        409,
+        "EMAIL_ALREADY_EXISTS",
+        "A user with this email already exists.",
+      );
+    }
+
+    const created = await repo.create(input, passwordHash, orgId, tx);
+    await recordAuditLog(tx, {
+      organizationId: orgId,
+      actorUserId,
+      action: "USER_CREATED",
+      targetType: "USER",
+      targetId: created.id,
+      metadata: { role: created.role },
+    });
+
+    return created;
+  });
 
   return toResponse(user);
 }
@@ -107,6 +121,14 @@ async function deleteUser(
 
     await repo.softDelete(userId, tx);
     await revokeAllUserTokens(userId, tx);
+    await recordAuditLog(tx, {
+      organizationId: orgId,
+      actorUserId,
+      action: "USER_DELETED",
+      targetType: "USER",
+      targetId: user.id,
+      metadata: { role: user.role },
+    });
   });
 }
 

@@ -61,7 +61,7 @@ export const UpdateMyOrganizationResponse = zod.object({
 })
 
 /**
- * @summary Soft delete current organization
+ * @summary Organization deletion is not supported
  */
 export const DeleteMyOrganizationResponse = zod.void()
 

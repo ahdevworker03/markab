@@ -207,11 +207,11 @@ export const useUpdateMyOrganization = <TError = ErrorType<ErrorResponse>,
 }
 
 /**
- * @summary Soft delete current organization
+ * @summary Organization deletion is not supported
  */
-export const deleteMyOrganization = async ( options?: RequestInit): Promise<void> => {
+export const deleteMyOrganization = async ( options?: RequestInit): Promise<unknown> => {
 
-  return customFetch<void>(getDeleteMyOrganizationUrl(),
+  return customFetch<unknown>(getDeleteMyOrganizationUrl(),
   {
     ...options,
     method: 'DELETE'
@@ -256,7 +256,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteMyOrganizationMutationError = ErrorType<ErrorResponse>
 
     /**
- * @summary Soft delete current organization
+ * @summary Organization deletion is not supported
  */
 export const useDeleteMyOrganization = <TError = ErrorType<ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyOrganization>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}

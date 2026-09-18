@@ -172,16 +172,23 @@ paths:
       operationId: getCurrentUser
       tags: [auth]
       summary: Get current user
-      description: Returns the current authenticated user, or null when no valid access token is provided.
+      description: Returns the current authenticated user when a valid active bearer token is supplied. Returns null only when the Authorization header is absent or does not use the supported Bearer format. A suspended or cancelled organization still returns its current status. Invalid, expired, and deleted-user bearer tokens are rejected.
       security:
+        - {}
         - bearerAuth: []
       responses:
         "200":
-          description: Current user or null
+          description: Current user, or null when no supported bearer token is supplied
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/CurrentUserResponseWrapper"
+        "401":
+          description: Invalid, expired, or deactivated bearer token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /auth/password-reset/request:
     post:
@@ -304,12 +311,16 @@ paths:
     delete:
       operationId: deleteMyOrganization
       tags: [organizations]
-      summary: Soft delete current organization
+      summary: Organization deletion is not supported
       security:
         - bearerAuth: []
       responses:
-        "204":
-          description: Organization deleted
+        "409":
+          description: Organization deletion is not supported
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "401":
           description: Authentication required
           content:

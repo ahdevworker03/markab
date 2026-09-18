@@ -98,6 +98,21 @@ describe("organization lifecycle routes", () => {
     });
   });
 
+  it("rejects organization deletion without mutating the organization", async () => {
+    const response = await request(app)
+      .delete("/api/organizations/me")
+      .set("Authorization", `Bearer ${ownerToken}`);
+
+    expect(response.status).toBe(409);
+    expect(response.body.error.code).toBe("CANNOT_DELETE_ORGANIZATION");
+    await expect(
+      prisma.organization.findUniqueOrThrow({
+        where: { id: organizationId },
+        select: { deleted_at: true },
+      }),
+    ).resolves.toEqual({ deleted_at: null });
+  });
+
   it("allows a platform owner to suspend a tenant and blocks tenant business routes", async () => {
     const statusResponse = await request(app)
       .patch(`/api/platform/organizations/${organizationId}/status`)
@@ -131,7 +146,9 @@ describe("organization lifecycle routes", () => {
       .get("/api/customers")
       .set("Authorization", `Bearer ${ownerToken}`);
     expect(businessResponse.status).toBe(403);
-    expect(businessResponse.body.error.code).toBe("ORGANIZATION_NOT_OPERATIONAL");
+    expect(businessResponse.body.error.code).toBe(
+      "ORGANIZATION_NOT_OPERATIONAL",
+    );
 
     const [organizationResponse, currentUserResponse] = await Promise.all([
       request(app)

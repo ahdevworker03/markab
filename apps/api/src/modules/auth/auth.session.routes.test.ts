@@ -105,6 +105,25 @@ describe("auth session integrity", () => {
     expect(response.body.error.code).toBe("INVALID_ACCESS_TOKEN");
   });
 
+  it("returns null from /auth/me only without a supported bearer token", async () => {
+    const [missing, malformed] = await Promise.all([
+      request(app).get("/api/auth/me"),
+      request(app).get("/api/auth/me").set("Authorization", "Token ignored"),
+    ]);
+
+    expect(missing).toMatchObject({ status: 200, body: { data: null } });
+    expect(malformed).toMatchObject({ status: 200, body: { data: null } });
+  });
+
+  it("returns INVALID_ACCESS_TOKEN from /auth/me for an invalid bearer token", async () => {
+    const response = await request(app)
+      .get("/api/auth/me")
+      .set("Authorization", "Bearer invalid-token");
+
+    expect(response.status).toBe(401);
+    expect(response.body.error.code).toBe("INVALID_ACCESS_TOKEN");
+  });
+
   it("revokes a deleted user's refresh credentials", async () => {
     await deleteEmployee();
 

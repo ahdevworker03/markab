@@ -1,8 +1,9 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import request from "supertest";
 import app from "../../app";
 import { prisma } from "../../database";
 import { generateAccessToken } from "../auth";
+import * as auditRepository from "../audit/audit.repository";
 import { cleanup } from "../../test/helpers";
 
 describe("user routes", () => {
@@ -35,6 +36,10 @@ describe("user routes", () => {
     });
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("allows an owner to create an employee in the same organization", async () => {
     const response = await request(app)
       .post("/api/users")
@@ -47,6 +52,111 @@ describe("user routes", () => {
 
     expect(response.status).toBe(201);
     expect(response.body.data.role).toBe("EMPLOYEE");
+  });
+
+  it("records employee creation with the owner actor and non-sensitive metadata", async () => {
+    const response = await request(app)
+      .post("/api/users")
+      .set("Authorization", `Bearer ${ownerToken}`)
+      .send({
+        email: `employee-audit-${Date.now()}@example.com`,
+        password: "Password123!",
+        role: "EMPLOYEE",
+      });
+
+    expect(response.status).toBe(201);
+    await expect(
+      prisma.auditLog.findFirst({
+        where: { action: "USER_CREATED", target_id: response.body.data.id },
+        select: {
+          organization_id: true,
+          actor_user_id: true,
+          target_type: true,
+          metadata: true,
+        },
+      }),
+    ).resolves.toEqual({
+      organization_id: organizationId,
+      actor_user_id: ownerId,
+      target_type: "USER",
+      metadata: { role: "EMPLOYEE" },
+    });
+  });
+
+  it("rolls back employee creation when its audit write fails", async () => {
+    const email = `employee-audit-rollback-${Date.now()}@example.com`;
+    vi.spyOn(auditRepository, "create").mockRejectedValueOnce(
+      new Error("audit unavailable"),
+    );
+
+    const response = await request(app)
+      .post("/api/users")
+      .set("Authorization", `Bearer ${ownerToken}`)
+      .send({ email, password: "Password123!", role: "EMPLOYEE" });
+
+    expect(response.status).toBe(500);
+    await expect(
+      prisma.user.findUnique({ where: { email } }),
+    ).resolves.toBeNull();
+  });
+
+  it("records employee deletion with the owner actor and role-only metadata", async () => {
+    const employee = await prisma.user.create({
+      data: {
+        organization_id: organizationId,
+        email: `employee-delete-audit-${Date.now()}@example.com`,
+        password_hash: "hash",
+        role: "EMPLOYEE",
+      },
+    });
+
+    const response = await request(app)
+      .delete(`/api/users/${employee.id}`)
+      .set("Authorization", `Bearer ${ownerToken}`);
+
+    expect(response.status).toBe(204);
+    await expect(
+      prisma.auditLog.findFirst({
+        where: { action: "USER_DELETED", target_id: employee.id },
+        select: {
+          organization_id: true,
+          actor_user_id: true,
+          target_type: true,
+          metadata: true,
+        },
+      }),
+    ).resolves.toEqual({
+      organization_id: organizationId,
+      actor_user_id: ownerId,
+      target_type: "USER",
+      metadata: { role: "EMPLOYEE" },
+    });
+  });
+
+  it("rolls back employee deletion when its audit write fails", async () => {
+    const employee = await prisma.user.create({
+      data: {
+        organization_id: organizationId,
+        email: `employee-delete-audit-rollback-${Date.now()}@example.com`,
+        password_hash: "hash",
+        role: "EMPLOYEE",
+      },
+    });
+    vi.spyOn(auditRepository, "create").mockRejectedValueOnce(
+      new Error("audit unavailable"),
+    );
+
+    const response = await request(app)
+      .delete(`/api/users/${employee.id}`)
+      .set("Authorization", `Bearer ${ownerToken}`);
+
+    expect(response.status).toBe(500);
+    await expect(
+      prisma.user.findUniqueOrThrow({
+        where: { id: employee.id },
+        select: { deleted_at: true },
+      }),
+    ).resolves.toEqual({ deleted_at: null });
   });
 
   it("normalizes employee email identity before enforcing global uniqueness", async () => {

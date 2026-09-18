@@ -3,12 +3,11 @@ export type AuditAction =
   | "EMPLOYEE_INVITATION_CREATED"
   | "EMPLOYEE_INVITATION_RESENT"
   | "EMPLOYEE_INVITATION_ACCEPTED"
-  | "PASSWORD_RESET_COMPLETED";
+  | "PASSWORD_RESET_COMPLETED"
+  | "USER_CREATED"
+  | "USER_DELETED";
 
-export type AuditTargetType =
-  | "ORGANIZATION"
-  | "EMPLOYEE_INVITATION"
-  | "USER";
+export type AuditTargetType = "ORGANIZATION" | "EMPLOYEE_INVITATION" | "USER";
 
 export type AuditMetadata = Record<string, string | number | boolean | null>;
 
