@@ -71,7 +71,7 @@ describe("ProtectedRoute", () => {
     const { queryClient } = renderRoute();
 
     await waitFor(() =>
-      expect(setLocation).toHaveBeenCalledWith("/login", { replace: true }),
+      expect(setLocation).toHaveBeenCalledWith("/platform", { replace: true }),
     );
 
     expect(screen.queryByText("tenant shell")).not.toBeInTheDocument();

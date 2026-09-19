@@ -32,7 +32,7 @@ interface AuthContextValue {
   user: CurrentUserResponse | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (params: LoginParams) => Promise<void>;
+  login: (params: LoginParams) => Promise<CurrentUserResponse>;
   logout: () => Promise<void>;
 }
 
@@ -138,6 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!me?.data) throw new Error("Invalid current user response.");
 
         setUser(me.data);
+        return me.data;
       } catch (error) {
         clearSession();
         throw error;

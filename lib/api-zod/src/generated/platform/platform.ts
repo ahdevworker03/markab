@@ -8,6 +8,73 @@
 import * as zod from "zod";
 
 /**
+ * Returns paginated client organizations. Internal and deleted organizations are excluded. This endpoint is restricted to PLATFORM_OWNER.
+ * @summary List client organizations for platform administration
+ */
+export const listPlatformOrganizationsQueryPageDefault = 1;
+
+export const listPlatformOrganizationsQueryPageSizeDefault = 20;
+export const listPlatformOrganizationsQueryPageSizeMax = 100;
+
+export const ListPlatformOrganizationsQueryParams = zod.object({
+  page: zod.coerce
+    .number()
+    .min(1)
+    .default(listPlatformOrganizationsQueryPageDefault),
+  pageSize: zod.coerce
+    .number()
+    .min(1)
+    .max(listPlatformOrganizationsQueryPageSizeMax)
+    .default(listPlatformOrganizationsQueryPageSizeDefault),
+  search: zod.coerce.string().min(1).optional(),
+  status: zod.enum(["TRIAL", "ACTIVE", "SUSPENDED", "CANCELLED"]).optional(),
+});
+
+export const ListPlatformOrganizationsResponse = zod.object({
+  data: zod.array(
+    zod.object({
+      id: zod.string().uuid(),
+      name: zod.string(),
+      status: zod.enum(["TRIAL", "ACTIVE", "SUSPENDED", "CANCELLED"]),
+      legalName: zod.string().nullable(),
+      phone: zod.string().nullable(),
+      email: zod.string().email().nullable(),
+      address: zod.string().nullable(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+  pagination: zod.object({
+    page: zod.number(),
+    pageSize: zod.number(),
+    total: zod.number(),
+    totalPages: zod.number(),
+  }),
+});
+
+/**
+ * Returns one client organization. Internal and deleted organizations are not found. This endpoint is restricted to PLATFORM_OWNER.
+ * @summary Get a client organization for platform administration
+ */
+export const GetPlatformOrganizationParams = zod.object({
+  organizationId: zod.coerce.string().uuid(),
+});
+
+export const GetPlatformOrganizationResponse = zod.object({
+  data: zod.object({
+    id: zod.string().uuid(),
+    name: zod.string(),
+    status: zod.enum(["TRIAL", "ACTIVE", "SUSPENDED", "CANCELLED"]),
+    legalName: zod.string().nullable(),
+    phone: zod.string().nullable(),
+    email: zod.string().email().nullable(),
+    address: zod.string().nullable(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
+
+/**
  * Updates tenant lifecycle status. This endpoint is restricted to PLATFORM_OWNER.
  * @summary Update an organization lifecycle status
  */
@@ -21,14 +88,13 @@ export const UpdateOrganizationStatusBody = zod.object({
 
 export const UpdateOrganizationStatusResponse = zod.object({
   data: zod.object({
-    id: zod.string(),
+    id: zod.string().uuid(),
     name: zod.string(),
     status: zod.enum(["TRIAL", "ACTIVE", "SUSPENDED", "CANCELLED"]),
     legalName: zod.string().nullable(),
     phone: zod.string().nullable(),
     email: zod.string().email().nullable(),
     address: zod.string().nullable(),
-    contractFooterText: zod.string().nullable(),
     createdAt: zod.coerce.date(),
     updatedAt: zod.coerce.date(),
   }),

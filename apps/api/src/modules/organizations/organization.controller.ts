@@ -1,13 +1,18 @@
 import type { Request, Response, NextFunction } from "express";
 import {
   getOrganization,
+  getPlatformOrganization,
+  listPlatformOrganizations,
   updateOrganization,
   updateOrganizationStatus,
   deleteOrganization,
 } from "./organization.service";
 import { ok, noContent } from "../../shared";
-import type { UpdateOrganizationInput } from "./organization.validation";
-import type { UpdateOrganizationStatusInput } from "./organization.validation";
+import type {
+  ListPlatformOrganizationsQuery,
+  UpdateOrganizationInput,
+  UpdateOrganizationStatusInput,
+} from "./organization.validation";
 
 async function get(
   req: Request,
@@ -57,6 +62,35 @@ async function updateStatus(
   }
 }
 
+async function listPlatform(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const organizations = await listPlatformOrganizations(
+      res.locals.validatedQuery as ListPlatformOrganizationsQuery,
+    );
+    res.status(200).json(organizations);
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getPlatform(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const organizationId = req.params.organizationId as string;
+    const org = await getPlatformOrganization(organizationId);
+    ok(res, org);
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function remove(
   req: Request,
   res: Response,
@@ -70,4 +104,4 @@ async function remove(
   }
 }
 
-export { get, update, updateStatus, remove };
+export { get, update, updateStatus, listPlatform, getPlatform, remove };

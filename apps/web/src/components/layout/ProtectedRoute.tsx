@@ -17,9 +17,11 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   useEffect(() => {
     if (!isLoading && !hasTenantAccess) {
-      setLocation("/login", { replace: true });
+      setLocation(user?.role === "PLATFORM_OWNER" ? "/platform" : "/login", {
+        replace: true,
+      });
     }
-  }, [hasTenantAccess, isLoading, setLocation]);
+  }, [hasTenantAccess, isLoading, setLocation, user?.role]);
 
   if (isLoading) {
     return (

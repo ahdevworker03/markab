@@ -43,7 +43,7 @@ function validateUuidParam(
 }
 
 function validateQuery<T>(schema: ZodSchema<T>) {
-  return (req: Request, _res: Response, next: NextFunction): void => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     const result = schema.safeParse(req.query);
 
     if (!result.success) {
@@ -55,6 +55,7 @@ function validateQuery<T>(schema: ZodSchema<T>) {
       return;
     }
 
+    res.locals.validatedQuery = result.data;
     next();
   };
 }

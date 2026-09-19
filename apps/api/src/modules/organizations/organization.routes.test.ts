@@ -7,6 +7,7 @@ import { cleanup } from "../../test/helpers";
 
 describe("organization lifecycle routes", () => {
   let organizationId: string;
+  let platformOrganizationId: string;
   let ownerToken: string;
   let platformOwnerToken: string;
 
@@ -17,7 +18,11 @@ describe("organization lifecycle routes", () => {
       data: { name: "Tenant organization" },
     });
     const platformOrganization = await prisma.organization.create({
-      data: { name: "Platform organization", status: "ACTIVE" },
+      data: {
+        name: "Platform organization",
+        internalKey: "platform",
+        status: "ACTIVE",
+      },
     });
     const [owner, platformOwner] = await Promise.all([
       prisma.user.create({
@@ -39,6 +44,7 @@ describe("organization lifecycle routes", () => {
     ]);
 
     organizationId = organization.id;
+    platformOrganizationId = platformOrganization.id;
     ownerToken = generateAccessToken({
       sub: owner.id,
       org: organization.id,
@@ -71,6 +77,32 @@ describe("organization lifecycle routes", () => {
       .get("/api/customers")
       .set("Authorization", `Bearer ${response.body.data.accessToken}`);
     expect(businessResponse.status).toBe(200);
+  });
+
+  it("leaves the internal key null when creating an organization normally", async () => {
+    const organization = await prisma.organization.create({
+      data: { name: "Organization without internal key" },
+    });
+
+    expect(organization.internalKey).toBeNull();
+  });
+
+  it("enforces unique organization internal keys", async () => {
+    await prisma.organization.create({
+      data: {
+        name: "First internal-key organization",
+        internalKey: "tenant-001",
+      },
+    });
+
+    await expect(
+      prisma.organization.create({
+        data: {
+          name: "Duplicate internal-key organization",
+          internalKey: "tenant-001",
+        },
+      }),
+    ).rejects.toMatchObject({ code: "P2002" });
   });
 
   it("lets an owner manage its organization profile", async () => {
@@ -121,6 +153,17 @@ describe("organization lifecycle routes", () => {
 
     expect(statusResponse.status).toBe(200);
     expect(statusResponse.body.data.status).toBe("SUSPENDED");
+    expect(Object.keys(statusResponse.body.data).sort()).toEqual([
+      "address",
+      "createdAt",
+      "email",
+      "id",
+      "legalName",
+      "name",
+      "phone",
+      "status",
+      "updatedAt",
+    ]);
 
     const auditLogs = await prisma.auditLog.findMany({
       where: { organization_id: organizationId },
@@ -209,6 +252,177 @@ describe("organization lifecycle routes", () => {
 
     expect(response.status).toBe(403);
     expect(response.body.error.code).toBe("INSUFFICIENT_PERMISSIONS");
+  });
+
+  it("restricts platform organization reads to platform owners", async () => {
+    const employee = await prisma.user.create({
+      data: {
+        email: "employee-reads@example.com",
+        password_hash: "hash",
+        role: "EMPLOYEE",
+        organization_id: organizationId,
+      },
+    });
+    const employeeToken = generateAccessToken({
+      sub: employee.id,
+      org: organizationId,
+      role: employee.role,
+    });
+
+    for (const token of [ownerToken, employeeToken]) {
+      const [listResponse, detailResponse] = await Promise.all([
+        request(app)
+          .get("/api/platform/organizations")
+          .set("Authorization", `Bearer ${token}`),
+        request(app)
+          .get(`/api/platform/organizations/${organizationId}`)
+          .set("Authorization", `Bearer ${token}`),
+      ]);
+
+      expect(listResponse.status).toBe(403);
+      expect(detailResponse.status).toBe(403);
+    }
+  });
+
+  it("lists only client organizations with parsed pagination and minimum fields", async () => {
+    const [matching, nonMatching, deleted, internal] = await Promise.all([
+      prisma.organization.create({
+        data: {
+          name: "Acme Rentals",
+          legal_name: "Acme Legal",
+          email: "ops@acme.example",
+          status: "ACTIVE",
+          created_at: new Date("2026-01-02T00:00:00.000Z"),
+        },
+      }),
+      prisma.organization.create({
+        data: {
+          name: "Beta Rentals",
+          status: "TRIAL",
+          created_at: new Date("2026-01-01T00:00:00.000Z"),
+        },
+      }),
+      prisma.organization.create({
+        data: {
+          name: "Deleted Acme",
+          status: "ACTIVE",
+          deleted_at: new Date(),
+        },
+      }),
+      prisma.organization.create({
+        data: {
+          name: "Internal Acme",
+          internalKey: "platform-internal",
+          status: "ACTIVE",
+        },
+      }),
+    ]);
+
+    const response = await request(app)
+      .get("/api/platform/organizations")
+      .query({ page: "1", pageSize: "1", search: "ACME", status: "ACTIVE" })
+      .set("Authorization", `Bearer ${platformOwnerToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.pagination).toEqual({
+      page: 1,
+      pageSize: 1,
+      total: 1,
+      totalPages: 1,
+    });
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.data[0]).toMatchObject({
+      id: matching.id,
+      name: "Acme Rentals",
+      legalName: "Acme Legal",
+      email: "ops@acme.example",
+      status: "ACTIVE",
+    });
+    expect(Object.keys(response.body.data[0]).sort()).toEqual([
+      "address",
+      "createdAt",
+      "email",
+      "id",
+      "legalName",
+      "name",
+      "phone",
+      "status",
+      "updatedAt",
+    ]);
+
+    const defaultResponse = await request(app)
+      .get("/api/platform/organizations")
+      .set("Authorization", `Bearer ${platformOwnerToken}`);
+    expect(defaultResponse.body.pagination).toMatchObject({ page: 1, pageSize: 20, total: 3 });
+    expect(defaultResponse.body.data.map((organization: { id: string }) => organization.id)).toEqual([
+      organizationId,
+      matching.id,
+      nonMatching.id,
+    ]);
+    expect(defaultResponse.body.data.map((organization: { id: string }) => organization.id)).not.toContain(platformOrganizationId);
+    expect(defaultResponse.body.data.map((organization: { id: string }) => organization.id)).not.toContain(deleted.id);
+    expect(defaultResponse.body.data.map((organization: { id: string }) => organization.id)).not.toContain(internal.id);
+  });
+
+  it("returns client details and hides missing, deleted, and internal organizations", async () => {
+    const deleted = await prisma.organization.create({
+      data: { name: "Deleted organization", deleted_at: new Date() },
+    });
+    const internal = await prisma.organization.create({
+      data: { name: "Internal organization", internalKey: "platform-detail" },
+    });
+
+    const detailResponse = await request(app)
+      .get(`/api/platform/organizations/${organizationId}`)
+      .set("Authorization", `Bearer ${platformOwnerToken}`);
+    expect(detailResponse.status).toBe(200);
+    expect(Object.keys(detailResponse.body.data).sort()).toEqual([
+      "address",
+      "createdAt",
+      "email",
+      "id",
+      "legalName",
+      "name",
+      "phone",
+      "status",
+      "updatedAt",
+    ]);
+
+    for (const id of [deleted.id, internal.id, "00000000-0000-4000-8000-000000000000"]) {
+      const response = await request(app)
+        .get(`/api/platform/organizations/${id}`)
+        .set("Authorization", `Bearer ${platformOwnerToken}`);
+      expect(response.status).toBe(404);
+      expect(response.body.error.code).toBe("ORGANIZATION_NOT_FOUND");
+    }
+
+    const malformedResponse = await request(app)
+      .get("/api/platform/organizations/not-a-uuid")
+      .set("Authorization", `Bearer ${platformOwnerToken}`);
+    expect(malformedResponse.status).toBe(422);
+    expect(malformedResponse.body.error.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("hides internal, deleted, and missing organizations from lifecycle updates", async () => {
+    const internal = await prisma.organization.create({
+      data: { name: "Internal status organization", internalKey: "platform-status" },
+    });
+    const deleted = await prisma.organization.create({
+      data: { name: "Deleted status organization", deleted_at: new Date() },
+    });
+
+    for (const id of [internal.id, deleted.id, "00000000-0000-4000-8000-000000000000"]) {
+      const response = await request(app)
+        .patch(`/api/platform/organizations/${id}/status`)
+        .set("Authorization", `Bearer ${platformOwnerToken}`)
+        .send({ status: "ACTIVE" });
+
+      expect(response.status).toBe(404);
+      expect(response.body.error.code).toBe("ORGANIZATION_NOT_FOUND");
+    }
+    await expect(
+      prisma.auditLog.count({ where: { organization_id: internal.id } }),
+    ).resolves.toBe(0);
   });
 
   it("blocks cancelled organizations from tenant business operations", async () => {

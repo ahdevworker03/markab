@@ -15,7 +15,13 @@ async function buildAll() {
   await rm(distDir, { recursive: true, force: true });
 
   await esbuild({
-    entryPoints: [path.resolve(artifactDir, "src/server.ts")],
+    entryPoints: {
+      server: path.resolve(artifactDir, "src/server.ts"),
+      "bootstrap-platform-owner": path.resolve(
+        artifactDir,
+        "src/scripts/bootstrap-platform-owner.ts",
+      ),
+    },
     platform: "node",
     bundle: true,
     format: "esm",

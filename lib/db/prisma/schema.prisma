@@ -9,6 +9,7 @@ datasource db {
 model Organization {
   id                   String             @id @default(uuid()) @db.Uuid
   name                 String
+  internalKey          String?            @unique @map("internal_key")
   status               OrganizationStatus @default(TRIAL)
   legal_name           String?
   phone                String?
