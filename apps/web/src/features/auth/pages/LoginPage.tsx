@@ -44,8 +44,8 @@ export default function LoginPage() {
     setFormError(null);
 
     try {
-      await login({ email: form.email.trim(), password: form.password });
-      setLocation("/", { replace: true });
+      const user = await login({ email: form.email.trim(), password: form.password });
+      setLocation(user.role === "PLATFORM_OWNER" ? "/platform" : "/", { replace: true });
     } catch (err) {
       setFormError(getApiErrorMessage(err).title);
     } finally {

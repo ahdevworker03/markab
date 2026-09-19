@@ -8,6 +8,7 @@
     "dev:api": "export NODE_ENV=development && pnpm run build && pnpm run start",
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/server.mjs",
+    "bootstrap:platform-owner": "pnpm run build && node --enable-source-maps ./dist/bootstrap-platform-owner.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "lint": "pnpm exec eslint src",

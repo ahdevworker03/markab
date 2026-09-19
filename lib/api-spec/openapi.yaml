@@ -340,6 +340,110 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /platform/organizations:
+    get:
+      operationId: listPlatformOrganizations
+      tags: [platform]
+      summary: List client organizations for platform administration
+      description: Returns paginated client organizations. Internal and deleted organizations are excluded. This endpoint is restricted to PLATFORM_OWNER.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: search
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/OrganizationStatus"
+      responses:
+        "200":
+          description: Paginated client organizations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformOrganizationListResponse"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /platform/organizations/{organizationId}:
+    get:
+      operationId: getPlatformOrganization
+      tags: [platform]
+      summary: Get a client organization for platform administration
+      description: Returns one client organization. Internal and deleted organizations are not found. This endpoint is restricted to PLATFORM_OWNER.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organizationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Client organization
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformOrganizationResponseWrapper"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Organization not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /platform/organizations/{organizationId}/status:
     patch:
       operationId: updateOrganizationStatus
@@ -367,7 +471,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OrganizationResponseWrapper"
+                $ref: "#/components/schemas/PlatformOrganizationResponseWrapper"
         "401":
           description: Authentication required
           content:
@@ -4221,6 +4325,84 @@ components:
           $ref: "#/components/schemas/OrganizationResponse"
       required:
         - data
+
+    PlatformOrganizationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        status:
+          $ref: "#/components/schemas/OrganizationStatus"
+        legalName:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - status
+        - legalName
+        - phone
+        - email
+        - address
+        - createdAt
+        - updatedAt
+
+    PlatformOrganizationResponseWrapper:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/PlatformOrganizationResponse"
+      required:
+        - data
+
+    PlatformOrganizationPagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - page
+        - pageSize
+        - total
+        - totalPages
+
+    PlatformOrganizationListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlatformOrganizationResponse"
+        pagination:
+          $ref: "#/components/schemas/PlatformOrganizationPagination"
+      required:
+        - data
+        - pagination
 
     UpdateOrganizationRequest:
       type: object

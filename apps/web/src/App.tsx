@@ -5,6 +5,8 @@ import { AppShell } from '@/components/layout/AppShell';
 import { FocusedFlow } from '@/components/layout/FocusedFlow';
 import { OrganizationStatusGate } from '@/components/layout/OrganizationStatusGate';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
+import { PlatformRoute } from '@/components/layout/PlatformRoute';
+import { PlatformShell } from '@/components/layout/PlatformShell';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
@@ -20,6 +22,7 @@ import { AnalyticsPage } from '@/features/analytics';
 import { ReportsPage } from '@/features/reports';
 import { AddTaskPage, TaskDetailPage, TasksPage } from '@/features/tasks';
 import { AccountPage } from '@/features/account';
+import { PlatformOrganizationDetailPage, PlatformOrganizationsPage } from '@/features/platform';
 import NotFound from '@/app/NotFoundPage';
 
 function Router() {
@@ -74,6 +77,13 @@ function App() {
                <Route path="/login" component={LoginPage} />
                <Route path="/password-reset" component={PasswordResetPage} />
                <Route path="/accept-invitation" component={AcceptInvitationPage} />
+
+               <Route path="/platform/organizations/:organizationId">
+                 {(params) => <PlatformRoute><PlatformShell><PlatformOrganizationDetailPage params={params} /></PlatformShell></PlatformRoute>}
+               </Route>
+               <Route path="/platform">
+                 <PlatformRoute><PlatformShell><PlatformOrganizationsPage /></PlatformShell></PlatformRoute>
+               </Route>
 
               {/* Full-screen flows render outside AppShell (no bottom navigation) */}
               <Route path="/rentals/new">

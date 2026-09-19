@@ -78,6 +78,23 @@ benefit.
   hashes its discarded initial secret, and triggers the approved password-reset
   delivery path instead of exposing a reusable password.
 
+### Bootstrap Procedure
+
+Run the command only in the production API environment, after migrations and
+the production password-reset email configuration have been verified:
+
+```sh
+NODE_ENV=production pnpm --filter @workspace/api-server bootstrap:platform-owner -- --email <email>
+```
+
+The command refuses non-production execution, normalizes the supplied email,
+and never prints a password or reset token. A successful first run creates the
+dedicated `internal_key = "platform"` organization, records one
+`PLATFORM_OWNER_BOOTSTRAPPED` audit event, and sends the normal reset
+activation email. A repeat with the same email is safe and sends a replacement
+activation email; a conflicting active platform owner or an email assigned to
+another account fails without replacing that account.
+
 ## Offline Operation Matrix
 
 The following matrix is the approved Version 2 offline scope. It supersedes

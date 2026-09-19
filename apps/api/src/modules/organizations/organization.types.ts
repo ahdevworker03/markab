@@ -31,6 +31,18 @@ export interface OrganizationResponse {
   updatedAt: string;
 }
 
+export interface PlatformOrganizationResponse {
+  id: string;
+  name: string;
+  status: OrganizationStatus;
+  legalName: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface UpdateOrganizationInput {
   name?: string;
   legalName?: string | null;

@@ -1,4 +1,6 @@
 import {
+  GetPlatformOrganizationParams,
+  ListPlatformOrganizationsQueryParams,
   UpdateMyOrganizationBody,
   UpdateOrganizationStatusBody,
   UpdateOrganizationStatusParams,
@@ -10,8 +12,16 @@ export const updateOrganizationSchema = UpdateMyOrganizationBody.refine(
 );
 export const updateOrganizationStatusSchema = UpdateOrganizationStatusBody;
 export const updateOrganizationStatusParamsSchema = UpdateOrganizationStatusParams;
+export const listPlatformOrganizationsQuerySchema = ListPlatformOrganizationsQueryParams;
+export const getPlatformOrganizationParamsSchema = GetPlatformOrganizationParams;
 
 export type { UpdateOrganizationInput } from "./organization.types";
 export type UpdateOrganizationStatusInput = {
   status: "TRIAL" | "ACTIVE" | "SUSPENDED" | "CANCELLED";
+};
+export type ListPlatformOrganizationsQuery = {
+  page: number;
+  pageSize: number;
+  search?: string;
+  status?: UpdateOrganizationStatusInput["status"];
 };

@@ -3,18 +3,20 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import LoginPage from "./LoginPage";
 
 const login = vi.fn();
+const setLocation = vi.fn();
 
 vi.mock("@/providers/AuthProvider", () => ({
   useAuth: () => ({ login }),
 }));
 
 vi.mock("wouter", () => ({
-  useLocation: () => ["/login", vi.fn()],
+  useLocation: () => ["/login", setLocation],
 }));
 
 describe("LoginPage", () => {
   beforeEach(() => {
     login.mockReset();
+    setLocation.mockReset();
   });
 
   it("associates the visible labels with the login controls", () => {
@@ -44,10 +46,30 @@ describe("LoginPage", () => {
     login.mockRejectedValueOnce(new Error("failed"));
     render(<LoginPage />);
 
-    fireEvent.change(screen.getByLabelText("البريد الإلكتروني*"), { target: { value: "user@example.com" } });
-    fireEvent.change(screen.getByLabelText("كلمة المرور*"), { target: { value: "password" } });
+    fireEvent.change(screen.getByLabelText("البريد الإلكتروني*"), {
+      target: { value: "user@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("كلمة المرور*"), {
+      target: { value: "password" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "دخول" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("حدث خطأ في الاتصال بالخادم.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "حدث خطأ في الاتصال بالخادم.",
+    );
+  });
+
+  it("redirects platform owners to the platform console", async () => {
+    login.mockResolvedValueOnce({ role: "PLATFORM_OWNER" });
+    render(<LoginPage />);
+    fireEvent.change(screen.getByLabelText("البريد الإلكتروني*"), {
+      target: { value: "owner@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("كلمة المرور*"), {
+      target: { value: "password" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "دخول" }));
+    await screen.findByRole("button", { name: "دخول" });
+    expect(setLocation).toHaveBeenCalledWith("/platform", { replace: true });
   });
 });

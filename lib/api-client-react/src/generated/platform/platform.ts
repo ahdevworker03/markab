@@ -5,16 +5,22 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
   MutationFunction,
+  QueryFunction,
+  QueryKey,
   UseMutationOptions,
   UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult,
 } from "@tanstack/react-query";
 
 import type {
   ErrorResponse,
-  OrganizationResponseWrapper,
+  ListPlatformOrganizationsParams,
+  PlatformOrganizationListResponse,
+  PlatformOrganizationResponseWrapper,
   UpdateOrganizationStatusRequest,
 } from "../api.schemas";
 
@@ -26,6 +32,228 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+const withQueryKey = <T extends object, K>(
+  query: T,
+  queryKey: K,
+): T & { queryKey: K } => {
+  const result = { queryKey } as T & { queryKey: K };
+  for (const key of Object.keys(query)) {
+    // The explicit queryKey always wins, matching the previous
+    // `{ ...query, queryKey }` spread where it was set last.
+    if (key === "queryKey") continue;
+    Object.defineProperty(result, key, {
+      enumerable: true,
+      configurable: true,
+      get: () => (query as Record<string, unknown>)[key],
+    });
+  }
+  return result;
+};
+
+export const getListPlatformOrganizationsUrl = (
+  params?: ListPlatformOrganizationsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/platform/organizations?${stringifiedParams}`
+    : `/api/platform/organizations`;
+};
+
+/**
+ * Returns paginated client organizations. Internal and deleted organizations are excluded. This endpoint is restricted to PLATFORM_OWNER.
+ * @summary List client organizations for platform administration
+ */
+export const listPlatformOrganizations = async (
+  params?: ListPlatformOrganizationsParams,
+  options?: RequestInit,
+): Promise<PlatformOrganizationListResponse> => {
+  return customFetch<PlatformOrganizationListResponse>(
+    getListPlatformOrganizationsUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListPlatformOrganizationsQueryKey = (
+  params?: ListPlatformOrganizationsParams,
+) => {
+  return [`/api/platform/organizations`, ...(params ? [params] : [])] as const;
+};
+
+export const getListPlatformOrganizationsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPlatformOrganizations>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params?: ListPlatformOrganizationsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listPlatformOrganizations>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListPlatformOrganizationsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listPlatformOrganizations>>
+  > = ({ signal }) =>
+    listPlatformOrganizations(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listPlatformOrganizations>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListPlatformOrganizationsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listPlatformOrganizations>>
+>;
+export type ListPlatformOrganizationsQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary List client organizations for platform administration
+ */
+
+export function useListPlatformOrganizations<
+  TData = Awaited<ReturnType<typeof listPlatformOrganizations>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params?: ListPlatformOrganizationsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listPlatformOrganizations>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListPlatformOrganizationsQueryOptions(
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetPlatformOrganizationUrl = (organizationId: string) => {
+  return `/api/platform/organizations/${organizationId}`;
+};
+
+/**
+ * Returns one client organization. Internal and deleted organizations are not found. This endpoint is restricted to PLATFORM_OWNER.
+ * @summary Get a client organization for platform administration
+ */
+export const getPlatformOrganization = async (
+  organizationId: string,
+  options?: RequestInit,
+): Promise<PlatformOrganizationResponseWrapper> => {
+  return customFetch<PlatformOrganizationResponseWrapper>(
+    getGetPlatformOrganizationUrl(organizationId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetPlatformOrganizationQueryKey = (organizationId: string) => {
+  return [`/api/platform/organizations/${organizationId}`] as const;
+};
+
+export const getGetPlatformOrganizationQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPlatformOrganization>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  organizationId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPlatformOrganization>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getGetPlatformOrganizationQueryKey(organizationId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getPlatformOrganization>>
+  > = ({ signal }) =>
+    getPlatformOrganization(organizationId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: organizationId !== null && organizationId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPlatformOrganization>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetPlatformOrganizationQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPlatformOrganization>>
+>;
+export type GetPlatformOrganizationQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get a client organization for platform administration
+ */
+
+export function useGetPlatformOrganization<
+  TData = Awaited<ReturnType<typeof getPlatformOrganization>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  organizationId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPlatformOrganization>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetPlatformOrganizationQueryOptions(
+    organizationId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export const getUpdateOrganizationStatusUrl = (organizationId: string) => {
   return `/api/platform/organizations/${organizationId}/status`;
@@ -39,8 +267,8 @@ export const updateOrganizationStatus = async (
   organizationId: string,
   updateOrganizationStatusRequest: UpdateOrganizationStatusRequest,
   options?: RequestInit,
-): Promise<OrganizationResponseWrapper> => {
-  return customFetch<OrganizationResponseWrapper>(
+): Promise<PlatformOrganizationResponseWrapper> => {
+  return customFetch<PlatformOrganizationResponseWrapper>(
     getUpdateOrganizationStatusUrl(organizationId),
     {
       ...options,

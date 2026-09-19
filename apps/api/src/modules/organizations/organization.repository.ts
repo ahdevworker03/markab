@@ -7,6 +7,30 @@ import type {
 } from "./organization.types";
 
 type DbClient = typeof prisma | TxClient;
+const platformOrganizationSelect = {
+  id: true,
+  name: true,
+  status: true,
+  legal_name: true,
+  phone: true,
+  email: true,
+  address: true,
+  created_at: true,
+  updated_at: true,
+};
+const clientOrganizationWhere = { deleted_at: null, internalKey: null };
+
+type PlatformOrganizationRecord = {
+  id: string;
+  name: string;
+  status: OrganizationStatus;
+  legal_name: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  created_at: Date;
+  updated_at: Date;
+};
 
 async function findById(orgId: string): Promise<OrganizationRecord | null> {
   return prisma.organization.findUnique({
@@ -40,6 +64,55 @@ async function findByIdWithinTx(
   });
 }
 
+async function listPlatformOrganizations(
+  input: { page: number; pageSize: number; search?: string; status?: OrganizationStatus },
+): Promise<{ organizations: PlatformOrganizationRecord[]; total: number }> {
+  const where = {
+    ...clientOrganizationWhere,
+    ...(input.status ? { status: input.status } : {}),
+    ...(input.search
+      ? {
+          OR: [
+            { name: { contains: input.search, mode: "insensitive" as const } },
+            { legal_name: { contains: input.search, mode: "insensitive" as const } },
+            { email: { contains: input.search, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
+  const [organizations, total] = await prisma.$transaction([
+    prisma.organization.findMany({
+      where,
+      select: platformOrganizationSelect,
+      orderBy: [{ created_at: "desc" }, { id: "asc" }],
+      skip: (input.page - 1) * input.pageSize,
+      take: input.pageSize,
+    }),
+    prisma.organization.count({ where }),
+  ]);
+
+  return { organizations, total };
+}
+
+async function findPlatformById(
+  orgId: string,
+): Promise<PlatformOrganizationRecord | null> {
+  return prisma.organization.findFirst({
+    where: { id: orgId, ...clientOrganizationWhere },
+    select: platformOrganizationSelect,
+  });
+}
+
+async function findPlatformByIdWithinTx(
+  orgId: string,
+  tx: DbClient,
+): Promise<PlatformOrganizationRecord | null> {
+  return tx.organization.findFirst({
+    where: { id: orgId, ...clientOrganizationWhere },
+    select: platformOrganizationSelect,
+  });
+}
+
 async function updateStatusWithinTx(
   orgId: string,
   status: OrganizationStatus,
@@ -49,6 +122,18 @@ async function updateStatusWithinTx(
     where: { id: orgId },
     data: { status },
   });
+}
+
+async function updatePlatformStatusWithinTx(
+  orgId: string,
+  status: OrganizationStatus,
+  tx: DbClient,
+): Promise<PlatformOrganizationRecord> {
+  await tx.organization.updateMany({
+    where: { id: orgId, ...clientOrganizationWhere },
+    data: { status },
+  });
+  return (await findPlatformByIdWithinTx(orgId, tx))!;
 }
 
 async function softDelete(orgId: string): Promise<OrganizationRecord> {
@@ -61,7 +146,11 @@ async function softDelete(orgId: string): Promise<OrganizationRecord> {
 export {
   findById,
   findByIdWithinTx,
+  findPlatformById,
+  findPlatformByIdWithinTx,
+  listPlatformOrganizations,
   update,
+  updatePlatformStatusWithinTx,
   updateStatusWithinTx,
   softDelete,
 };

@@ -175,6 +175,34 @@ export interface OrganizationResponseWrapper {
   data: OrganizationResponse;
 }
 
+export interface PlatformOrganizationResponse {
+  id: string;
+  name: string;
+  status: OrganizationStatus;
+  legalName: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PlatformOrganizationResponseWrapper {
+  data: PlatformOrganizationResponse;
+}
+
+export interface PlatformOrganizationPagination {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface PlatformOrganizationListResponse {
+  data: PlatformOrganizationResponse[];
+  pagination: PlatformOrganizationPagination;
+}
+
 export interface UpdateOrganizationRequest {
   /** @minLength 1 */
   name?: string;
@@ -1032,6 +1060,23 @@ export type ErrorResponseError = {
 export interface ErrorResponse {
   error: ErrorResponseError;
 }
+
+export type ListPlatformOrganizationsParams = {
+  /**
+   * @minimum 1
+   */
+  page?: number;
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  pageSize?: number;
+  /**
+   * @minLength 1
+   */
+  search?: string;
+  status?: OrganizationStatus;
+};
 
 export type ListCustomersParams = {
   /**

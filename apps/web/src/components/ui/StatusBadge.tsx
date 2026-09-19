@@ -17,6 +17,8 @@ export type StatusType =
   | "OUT_OF_SERVICE"
   | "ARCHIVED"
   | "ACTIVE"
+  | "TRIAL"
+  | "SUSPENDED"
   | "RETURNED"
   | "CANCELLED"
   | "SCHEDULED"
@@ -56,6 +58,8 @@ const statusMap: Record<StatusType, { label: string; tone: StatusTone }> = {
   OUT_OF_SERVICE: { label: VEHICLE_STATUS_LABELS.OUT_OF_SERVICE, tone: "danger" },
   ARCHIVED: { label: VEHICLE_STATUS_LABELS.ARCHIVED, tone: "neutral" },
   ACTIVE: { label: "نشط", tone: "info" },
+  TRIAL: { label: "تجريبي", tone: "warning" },
+  SUSPENDED: { label: "معلّق", tone: "danger" },
   RETURNED: { label: "مُعاد", tone: "positive" },
   CANCELLED: { label: "ملغي", tone: "danger" },
   SCHEDULED: { label: "مجدولة", tone: "warning" },
