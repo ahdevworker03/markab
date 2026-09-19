@@ -29,11 +29,11 @@ describe("password-reset email configuration", () => {
       RESEND_API_KEY: "re_test_key",
       RESEND_FROM: "Markab <security@example.com>",
       PASSWORD_RESET_FRONTEND_ORIGIN: "https://app.example.com",
-      PASSWORD_RESET_FRONTEND_PATH: "/reset-password",
+      PASSWORD_RESET_FRONTEND_PATH: "/password-reset",
     });
 
     expect(env.PASSWORD_RESET_EMAIL?.resetUrl.toString()).toBe(
-      "https://app.example.com/reset-password",
+      "https://app.example.com/password-reset",
     );
   });
 
