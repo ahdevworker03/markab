@@ -4,7 +4,7 @@ import { createResendPasswordResetDelivery } from "./password-reset.delivery";
 const config = {
   apiKey: "re_test_key",
   from: "Markab <security@example.com>",
-  resetUrl: new URL("https://app.example.com/reset-password"),
+  resetUrl: new URL("https://app.example.com/password-reset"),
 };
 
 describe("Resend password-reset delivery", () => {
@@ -33,10 +33,10 @@ describe("Resend password-reset delivery", () => {
       text: string;
     };
     expect(body.html).toContain(
-      "https://app.example.com/reset-password?token=one-time-token",
+      "https://app.example.com/password-reset?token=one-time-token",
     );
     expect(body.text).toContain(
-      "https://app.example.com/reset-password?token=one-time-token",
+      "https://app.example.com/password-reset?token=one-time-token",
     );
     expect(body.html).toContain("one hour");
     expect(body.text).toContain("Ignore this email if you did not request");
