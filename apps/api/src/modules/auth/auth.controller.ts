@@ -14,11 +14,14 @@ import { AppError, ok, created, noContent } from "../../shared";
 import type {
   RegisterInput,
   LoginInput,
-  RefreshInput,
-  LogoutInput,
   RequestPasswordResetInput,
   ConfirmPasswordResetInput,
 } from "./auth.validation";
+import {
+  clearRefreshCookie,
+  getRefreshCookie,
+  setRefreshCookie,
+} from "./auth.cookie";
 
 async function register(
   req: Request,
@@ -32,9 +35,9 @@ async function register(
       input.password,
       input.organizationName,
     );
+    setRefreshCookie(res, tokens.refreshToken);
     created(res, {
       accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
       expiresAt: tokens.expiresAt.toISOString(),
     });
   } catch (err) {
@@ -50,9 +53,9 @@ async function loginHandler(
   try {
     const input = req.body as LoginInput;
     const tokens = await login(input.email, input.password);
+    setRefreshCookie(res, tokens.refreshToken);
     ok(res, {
       accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
       expiresAt: tokens.expiresAt.toISOString(),
     });
   } catch (err) {
@@ -66,11 +69,18 @@ async function refresh(
   next: NextFunction,
 ): Promise<void> {
   try {
-    const input = req.body as RefreshInput;
-    const tokens = await rotateRefreshToken(input.refreshToken);
+    const refreshToken = getRefreshCookie(req);
+    if (!refreshToken) {
+      throw new AppError(
+        401,
+        "INVALID_REFRESH_TOKEN",
+        "Refresh token not found or already used.",
+      );
+    }
+    const tokens = await rotateRefreshToken(refreshToken);
+    setRefreshCookie(res, tokens.refreshToken);
     ok(res, {
       accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
       expiresAt: tokens.expiresAt.toISOString(),
     });
   } catch (err) {
@@ -84,8 +94,9 @@ async function logout(
   next: NextFunction,
 ): Promise<void> {
   try {
-    const input = req.body as LogoutInput;
-    await revokeRefreshToken(input.refreshToken);
+    const refreshToken = getRefreshCookie(req);
+    if (refreshToken) await revokeRefreshToken(refreshToken);
+    clearRefreshCookie(res);
     noContent(res);
   } catch (err) {
     next(err);

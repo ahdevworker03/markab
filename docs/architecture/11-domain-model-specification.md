@@ -2,47 +2,47 @@
 
 ## Table of Contents
 
-| # | Section |
-| - | ------- |
-| 1 | [1. Purpose](#1-purpose) |
-| 2 | [2. Source of Truth and Scope](#2-source-of-truth-and-scope) |
-| 3 | [3. Shared Conventions](#3-shared-conventions) |
-| 4 | [3.1 IDs, Names, and Audit Fields](#31-ids-names-and-audit-fields) |
-| 5 | [3.2 Tenant Isolation](#32-tenant-isolation) |
-| 6 | [3.3 Soft Deletes](#33-soft-deletes) |
-| 7 | [3.4 Foreign Keys, Deletes, and Indexes](#34-foreign-keys-deletes-and-indexes) |
-| 8 | [3.5 Validation and API Boundaries](#35-validation-and-api-boundaries) |
-| 9 | [4. Shared Enums](#4-shared-enums) |
-| 10 | [5. Core SaaS and Security Models](#5-core-saas-and-security-models) |
-| 11 | [5.1 Organization](#51-organization) |
-| 12 | [5.2 User](#52-user) |
-| 13 | [5.3 RefreshToken](#53-refreshtoken) |
-| 14 | [5.4 EmployeeInvitation](#54-employeeinvitation) |
-| 15 | [5.5 PasswordResetToken](#55-passwordresettoken) |
-| 16 | [5.6 AuditLog](#56-auditlog) |
-| 17 | [6. Core Business Models](#6-core-business-models) |
-| 18 | [6.1 Customer](#61-customer) |
-| 19 | [6.2 Vehicle](#62-vehicle) |
-| 20 | [6.3 Rental](#63-rental) |
-| 21 | [6.4 Contract](#64-contract) |
-| 22 | [6.5 Payment](#65-payment) |
-| 23 | [6.6 Expense](#66-expense) |
-| 24 | [6.7 Maintenance](#67-maintenance) |
-| 25 | [6.8 MaintenanceSchedule](#68-maintenanceschedule) |
-| 26 | [6.9 Task](#69-task) |
-| 27 | [7. Media Models](#7-media-models) |
-| 28 | [7.1 Shared Media Rules](#71-shared-media-rules) |
-| 29 | [7.2 Document](#72-document) |
-| 30 | [7.3 Photo](#73-photo) |
-| 31 | [8. Reporting and Derived Concepts](#8-reporting-and-derived-concepts) |
-| 32 | [9. Deferred or Future Models](#9-deferred-or-future-models) |
-| 33 | [9.1 Notifications and Reminder Delivery](#91-notifications-and-reminder-delivery) |
-| 34 | [9.2 Online Payment Processing](#92-online-payment-processing) |
-| 35 | [9.3 SaaS Billing and Subscriptions](#93-saas-billing-and-subscriptions) |
-| 36 | [9.4 Platform Administration UI](#94-platform-administration-ui) |
-| 37 | [9.5 Future Product Modules](#95-future-product-modules) |
-| 38 | [10. Open Decisions](#10-open-decisions) |
-| 39 | [11. Implementation Contract](#11-implementation-contract) |
+| #   | Section                                                                            |
+| --- | ---------------------------------------------------------------------------------- |
+| 1   | [1. Purpose](#1-purpose)                                                           |
+| 2   | [2. Source of Truth and Scope](#2-source-of-truth-and-scope)                       |
+| 3   | [3. Shared Conventions](#3-shared-conventions)                                     |
+| 4   | [3.1 IDs, Names, and Audit Fields](#31-ids-names-and-audit-fields)                 |
+| 5   | [3.2 Tenant Isolation](#32-tenant-isolation)                                       |
+| 6   | [3.3 Soft Deletes](#33-soft-deletes)                                               |
+| 7   | [3.4 Foreign Keys, Deletes, and Indexes](#34-foreign-keys-deletes-and-indexes)     |
+| 8   | [3.5 Validation and API Boundaries](#35-validation-and-api-boundaries)             |
+| 9   | [4. Shared Enums](#4-shared-enums)                                                 |
+| 10  | [5. Core SaaS and Security Models](#5-core-saas-and-security-models)               |
+| 11  | [5.1 Organization](#51-organization)                                               |
+| 12  | [5.2 User](#52-user)                                                               |
+| 13  | [5.3 RefreshToken](#53-refreshtoken)                                               |
+| 14  | [5.4 EmployeeInvitation](#54-employeeinvitation)                                   |
+| 15  | [5.5 PasswordResetToken](#55-passwordresettoken)                                   |
+| 16  | [5.6 AuditLog](#56-auditlog)                                                       |
+| 17  | [6. Core Business Models](#6-core-business-models)                                 |
+| 18  | [6.1 Customer](#61-customer)                                                       |
+| 19  | [6.2 Vehicle](#62-vehicle)                                                         |
+| 20  | [6.3 Rental](#63-rental)                                                           |
+| 21  | [6.4 Contract](#64-contract)                                                       |
+| 22  | [6.5 Payment](#65-payment)                                                         |
+| 23  | [6.6 Expense](#66-expense)                                                         |
+| 24  | [6.7 Maintenance](#67-maintenance)                                                 |
+| 25  | [6.8 MaintenanceSchedule](#68-maintenanceschedule)                                 |
+| 26  | [6.9 Task](#69-task)                                                               |
+| 27  | [7. Media Models](#7-media-models)                                                 |
+| 28  | [7.1 Shared Media Rules](#71-shared-media-rules)                                   |
+| 29  | [7.2 Document](#72-document)                                                       |
+| 30  | [7.3 Photo](#73-photo)                                                             |
+| 31  | [8. Reporting and Derived Concepts](#8-reporting-and-derived-concepts)             |
+| 32  | [9. Deferred or Future Models](#9-deferred-or-future-models)                       |
+| 33  | [9.1 Notifications and Reminder Delivery](#91-notifications-and-reminder-delivery) |
+| 34  | [9.2 Online Payment Processing](#92-online-payment-processing)                     |
+| 35  | [9.3 SaaS Billing and Subscriptions](#93-saas-billing-and-subscriptions)           |
+| 36  | [9.4 Platform Administration UI](#94-platform-administration-ui)                   |
+| 37  | [9.5 Future Product Modules](#95-future-product-modules)                           |
+| 38  | [10. Open Decisions](#10-open-decisions)                                           |
+| 39  | [11. Implementation Contract](#11-implementation-contract)                         |
 
 ## 1. Purpose
 
@@ -78,7 +78,7 @@ This document describes the currently implemented PostgreSQL/Prisma model. Imple
 - Business models with `deleted_at` are soft-deletable. Normal reads, searches, derived balances, and reports exclude soft-deleted records unless an explicit historical/audit operation requires otherwise.
 - Direct API retrieval of soft-deleted business/media records behaves as not found. Soft deletion preserves history and recovery data.
 - `AuditLog`, `RefreshToken`, `PasswordResetToken`, and `EmployeeInvitation` do not use `deleted_at`; lifecycle is described by their fields or deletion workflow.
-- Soft-deleting media does not itself delete the underlying storage object. Storage cleanup is a separate future concern.
+- If metadata persistence fails after an upload, the newly stored object is deleted immediately; cleanup failures are logged without masking the metadata error. Soft-deleting media does not itself delete the underlying storage object. Missing objects return `FILE_NOT_FOUND`; retained soft-deleted objects and cleanup-failure orphans are reconciled operationally before permanent storage deletion is introduced.
 
 ### 3.4 Foreign Keys, Deletes, and Indexes
 
@@ -94,22 +94,22 @@ This document describes the currently implemented PostgreSQL/Prisma model. Imple
 
 ## 4. Shared Enums
 
-| Enum | Values | Notes |
-|---|---|---|
-| `OrganizationStatus` | `TRIAL`, `ACTIVE`, `SUSPENDED`, `CANCELLED` | New registrations default to `TRIAL`. `TRIAL` and `ACTIVE` permit tenant operations; `SUSPENDED` and `CANCELLED` block tenant business APIs. Authentication/account-status visibility is separate. |
-| `Role` (user role) | `PLATFORM_OWNER`, `OWNER`, `EMPLOYEE` | No public `MANAGER` or `CLIENT` role exists. Normal registration creates `OWNER`, never `PLATFORM_OWNER`. |
-| `VehicleStatus` | `AVAILABLE`, `RESERVED`, `RENTED`, `MAINTENANCE`, `OUT_OF_SERVICE`, `ARCHIVED` | Default `AVAILABLE`; availability is derived from status and active rentals, not separately stored. |
-| `Transmission` | `MANUAL`, `AUTOMATIC` | Vehicle transmission. |
-| `FuelType` | `PETROL`, `DIESEL`, `ELECTRIC`, `HYBRID` | Vehicle fuel type. |
-| `DocumentCategory` | `REGISTRATION`, `INSURANCE`, `OTHER` | Default `OTHER`. |
-| `RentalStatus` | `RESERVED`, `ACTIVE`, `RETURNED`, `CANCELLED` | Default `RESERVED`. |
-| `MaintenanceType` | `PREVENTIVE_SERVICE`, `INSPECTION`, `REPAIR`, `OTHER` | Oil changes use `PREVENTIVE_SERVICE`; insurance and registration are not maintenance types. |
-| `MaintenanceStatus` | `SCHEDULED`, `IN_PROGRESS`, `COMPLETED` | Default `SCHEDULED`; upcoming/overdue are derived, not persisted. |
-| `MaintenanceScheduleType` | `DATE`, `MILEAGE`, `DATE_OR_MILEAGE` | Describes a schedule basis, not maintenance work status. |
-| `ExpenseCategory` | `FUEL`, `INSURANCE`, `REGISTRATION`, `CLEANING`, `OTHER` | No `MAINTENANCE` category; `Maintenance.cost` is authoritative for maintenance work. |
-| `PaymentMethod` | `CASH`, `CARD`, `TRANSFER`, `OTHER` | A method for recording money already received. |
-| `TaskStatus` | `PENDING`, `COMPLETED` | Default `PENDING`; upcoming/overdue are derived and there is no `IN_PROGRESS` or `CANCELLED` value. |
-| `TaskRecurrenceUnit` | `DAY`, `WEEK`, `MONTH` | Unit for interval recurrence. |
+| Enum                      | Values                                                                         | Notes                                                                                                                                                                                              |
+| ------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OrganizationStatus`      | `TRIAL`, `ACTIVE`, `SUSPENDED`, `CANCELLED`                                    | New registrations default to `TRIAL`. `TRIAL` and `ACTIVE` permit tenant operations; `SUSPENDED` and `CANCELLED` block tenant business APIs. Authentication/account-status visibility is separate. |
+| `Role` (user role)        | `PLATFORM_OWNER`, `OWNER`, `EMPLOYEE`                                          | No public `MANAGER` or `CLIENT` role exists. Normal registration creates `OWNER`, never `PLATFORM_OWNER`.                                                                                          |
+| `VehicleStatus`           | `AVAILABLE`, `RESERVED`, `RENTED`, `MAINTENANCE`, `OUT_OF_SERVICE`, `ARCHIVED` | Default `AVAILABLE`; availability is derived from status and active rentals, not separately stored.                                                                                                |
+| `Transmission`            | `MANUAL`, `AUTOMATIC`                                                          | Vehicle transmission.                                                                                                                                                                              |
+| `FuelType`                | `PETROL`, `DIESEL`, `ELECTRIC`, `HYBRID`                                       | Vehicle fuel type.                                                                                                                                                                                 |
+| `DocumentCategory`        | `REGISTRATION`, `INSURANCE`, `OTHER`                                           | Default `OTHER`.                                                                                                                                                                                   |
+| `RentalStatus`            | `RESERVED`, `ACTIVE`, `RETURNED`, `CANCELLED`                                  | Default `RESERVED`.                                                                                                                                                                                |
+| `MaintenanceType`         | `PREVENTIVE_SERVICE`, `INSPECTION`, `REPAIR`, `OTHER`                          | Oil changes use `PREVENTIVE_SERVICE`; insurance and registration are not maintenance types.                                                                                                        |
+| `MaintenanceStatus`       | `SCHEDULED`, `IN_PROGRESS`, `COMPLETED`                                        | Default `SCHEDULED`; upcoming/overdue are derived, not persisted.                                                                                                                                  |
+| `MaintenanceScheduleType` | `DATE`, `MILEAGE`, `DATE_OR_MILEAGE`                                           | Describes a schedule basis, not maintenance work status.                                                                                                                                           |
+| `ExpenseCategory`         | `FUEL`, `INSURANCE`, `REGISTRATION`, `CLEANING`, `OTHER`                       | No `MAINTENANCE` category; `Maintenance.cost` is authoritative for maintenance work.                                                                                                               |
+| `PaymentMethod`           | `CASH`, `CARD`, `TRANSFER`, `OTHER`                                            | A method for recording money already received.                                                                                                                                                     |
+| `TaskStatus`              | `PENDING`, `COMPLETED`                                                         | Default `PENDING`; upcoming/overdue are derived and there is no `IN_PROGRESS` or `CANCELLED` value.                                                                                                |
+| `TaskRecurrenceUnit`      | `DAY`, `WEEK`, `MONTH`                                                         | Unit for interval recurrence.                                                                                                                                                                      |
 
 ## 5. Core SaaS and Security Models
 
@@ -119,13 +119,13 @@ This document describes the currently implemented PostgreSQL/Prisma model. Imple
 
 **Relationships:** Has many users, customers, vehicles, rentals, contracts, documents, photos, maintenance records/schedules, expenses, payments, tasks, audit logs, and employee invitations.
 
-| Field | Type | Required | Default | Notes |
-|---|---:|---:|---:|---|
-| `id` | UUID | Yes | `uuid()` | Primary key. |
-| `name` | String | Yes | - | Operating business name. |
-| `status` | `OrganizationStatus` | Yes | `TRIAL` | Tenant lifecycle. |
-| `legal_name`, `phone`, `email`, `address`, `contract_footer_text` | String | No | `null` | Optional business identity/profile fields for contracts and reports. |
-| `created_at`, `updated_at`, `deleted_at` | DateTime | Yes, Yes, No | shared | `deleted_at` soft-deletes the organization. |
+| Field                                                             |                 Type |     Required |  Default | Notes                                                                |
+| ----------------------------------------------------------------- | -------------------: | -----------: | -------: | -------------------------------------------------------------------- |
+| `id`                                                              |                 UUID |          Yes | `uuid()` | Primary key.                                                         |
+| `name`                                                            |               String |          Yes |        - | Operating business name.                                             |
+| `status`                                                          | `OrganizationStatus` |          Yes |  `TRIAL` | Tenant lifecycle.                                                    |
+| `legal_name`, `phone`, `email`, `address`, `contract_footer_text` |               String |           No |   `null` | Optional business identity/profile fields for contracts and reports. |
+| `created_at`, `updated_at`, `deleted_at`                          |             DateTime | Yes, Yes, No |   shared | `deleted_at` soft-deletes the organization.                          |
 
 **Constraints and indexes:** `@@index([deleted_at])`; names are not unique.
 
@@ -137,14 +137,14 @@ This document describes the currently implemented PostgreSQL/Prisma model. Imple
 
 **Relationships:** Belongs to one organization; has refresh tokens, password-reset tokens, audit logs, created invitations, and at most one accepted invitation relation.
 
-| Field | Type | Required | Default | Notes |
-|---|---:|---:|---:|---|
-| `id` | UUID | Yes | `uuid()` | Primary key. |
-| `email` | String | Yes | - | Globally unique login identity. |
-| `password_hash` | String | Yes | - | Password hash only; never return it. |
-| `role` | `Role` | Yes | `OWNER` | `PLATFORM_OWNER`, `OWNER`, or `EMPLOYEE`. |
-| `organization_id` | UUID | Yes | - | FK to `Organization`. |
-| `created_at`, `updated_at`, `deleted_at` | DateTime | Yes, Yes, No | shared | Deleted users cannot authenticate. |
+| Field                                    |     Type |     Required |  Default | Notes                                     |
+| ---------------------------------------- | -------: | -----------: | -------: | ----------------------------------------- |
+| `id`                                     |     UUID |          Yes | `uuid()` | Primary key.                              |
+| `email`                                  |   String |          Yes |        - | Globally unique login identity.           |
+| `password_hash`                          |   String |          Yes |        - | Password hash only; never return it.      |
+| `role`                                   |   `Role` |          Yes |  `OWNER` | `PLATFORM_OWNER`, `OWNER`, or `EMPLOYEE`. |
+| `organization_id`                        |     UUID |          Yes |        - | FK to `Organization`.                     |
+| `created_at`, `updated_at`, `deleted_at` | DateTime | Yes, Yes, No |   shared | Deleted users cannot authenticate.        |
 
 **Constraints and indexes:** `@unique(email)`; `@@index([organization_id])`; `@@index([deleted_at])`.
 
@@ -156,12 +156,12 @@ This document describes the currently implemented PostgreSQL/Prisma model. Imple
 
 **Relationships:** Belongs to one user; `user_id` cascades on user deletion.
 
-| Field | Type | Required | Default | Notes |
-|---|---:|---:|---:|---|
-| `id` | UUID | Yes | `uuid()` | Primary key. |
-| `token` | String | Yes | - | Unique SHA-256 hash of the opaque refresh token. |
-| `user_id` | UUID | Yes | - | FK to `User`, `CASCADE` on delete. |
-| `expires_at`, `created_at` | DateTime | Yes | - / `now()` | Expiry and creation time. |
+| Field                      |     Type | Required |     Default | Notes                                            |
+| -------------------------- | -------: | -------: | ----------: | ------------------------------------------------ |
+| `id`                       |     UUID |      Yes |    `uuid()` | Primary key.                                     |
+| `token`                    |   String |      Yes |           - | Unique SHA-256 hash of the opaque refresh token. |
+| `user_id`                  |     UUID |      Yes |           - | FK to `User`, `CASCADE` on delete.               |
+| `expires_at`, `created_at` | DateTime |      Yes | - / `now()` | Expiry and creation time.                        |
 
 **Constraints and indexes:** `@unique(token)`; `@@index([user_id])`; `@@index([expires_at])`.
 
@@ -173,16 +173,16 @@ This document describes the currently implemented PostgreSQL/Prisma model. Imple
 
 **Relationships:** Belongs to one organization; created by one user; may reference the user created on acceptance. All FKs use `RESTRICT`.
 
-| Field | Type | Required | Default | Notes |
-|---|---:|---:|---:|---|
-| `id` | UUID | Yes | `uuid()` | Primary key. |
-| `organization_id` | UUID | Yes | - | Tenant owner. |
-| `email` | String | Yes | - | Invited email. |
-| `token_hash` | String | Yes | - | Unique opaque-token hash; plaintext is never stored. |
-| `expires_at`, `accepted_at` | DateTime | Yes, No | - / `null` | Expiration and single acceptance marker. |
-| `created_by_user_id` | UUID | Yes | - | Inviting user. |
-| `accepted_user_id` | UUID | No | `null` | Unique accepted user reference. |
-| `created_at`, `updated_at` | DateTime | Yes | shared | Audit fields. |
+| Field                       |     Type | Required |    Default | Notes                                                |
+| --------------------------- | -------: | -------: | ---------: | ---------------------------------------------------- |
+| `id`                        |     UUID |      Yes |   `uuid()` | Primary key.                                         |
+| `organization_id`           |     UUID |      Yes |          - | Tenant owner.                                        |
+| `email`                     |   String |      Yes |          - | Invited email.                                       |
+| `token_hash`                |   String |      Yes |          - | Unique opaque-token hash; plaintext is never stored. |
+| `expires_at`, `accepted_at` | DateTime |  Yes, No | - / `null` | Expiration and single acceptance marker.             |
+| `created_by_user_id`        |     UUID |      Yes |          - | Inviting user.                                       |
+| `accepted_user_id`          |     UUID |       No |     `null` | Unique accepted user reference.                      |
+| `created_at`, `updated_at`  | DateTime |      Yes |     shared | Audit fields.                                        |
 
 **Constraints and indexes:** `@unique(token_hash)`; `@unique(accepted_user_id)`; `@@unique([organization_id, email])`; `@@index([organization_id, expires_at])`; `@@index([accepted_at])`.
 
@@ -194,12 +194,12 @@ This document describes the currently implemented PostgreSQL/Prisma model. Imple
 
 **Relationships:** Belongs to one user; `user_id` cascades on user deletion.
 
-| Field | Type | Required | Default | Notes |
-|---|---:|---:|---:|---|
-| `id` | UUID | Yes | `uuid()` | Primary key. |
-| `token_hash` | String | Yes | - | Unique opaque-token hash; plaintext is never stored. |
-| `user_id` | UUID | Yes | - | FK to `User`, `CASCADE` on delete. |
-| `expires_at`, `consumed_at`, `created_at` | DateTime | Yes, No, Yes | - / `null` / `now()` | Expiry, consumption marker, creation. |
+| Field                                     |     Type |     Required |              Default | Notes                                                |
+| ----------------------------------------- | -------: | -----------: | -------------------: | ---------------------------------------------------- |
+| `id`                                      |     UUID |          Yes |             `uuid()` | Primary key.                                         |
+| `token_hash`                              |   String |          Yes |                    - | Unique opaque-token hash; plaintext is never stored. |
+| `user_id`                                 |     UUID |          Yes |                    - | FK to `User`, `CASCADE` on delete.                   |
+| `expires_at`, `consumed_at`, `created_at` | DateTime | Yes, No, Yes | - / `null` / `now()` | Expiry, consumption marker, creation.                |
 
 **Constraints and indexes:** `@unique(token_hash)`; `@@index([user_id, consumed_at])`; `@@index([expires_at])`.
 
@@ -211,14 +211,14 @@ This document describes the currently implemented PostgreSQL/Prisma model. Imple
 
 **Relationships:** Optionally belongs to an organization and actor user; both FKs use `RESTRICT`.
 
-| Field | Type | Required | Default | Notes |
-|---|---:|---:|---:|---|
-| `id` | UUID | Yes | `uuid()` | Primary key. |
-| `organization_id`, `actor_user_id` | UUID | No | `null` | Optional tenant and actor context. |
-| `action`, `target_type` | String | Yes | - | Event action and target category. |
-| `target_id` | String | No | `null` | Optional target identifier. |
-| `metadata` | JSON | No | `null` | Non-sensitive structured metadata only. |
-| `created_at` | DateTime | Yes | `now()` | Immutable event time. |
+| Field                              |     Type | Required |  Default | Notes                                   |
+| ---------------------------------- | -------: | -------: | -------: | --------------------------------------- |
+| `id`                               |     UUID |      Yes | `uuid()` | Primary key.                            |
+| `organization_id`, `actor_user_id` |     UUID |       No |   `null` | Optional tenant and actor context.      |
+| `action`, `target_type`            |   String |      Yes |        - | Event action and target category.       |
+| `target_id`                        |   String |       No |   `null` | Optional target identifier.             |
+| `metadata`                         |     JSON |       No |   `null` | Non-sensitive structured metadata only. |
+| `created_at`                       | DateTime |      Yes |  `now()` | Immutable event time.                   |
 
 **Indexes:** `@@index([organization_id, created_at])`; `@@index([actor_user_id, created_at])`; `@@index([target_type, target_id])`.
 
@@ -232,13 +232,13 @@ This document describes the currently implemented PostgreSQL/Prisma model. Imple
 
 **Relationships:** Belongs to one organization; has rentals and documents.
 
-| Field | Type | Required | Default | Notes |
-|---|---:|---:|---:|---|
-| `id`, `organization_id` | UUID | Yes | `uuid()` / - | Primary key and tenant FK. |
-| `first_name`, `last_name`, `phone`, `address` | String | Yes | - | Required identity/contact data. |
-| `national_id`, `license_number` | String | Yes | - | Tenant-unique identity/license values. |
-| `license_expiry_date` | DateTime | Yes | - | Required license expiry. |
-| `created_at`, `updated_at`, `deleted_at` | DateTime | Yes, Yes, No | shared | Archived customers are soft-deleted. |
+| Field                                         |     Type |     Required |      Default | Notes                                  |
+| --------------------------------------------- | -------: | -----------: | -----------: | -------------------------------------- |
+| `id`, `organization_id`                       |     UUID |          Yes | `uuid()` / - | Primary key and tenant FK.             |
+| `first_name`, `last_name`, `phone`, `address` |   String |          Yes |            - | Required identity/contact data.        |
+| `national_id`, `license_number`               |   String |          Yes |            - | Tenant-unique identity/license values. |
+| `license_expiry_date`                         | DateTime |          Yes |            - | Required license expiry.               |
+| `created_at`, `updated_at`, `deleted_at`      | DateTime | Yes, Yes, No |       shared | Archived customers are soft-deleted.   |
 
 **Constraints and indexes:** `@@unique([organization_id, national_id])`; `@@unique([organization_id, license_number])`; indexes on `organization_id`, `deleted_at`, `first_name`, `last_name`, `phone`, `national_id`, and `license_number`. Migration check constraint limits `license_expiry_date` to `1900-01-01` through `2100-12-31`.
 
@@ -250,16 +250,16 @@ This document describes the currently implemented PostgreSQL/Prisma model. Imple
 
 **Relationships:** Belongs to one organization; has rentals, maintenance records/schedules, expenses, documents, and photos.
 
-| Field | Type | Required | Default | Notes |
-|---|---:|---:|---:|---|
-| `id`, `organization_id` | UUID | Yes | `uuid()` / - | Primary key and tenant FK. |
-| `make`, `model`, `plate_number`, `color` | String | Yes | - | Required vehicle identity/details. |
-| `year`, `seats` | Int | Yes | - | Valid year and positive seat count. |
-| `notes` | String | No | `null` | Optional general notes; non-empty when supplied. |
-| `transmission`, `fuel_type` | Enum | Yes | - | `Transmission` and `FuelType`. |
-| `current_mileage` | Int | Yes | `0` | Non-negative kilometers. |
-| `status` | `VehicleStatus` | Yes | `AVAILABLE` | Current operational state. |
-| `created_at`, `updated_at`, `deleted_at` | DateTime | Yes, Yes, No | shared | Archived vehicles are soft-deleted. |
+| Field                                    |            Type |     Required |      Default | Notes                                            |
+| ---------------------------------------- | --------------: | -----------: | -----------: | ------------------------------------------------ |
+| `id`, `organization_id`                  |            UUID |          Yes | `uuid()` / - | Primary key and tenant FK.                       |
+| `make`, `model`, `plate_number`, `color` |          String |          Yes |            - | Required vehicle identity/details.               |
+| `year`, `seats`                          |             Int |          Yes |            - | Valid year and positive seat count.              |
+| `notes`                                  |          String |           No |       `null` | Optional general notes; non-empty when supplied. |
+| `transmission`, `fuel_type`              |            Enum |          Yes |            - | `Transmission` and `FuelType`.                   |
+| `current_mileage`                        |             Int |          Yes |          `0` | Non-negative kilometers.                         |
+| `status`                                 | `VehicleStatus` |          Yes |  `AVAILABLE` | Current operational state.                       |
+| `created_at`, `updated_at`, `deleted_at` |        DateTime | Yes, Yes, No |       shared | Archived vehicles are soft-deleted.              |
 
 **Constraints and indexes:** `@@unique([organization_id, plate_number])`; indexes on `organization_id`, `deleted_at`, `status`, `make`, `model`, and `plate_number`.
 
@@ -271,14 +271,14 @@ This document describes the currently implemented PostgreSQL/Prisma model. Imple
 
 **Relationships:** Belongs to one organization, customer, and vehicle; has at most one contract and many payments.
 
-| Field | Type | Required | Default | Notes |
-|---|---:|---:|---:|---|
-| `id`, `organization_id`, `customer_id`, `vehicle_id` | UUID | Yes | `uuid()` / - | Primary key and required FKs. |
-| `pickup_date`, `expected_return_date` | DateTime | Yes | - | Agreed rental period. |
-| `actual_pickup_date`, `actual_return_date` | DateTime | No | `null` | Recorded lifecycle moments. |
-| `status` | `RentalStatus` | Yes | `RESERVED` | Reserved, active, returned, or cancelled. |
-| `daily_rate`, `total_amount`, `deposit_amount` | Decimal | Yes | - | `Decimal(10,2)` financial snapshots. |
-| `created_at`, `updated_at`, `deleted_at` | DateTime | Yes, Yes, No | shared | Historical soft delete. |
+| Field                                                |           Type |     Required |      Default | Notes                                     |
+| ---------------------------------------------------- | -------------: | -----------: | -----------: | ----------------------------------------- |
+| `id`, `organization_id`, `customer_id`, `vehicle_id` |           UUID |          Yes | `uuid()` / - | Primary key and required FKs.             |
+| `pickup_date`, `expected_return_date`                |       DateTime |          Yes |            - | Agreed rental period.                     |
+| `actual_pickup_date`, `actual_return_date`           |       DateTime |           No |       `null` | Recorded lifecycle moments.               |
+| `status`                                             | `RentalStatus` |          Yes |   `RESERVED` | Reserved, active, returned, or cancelled. |
+| `daily_rate`, `total_amount`, `deposit_amount`       |        Decimal |          Yes |            - | `Decimal(10,2)` financial snapshots.      |
+| `created_at`, `updated_at`, `deleted_at`             |       DateTime | Yes, Yes, No |       shared | Historical soft delete.                   |
 
 **Constraints and indexes:** indexes on `organization_id`, `customer_id`, `vehicle_id`, `status`, `pickup_date`, `expected_return_date`, `deleted_at`, and `@@index([vehicle_id, pickup_date, expected_return_date])`.
 
@@ -290,14 +290,14 @@ This document describes the currently implemented PostgreSQL/Prisma model. Imple
 
 **Relationships:** Belongs to one organization and one rental; has documents.
 
-| Field | Type | Required | Default | Notes |
-|---|---:|---:|---:|---|
-| `id`, `organization_id`, `rental_id` | UUID | Yes | `uuid()` / - | Primary key and required FKs. |
-| `pickup_date`, `expected_return_date` | DateTime | Yes | - | Rental-period snapshot. |
-| `daily_rate`, `total_amount`, `deposit_amount` | Decimal | Yes | - | `Decimal(10,2)` financial snapshot. |
-| `customer_first_name`, `customer_last_name`, `customer_national_id` | String | Yes | - | Customer identity snapshot. |
-| `vehicle_make`, `vehicle_model`, `vehicle_plate_number` | String | Yes | - | Vehicle snapshot. |
-| `created_at`, `updated_at`, `deleted_at` | DateTime | Yes, Yes, No | shared | Contract history soft delete. |
+| Field                                                               |     Type |     Required |      Default | Notes                               |
+| ------------------------------------------------------------------- | -------: | -----------: | -----------: | ----------------------------------- |
+| `id`, `organization_id`, `rental_id`                                |     UUID |          Yes | `uuid()` / - | Primary key and required FKs.       |
+| `pickup_date`, `expected_return_date`                               | DateTime |          Yes |            - | Rental-period snapshot.             |
+| `daily_rate`, `total_amount`, `deposit_amount`                      |  Decimal |          Yes |            - | `Decimal(10,2)` financial snapshot. |
+| `customer_first_name`, `customer_last_name`, `customer_national_id` |   String |          Yes |            - | Customer identity snapshot.         |
+| `vehicle_make`, `vehicle_model`, `vehicle_plate_number`             |   String |          Yes |            - | Vehicle snapshot.                   |
+| `created_at`, `updated_at`, `deleted_at`                            | DateTime | Yes, Yes, No |       shared | Contract history soft delete.       |
 
 **Constraints and indexes:** `@@unique([rental_id])`; indexes on `organization_id`, `rental_id`, and `deleted_at`.
 
@@ -309,13 +309,13 @@ This document describes the currently implemented PostgreSQL/Prisma model. Imple
 
 **Relationships:** Belongs to one organization and one rental.
 
-| Field | Type | Required | Default | Notes |
-|---|---:|---:|---:|---|
-| `id`, `organization_id`, `rental_id` | UUID | Yes | `uuid()` / - | Primary key and required FKs. |
-| `amount` | Decimal | Yes | - | `Decimal(10,2)`, strictly greater than zero. |
-| `payment_date` | DateTime | Yes | - | When money was received. |
-| `method` | `PaymentMethod` | Yes | - | Cash, card, transfer, or other recorded method. |
-| `created_at`, `updated_at`, `deleted_at` | DateTime | Yes, Yes, No | shared | Deleted payments are excluded from balances/reports. |
+| Field                                    |            Type |     Required |      Default | Notes                                                |
+| ---------------------------------------- | --------------: | -----------: | -----------: | ---------------------------------------------------- |
+| `id`, `organization_id`, `rental_id`     |            UUID |          Yes | `uuid()` / - | Primary key and required FKs.                        |
+| `amount`                                 |         Decimal |          Yes |            - | `Decimal(10,2)`, strictly greater than zero.         |
+| `payment_date`                           |        DateTime |          Yes |            - | When money was received.                             |
+| `method`                                 | `PaymentMethod` |          Yes |            - | Cash, card, transfer, or other recorded method.      |
+| `created_at`, `updated_at`, `deleted_at` |        DateTime | Yes, Yes, No |       shared | Deleted payments are excluded from balances/reports. |
 
 **Constraints and indexes:** indexes on `organization_id`, `rental_id`, `deleted_at`, and `payment_date`; no unique rental constraint because partial payments are valid.
 
@@ -327,15 +327,15 @@ This document describes the currently implemented PostgreSQL/Prisma model. Imple
 
 **Relationships:** Belongs to one organization and optionally one vehicle; the optional vehicle FK uses `RESTRICT`.
 
-| Field | Type | Required | Default | Notes |
-|---|---:|---:|---:|---|
-| `id`, `organization_id` | UUID | Yes | `uuid()` / - | Primary key and tenant FK. |
-| `vehicle_id` | UUID | No | `null` | Optional vehicle FK. |
-| `expense_date` | DateTime | Yes | - | Date incurred. |
-| `amount` | Decimal | Yes | - | `Decimal(10,2)`, non-negative. |
-| `category` | `ExpenseCategory` | Yes | - | Operational cost category. |
-| `description` | String | No | `null` | Non-empty if supplied. |
-| `created_at`, `updated_at`, `deleted_at` | DateTime | Yes, Yes, No | shared | Soft delete. |
+| Field                                    |              Type |     Required |      Default | Notes                          |
+| ---------------------------------------- | ----------------: | -----------: | -----------: | ------------------------------ |
+| `id`, `organization_id`                  |              UUID |          Yes | `uuid()` / - | Primary key and tenant FK.     |
+| `vehicle_id`                             |              UUID |           No |       `null` | Optional vehicle FK.           |
+| `expense_date`                           |          DateTime |          Yes |            - | Date incurred.                 |
+| `amount`                                 |           Decimal |          Yes |            - | `Decimal(10,2)`, non-negative. |
+| `category`                               | `ExpenseCategory` |          Yes |            - | Operational cost category.     |
+| `description`                            |            String |           No |       `null` | Non-empty if supplied.         |
+| `created_at`, `updated_at`, `deleted_at` |          DateTime | Yes, Yes, No |       shared | Soft delete.                   |
 
 **Constraints and indexes:** indexes on `organization_id`, `vehicle_id`, `category`, `deleted_at`, and `expense_date`.
 
@@ -347,16 +347,16 @@ This document describes the currently implemented PostgreSQL/Prisma model. Imple
 
 **Relationships:** Belongs to one organization and one vehicle.
 
-| Field | Type | Required | Default | Notes |
-|---|---:|---:|---:|---|
-| `id`, `organization_id`, `vehicle_id` | UUID | Yes | `uuid()` / - | Primary key and required FKs. |
-| `type`, `status` | Enum | Yes | - / `SCHEDULED` | `MaintenanceType` and `MaintenanceStatus`. |
-| `maintenance_date` | DateTime | Yes | - | Scheduled/due business date; actual work date for backfilled history. |
-| `completed_at` | DateTime | No | `null` | Actual completion time. |
-| `cost` | Decimal | No | `null` | `Decimal(10,2)` authoritative cost. |
-| `vendor`, `notes` | String | No | `null` | Non-empty if supplied. |
-| `replaced_parts` | JSON | No | `null` | Structured parts breakdown; `null` when empty. |
-| `created_at`, `updated_at`, `deleted_at` | DateTime | Yes, Yes, No | shared | Soft delete instead of cancellation. |
+| Field                                    |     Type |     Required |         Default | Notes                                                                 |
+| ---------------------------------------- | -------: | -----------: | --------------: | --------------------------------------------------------------------- |
+| `id`, `organization_id`, `vehicle_id`    |     UUID |          Yes |    `uuid()` / - | Primary key and required FKs.                                         |
+| `type`, `status`                         |     Enum |          Yes | - / `SCHEDULED` | `MaintenanceType` and `MaintenanceStatus`.                            |
+| `maintenance_date`                       | DateTime |          Yes |               - | Scheduled/due business date; actual work date for backfilled history. |
+| `completed_at`                           | DateTime |           No |          `null` | Actual completion time.                                               |
+| `cost`                                   |  Decimal |           No |          `null` | `Decimal(10,2)` authoritative cost.                                   |
+| `vendor`, `notes`                        |   String |           No |          `null` | Non-empty if supplied.                                                |
+| `replaced_parts`                         |     JSON |           No |          `null` | Structured parts breakdown; `null` when empty.                        |
+| `created_at`, `updated_at`, `deleted_at` | DateTime | Yes, Yes, No |          shared | Soft delete instead of cancellation.                                  |
 
 **Constraints and indexes:** indexes on `organization_id`, `vehicle_id`, `deleted_at`, `status`, and `maintenance_date`.
 
@@ -368,17 +368,17 @@ This document describes the currently implemented PostgreSQL/Prisma model. Imple
 
 **Relationships:** Belongs to one organization and one vehicle; both FKs use `RESTRICT`.
 
-| Field | Type | Required | Default | Notes |
-|---|---:|---:|---:|---|
-| `id`, `organization_id`, `vehicle_id` | UUID | Yes | `uuid()` / - | Primary key and required FKs. |
-| `maintenance_type` | `MaintenanceType` | Yes | - | Intended service category. |
-| `schedule_type` | `MaintenanceScheduleType` | Yes | - | Date, mileage, or either basis. |
-| `date_interval_days` | Int | No | `null` | Positive for date-capable schedules. |
-| `next_due_date` | Date | No | `null` | PostgreSQL `DATE` business date. |
-| `mileage_interval` | Int | No | `null` | Positive for mileage-capable schedules. |
-| `next_due_mileage` | Int | No | `null` | Non-negative odometer threshold. |
-| `is_active` | Boolean | Yes | `true` | Enables or pauses the rule. |
-| `created_at`, `updated_at`, `deleted_at` | DateTime | Yes, Yes, No | shared | Soft-deletable schedule. |
+| Field                                    |                      Type |     Required |      Default | Notes                                   |
+| ---------------------------------------- | ------------------------: | -----------: | -----------: | --------------------------------------- |
+| `id`, `organization_id`, `vehicle_id`    |                      UUID |          Yes | `uuid()` / - | Primary key and required FKs.           |
+| `maintenance_type`                       |         `MaintenanceType` |          Yes |            - | Intended service category.              |
+| `schedule_type`                          | `MaintenanceScheduleType` |          Yes |            - | Date, mileage, or either basis.         |
+| `date_interval_days`                     |                       Int |           No |       `null` | Positive for date-capable schedules.    |
+| `next_due_date`                          |                      Date |           No |       `null` | PostgreSQL `DATE` business date.        |
+| `mileage_interval`                       |                       Int |           No |       `null` | Positive for mileage-capable schedules. |
+| `next_due_mileage`                       |                       Int |           No |       `null` | Non-negative odometer threshold.        |
+| `is_active`                              |                   Boolean |          Yes |       `true` | Enables or pauses the rule.             |
+| `created_at`, `updated_at`, `deleted_at` |                  DateTime | Yes, Yes, No |       shared | Soft-deletable schedule.                |
 
 **Constraints and indexes:** PostgreSQL `MaintenanceSchedule_schedule_basis_check` requires exactly the fields appropriate to the selected basis: `DATE` requires valid date values and null mileage values; `MILEAGE` requires valid mileage values and null date values; `DATE_OR_MILEAGE` requires both. Indexes: `organization_id`, `vehicle_id`, `deleted_at`, `is_active`, `next_due_date`, and `next_due_mileage`.
 
@@ -395,18 +395,18 @@ task identity. `notes` remain optional supplementary description and are not
 task identity. Existing titles were backfilled from trimmed non-empty notes,
 otherwise using `مهمة بدون عنوان`, while preserving `notes` unchanged.
 
-| Field | Type | Required | Default | Notes |
-|---|---:|---:|---:|---|
-| `id`, `organization_id` | UUID | Yes | `uuid()` / - | Primary key and tenant FK. |
-| `title` | String | Yes | - | Non-empty primary human-readable identity. |
-| `due_date` | DateTime | Yes | - | Due/business date. |
-| `status` | `TaskStatus` | Yes | `PENDING` | Pending or completed. |
-| `recurrence_interval`, `recurrence_unit` | Int, enum | No, No | `null` / `null` | No recurrence when absent; otherwise a positive interval in days, weeks, or months. |
-| `recurrence_end_date`, `recurrence_end_count` | Date, Int | No, No | `null` / `null` | Optional end condition; at most one end condition is selected. |
-| `occurrence_number` | Int | Yes | `1` | Positive occurrence position; original task is 1. |
-| `predecessor_id` | UUID | No | `null` | Unique FK to the immediate preceding occurrence. |
-| `notes` | String | No | `null` | Non-empty if supplied. |
-| `created_at`, `updated_at`, `deleted_at` | DateTime | Yes, Yes, No | shared | Soft delete. |
+| Field                                         |         Type |     Required |         Default | Notes                                                                               |
+| --------------------------------------------- | -----------: | -----------: | --------------: | ----------------------------------------------------------------------------------- |
+| `id`, `organization_id`                       |         UUID |          Yes |    `uuid()` / - | Primary key and tenant FK.                                                          |
+| `title`                                       |       String |          Yes |               - | Non-empty primary human-readable identity.                                          |
+| `due_date`                                    |     DateTime |          Yes |               - | Due/business date.                                                                  |
+| `status`                                      | `TaskStatus` |          Yes |       `PENDING` | Pending or completed.                                                               |
+| `recurrence_interval`, `recurrence_unit`      |    Int, enum |       No, No | `null` / `null` | No recurrence when absent; otherwise a positive interval in days, weeks, or months. |
+| `recurrence_end_date`, `recurrence_end_count` |    Date, Int |       No, No | `null` / `null` | Optional end condition; at most one end condition is selected.                      |
+| `occurrence_number`                           |          Int |          Yes |             `1` | Positive occurrence position; original task is 1.                                   |
+| `predecessor_id`                              |         UUID |           No |          `null` | Unique FK to the immediate preceding occurrence.                                    |
+| `notes`                                       |       String |           No |          `null` | Non-empty if supplied.                                                              |
+| `created_at`, `updated_at`, `deleted_at`      |     DateTime | Yes, Yes, No |          shared | Soft delete.                                                                        |
 
 **Constraints and indexes:** `@unique(predecessor_id)` ensures a task has at most one direct successor. Indexes: `organization_id`, `deleted_at`, `status`, and `due_date`.
 
@@ -427,16 +427,16 @@ otherwise using `مهمة بدون عنوان`, while preserving `notes` unchang
 
 **Relationships:** Belongs to one organization and exactly one explicit owner: a vehicle, customer, or contract. Each owner FK uses `RESTRICT`.
 
-| Field | Type | Required | Default | Notes |
-|---|---:|---:|---:|---|
-| `id`, `organization_id` | UUID | Yes | `uuid()` / - | Primary key and tenant FK. |
-| `vehicle_id`, `customer_id`, `contract_id` | UUID | Individually no; collectively yes | `null` | Exactly one owner FK must be set. |
-| `category` | `DocumentCategory` | Yes | `OTHER` | Registration, insurance, or other. |
-| `expiry_date` | Date | No | `null` | PostgreSQL `DATE`; document expiry, not a timestamp. |
-| `original_filename`, `mime_type` | String | Yes | - | Sanitized display filename and validated content type. |
-| `file_size` | Int | Yes | - | Byte size. |
-| `storage_key` | String | Yes | - | Unique server-generated storage reference. |
-| `created_at`, `updated_at`, `deleted_at` | DateTime | Yes, Yes, No | shared | Soft delete. |
+| Field                                      |               Type |                          Required |      Default | Notes                                                  |
+| ------------------------------------------ | -----------------: | --------------------------------: | -----------: | ------------------------------------------------------ |
+| `id`, `organization_id`                    |               UUID |                               Yes | `uuid()` / - | Primary key and tenant FK.                             |
+| `vehicle_id`, `customer_id`, `contract_id` |               UUID | Individually no; collectively yes |       `null` | Exactly one owner FK must be set.                      |
+| `category`                                 | `DocumentCategory` |                               Yes |      `OTHER` | Registration, insurance, or other.                     |
+| `expiry_date`                              |               Date |                                No |       `null` | PostgreSQL `DATE`; document expiry, not a timestamp.   |
+| `original_filename`, `mime_type`           |             String |                               Yes |            - | Sanitized display filename and validated content type. |
+| `file_size`                                |                Int |                               Yes |            - | Byte size.                                             |
+| `storage_key`                              |             String |                               Yes |            - | Unique server-generated storage reference.             |
+| `created_at`, `updated_at`, `deleted_at`   |           DateTime |                      Yes, Yes, No |       shared | Soft delete.                                           |
 
 **Constraints and indexes:** `@unique(storage_key)`; PostgreSQL `Document_exactly_one_owner_check` requires exactly one of `vehicle_id`, `customer_id`, or `contract_id`; `Document_expiry_date_range_check` allows null or `1900-01-01` through `2100-12-31`. Indexes: `organization_id`, each owner FK, `category`, `expiry_date`, and `deleted_at`.
 
@@ -448,15 +448,15 @@ otherwise using `مهمة بدون عنوان`, while preserving `notes` unchang
 
 **Relationships:** Belongs to one organization and one vehicle.
 
-| Field | Type | Required | Default | Notes |
-|---|---:|---:|---:|---|
-| `id`, `organization_id`, `vehicle_id` | UUID | Yes | `uuid()` / - | Primary key and required FKs. |
-| `sort_order` | Int | Yes | `0` | Ascending display order. |
-| `caption` | String | No | `null` | Non-empty if supplied. |
-| `original_filename`, `mime_type` | String | Yes | - | Sanitized filename and validated image type. |
-| `file_size` | Int | Yes | - | Byte size. |
-| `storage_key` | String | Yes | - | Unique server-generated storage reference. |
-| `created_at`, `updated_at`, `deleted_at` | DateTime | Yes, Yes, No | shared | Soft delete. |
+| Field                                    |     Type |     Required |      Default | Notes                                        |
+| ---------------------------------------- | -------: | -----------: | -----------: | -------------------------------------------- |
+| `id`, `organization_id`, `vehicle_id`    |     UUID |          Yes | `uuid()` / - | Primary key and required FKs.                |
+| `sort_order`                             |      Int |          Yes |          `0` | Ascending display order.                     |
+| `caption`                                |   String |           No |       `null` | Non-empty if supplied.                       |
+| `original_filename`, `mime_type`         |   String |          Yes |            - | Sanitized filename and validated image type. |
+| `file_size`                              |      Int |          Yes |            - | Byte size.                                   |
+| `storage_key`                            |   String |          Yes |            - | Unique server-generated storage reference.   |
+| `created_at`, `updated_at`, `deleted_at` | DateTime | Yes, Yes, No |       shared | Soft delete.                                 |
 
 **Constraints and indexes:** `@unique(storage_key)`; indexes on `organization_id`, `vehicle_id`, `@@index([vehicle_id, sort_order])`, and `deleted_at`.
 

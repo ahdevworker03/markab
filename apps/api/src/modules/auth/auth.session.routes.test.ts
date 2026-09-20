@@ -11,6 +11,17 @@ describe("auth session integrity", () => {
   let ownerToken: string;
   let employeeAccessToken: string;
   let employeeRefreshToken: string;
+  const origin = "http://localhost:5173";
+
+  function refreshCookie(token: string): string {
+    return `refreshToken=${token}`;
+  }
+
+  function tokenFromSetCookie(response: request.Response): string {
+    const cookie = response.headers["set-cookie"]?.[0];
+    if (!cookie) throw new Error("Expected a refresh-token cookie.");
+    return cookie.split(";", 1)[0]!.split("=", 2)[1]!;
+  }
 
   beforeEach(async () => {
     await cleanup();
@@ -62,7 +73,7 @@ describe("auth session integrity", () => {
       password: "Password123!",
     });
     employeeAccessToken = login.body.data.accessToken;
-    employeeRefreshToken = login.body.data.refreshToken;
+    employeeRefreshToken = tokenFromSetCookie(login);
   });
 
   async function deleteEmployee(): Promise<void> {
@@ -138,26 +149,32 @@ describe("auth session integrity", () => {
       data: { deleted_at: new Date() },
     });
 
-    const response = await request(app).post("/api/auth/refresh").send({
-      refreshToken: employeeRefreshToken,
-    });
+    const response = await request(app)
+      .post("/api/auth/refresh")
+      .set("Origin", origin)
+      .set("Cookie", refreshCookie(employeeRefreshToken));
 
     expect(response.status).toBe(401);
     expect(response.body.error.code).toBe("INVALID_REFRESH_TOKEN");
   });
 
   it("rotates refresh tokens without storing the raw token", async () => {
-    const response = await request(app).post("/api/auth/refresh").send({
-      refreshToken: employeeRefreshToken,
-    });
+    const response = await request(app)
+      .post("/api/auth/refresh")
+      .set("Origin", origin)
+      .set("Cookie", refreshCookie(employeeRefreshToken));
 
     expect(response.status).toBe(200);
     expect(response.body.data.accessToken).toEqual(expect.any(String));
-    expect(response.body.data.refreshToken).toEqual(expect.any(String));
-    expect(response.body.data.refreshToken).not.toBe(employeeRefreshToken);
+    expect(response.body.data.refreshToken).toBeUndefined();
+    const rotatedRefreshToken = tokenFromSetCookie(response);
+    expect(rotatedRefreshToken).not.toBe(employeeRefreshToken);
+    expect(response.headers["set-cookie"]?.[0]).toMatch(
+      /Path=\/api\/auth;.*HttpOnly; SameSite=Lax/,
+    );
     await expect(
       prisma.refreshToken.findUnique({
-        where: { token: response.body.data.refreshToken },
+        where: { token: rotatedRefreshToken },
       }),
     ).resolves.toBeNull();
   });
@@ -165,12 +182,14 @@ describe("auth session integrity", () => {
   it("rejects reuse of an already rotated refresh token", async () => {
     await request(app)
       .post("/api/auth/refresh")
-      .send({ refreshToken: employeeRefreshToken })
+      .set("Origin", origin)
+      .set("Cookie", refreshCookie(employeeRefreshToken))
       .expect(200);
 
-    const replay = await request(app).post("/api/auth/refresh").send({
-      refreshToken: employeeRefreshToken,
-    });
+    const replay = await request(app)
+      .post("/api/auth/refresh")
+      .set("Origin", origin)
+      .set("Cookie", refreshCookie(employeeRefreshToken));
 
     expect(replay.status).toBe(401);
     expect(replay.body.error.code).toBe("INVALID_REFRESH_TOKEN");
@@ -180,10 +199,12 @@ describe("auth session integrity", () => {
     const responses = await Promise.all([
       request(app)
         .post("/api/auth/refresh")
-        .send({ refreshToken: employeeRefreshToken }),
+        .set("Origin", origin)
+        .set("Cookie", refreshCookie(employeeRefreshToken)),
       request(app)
         .post("/api/auth/refresh")
-        .send({ refreshToken: employeeRefreshToken }),
+        .set("Origin", origin)
+        .set("Cookie", refreshCookie(employeeRefreshToken)),
     ]);
 
     expect(
@@ -198,6 +219,28 @@ describe("auth session integrity", () => {
     await expect(
       prisma.refreshToken.count({ where: { user_id: employeeId } }),
     ).resolves.toBe(1);
+  });
+
+  it("rejects cookie-authenticated session mutations without an allowed origin", async () => {
+    const response = await request(app)
+      .post("/api/auth/refresh")
+      .set("Cookie", refreshCookie(employeeRefreshToken));
+
+    expect(response.status).toBe(403);
+    expect(response.body.error.code).toBe("INVALID_ORIGIN");
+  });
+
+  it("clears the refresh cookie on logout without returning it in JSON", async () => {
+    const response = await request(app)
+      .post("/api/auth/logout")
+      .set("Origin", origin)
+      .set("Cookie", refreshCookie(employeeRefreshToken));
+
+    expect(response.status).toBe(204);
+    expect(response.body).toEqual({});
+    expect(response.headers["set-cookie"]?.[0]).toMatch(
+      /refreshToken=; Path=\/api\/auth; Expires=.*; HttpOnly; SameSite=Lax/,
+    );
   });
 
   it("keeps active employee sessions tenant-scoped and role-restricted", async () => {

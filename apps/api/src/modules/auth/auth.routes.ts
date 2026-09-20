@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type RequestHandler } from "express";
 import {
   register,
   login,
@@ -12,15 +12,22 @@ import { createRateLimiter, validateBody } from "../../middleware";
 import {
   registerSchema,
   loginSchema,
-  refreshSchema,
-  logoutSchema,
   requestPasswordResetSchema,
   confirmPasswordResetSchema,
 } from "./auth.validation";
+import { AppError } from "../../shared";
+import { hasAllowedOrigin } from "./auth.cookie";
 
 const router: IRouter = Router();
 const publicRateLimit = () =>
   createRateLimiter({ limit: 30, windowMs: 15 * 60 * 1000 });
+const requireAllowedOrigin: RequestHandler = (req, _res, next) => {
+  if (!hasAllowedOrigin(req)) {
+    next(new AppError(403, "INVALID_ORIGIN", "Request origin is not allowed."));
+    return;
+  }
+  next();
+};
 
 router.post(
   "/register",
@@ -29,13 +36,8 @@ router.post(
   register,
 );
 router.post("/login", publicRateLimit(), validateBody(loginSchema), login);
-router.post(
-  "/refresh",
-  publicRateLimit(),
-  validateBody(refreshSchema),
-  refresh,
-);
-router.post("/logout", validateBody(logoutSchema), logout);
+router.post("/refresh", publicRateLimit(), requireAllowedOrigin, refresh);
+router.post("/logout", requireAllowedOrigin, logout);
 router.post(
   "/password-reset/request",
   publicRateLimit(),

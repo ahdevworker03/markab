@@ -34,7 +34,10 @@ describe("auth routes", () => {
       prisma.refreshToken.count({ where: { user_id: user.id } }),
     ).resolves.toBe(1);
     expect(response.body.data.accessToken).toEqual(expect.any(String));
-    expect(response.body.data.refreshToken).toEqual(expect.any(String));
+    expect(response.body.data.refreshToken).toBeUndefined();
+    expect(response.headers["set-cookie"]?.[0]).toMatch(
+      /Path=\/api\/auth;.*HttpOnly; SameSite=Lax/,
+    );
   });
 
   it("normalizes registration email identity and accepts case-variant login", async () => {

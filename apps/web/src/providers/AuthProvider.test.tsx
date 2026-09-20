@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { setTokens } from "@/lib/auth-token";
+import { getAccessToken, setAccessToken } from "@/lib/auth-token";
 import { AuthProvider, useAuth } from "./AuthProvider";
 
 const api = vi.hoisted(() => ({
@@ -75,7 +75,6 @@ describe("AuthProvider", () => {
     api.login.mockResolvedValue({
       data: {
         accessToken: "access-token",
-        refreshToken: "refresh-token",
         expiresAt: "2026-01-01T01:00:00.000Z",
       },
     });
@@ -112,7 +111,7 @@ describe("AuthProvider", () => {
   it("clears tenant cache and fails closed when session restoration cannot refresh", async () => {
     const queryClient = new QueryClient();
     queryClient.setQueryData(["/api/vehicles"], [{ id: "vehicle-a" }]);
-    setTokens("expired-access-token", "expired-refresh-token");
+    setAccessToken("expired-access-token");
     api.getCurrentUser.mockRejectedValueOnce(new Error("unauthorized"));
     api.refreshToken.mockRejectedValueOnce(new Error("refresh rejected"));
 
@@ -124,24 +123,25 @@ describe("AuthProvider", () => {
     });
   });
 
-  it("clears tenant cache when session restoration has no refresh token", async () => {
+  it("restores an in-memory session after reload through the refresh cookie", async () => {
     const queryClient = new QueryClient();
-    queryClient.setQueryData(["/api/vehicles"], [{ id: "vehicle-a" }]);
-    setTokens("expired-access-token", "");
-    api.getCurrentUser.mockRejectedValueOnce(new Error("unauthorized"));
+    api.refreshToken.mockResolvedValueOnce({
+      data: { accessToken: "restored-access-token" },
+    });
+    api.getCurrentUser.mockResolvedValueOnce({ data: tenantA });
 
     renderAuth(queryClient);
 
     await waitFor(() => {
-      expect(screen.getByText("signed-out")).toBeInTheDocument();
-      expect(queryClient.getQueryData(["/api/vehicles"])).toBeUndefined();
+      expect(screen.getByText("tenant-a")).toBeInTheDocument();
+      expect(getAccessToken()).toBe("restored-access-token");
     });
   });
 
   it("clears tenant cache when /auth/me returns no current user", async () => {
     const queryClient = new QueryClient();
     queryClient.setQueryData(["/api/vehicles"], [{ id: "vehicle-a" }]);
-    setTokens("access-token", "refresh-token");
+    setAccessToken("access-token");
     api.getCurrentUser.mockResolvedValueOnce({ data: null });
 
     renderAuth(queryClient);

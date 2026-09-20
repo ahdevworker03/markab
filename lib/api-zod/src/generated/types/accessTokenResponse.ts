@@ -5,8 +5,8 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { AuthTokens } from "./authTokens";
+import type { AccessToken } from "./accessToken";
 
-export interface AuthTokensResponse {
-  data: AuthTokens;
+export interface AccessTokenResponse {
+  data: AccessToken;
 }

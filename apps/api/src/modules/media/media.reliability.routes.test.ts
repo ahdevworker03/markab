@@ -172,6 +172,53 @@ describe("media and signed contract storage reliability", () => {
     expect(response.body.error.code).toBe("UPLOAD_ERROR");
   });
 
+  it("rejects indexed multipart fields before validation", async () => {
+    const response = await request(app)
+      .post(`/api/vehicles/${vehicleId}/documents`)
+      .set("Authorization", `Bearer ${token}`)
+      .field("category[1]", "OTHER")
+      .attach("file", pdf, "vehicle.pdf");
+
+    expect(response.status).toBe(422);
+    expect(response.body.error.code).toBe("UPLOAD_ERROR");
+  });
+
+  it("rejects an upload over the file-size limit", async () => {
+    const response = await request(app)
+      .post(`/api/vehicles/${vehicleId}/documents`)
+      .set("Authorization", `Bearer ${token}`)
+      .field("category", "OTHER")
+      .attach("file", Buffer.alloc(10 * 1024 * 1024 + 1, "%"), "large.pdf");
+
+    expect(response.status).toBe(422);
+    expect(response.body.error.code).toBe("FILE_TOO_LARGE");
+  });
+
+  it("rejects multipart requests with more than one file", async () => {
+    const response = await request(app)
+      .post(`/api/vehicles/${vehicleId}/documents`)
+      .set("Authorization", `Bearer ${token}`)
+      .field("category", "OTHER")
+      .attach("file", pdf, "first.pdf")
+      .attach("file", pdf, "second.pdf");
+
+    expect(response.status).toBe(422);
+    expect(response.body.error.code).toBe("UPLOAD_ERROR");
+  });
+
+  it("rejects malformed multipart requests", async () => {
+    const response = await request(app)
+      .post(`/api/vehicles/${vehicleId}/documents`)
+      .set("Authorization", `Bearer ${token}`)
+      .set("Content-Type", "multipart/form-data; boundary=malformed")
+      .send(
+        '--malformed\r\nContent-Disposition: form-data; name="category"\r\n\r\nOTHER',
+      );
+
+    expect(response.status).toBe(422);
+    expect(response.body.error.code).toBe("UPLOAD_ERROR");
+  });
+
   it("stores, returns, and updates date-only document expiry metadata", async () => {
     const created = await request(app)
       .post(`/api/vehicles/${vehicleId}/documents`)

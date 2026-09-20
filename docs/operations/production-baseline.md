@@ -158,6 +158,13 @@ limits supplement, rather than replace, Cloudflare edge limits; each API
 instance has its own counters, so Cloudflare must coordinate the production
 edge policy.
 
+Upload metadata is persisted only after the object is stored. If metadata
+creation fails, the API deletes that exact new object and logs any cleanup
+failure while returning the original persistence error. Missing metadata-backed
+objects return `FILE_NOT_FOUND`. Soft-deleted objects remain retained; operators
+must investigate cleanup-failure logs and reconcile orphaned or missing objects
+against database metadata before any permanent deletion process is run.
+
 ## Pilot Capacity And Performance Gates
 
 All measurements use a warm staging environment with production-like API and

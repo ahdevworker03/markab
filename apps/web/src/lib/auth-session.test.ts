@@ -30,22 +30,43 @@ describe("authenticated request refresh", () => {
     setAuthTokenGetter(() => token);
     setAuthRefreshHandler(refresh);
 
-    await expect(customFetch("/api/protected", { responseType: "json" })).resolves.toEqual({ ok: true });
+    await expect(
+      customFetch("/api/protected", { responseType: "json" }),
+    ).resolves.toEqual({ ok: true });
     expect(refresh).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({ headers: expect.any(Headers) });
-    expect((fetchMock.mock.calls[1]?.[1]?.headers as Headers).get("authorization")).toBe("Bearer rotated-token");
+    expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({
+      headers: expect.any(Headers),
+    });
+    expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({
+      credentials: "include",
+    });
+    expect(
+      (fetchMock.mock.calls[1]?.[1]?.headers as Headers).get("authorization"),
+    ).toBe("Bearer rotated-token");
   });
 
   it("shares one refresh operation across concurrent expired requests", async () => {
     let token = "expired-token";
     let resolveRefresh!: (value: boolean) => void;
-    const refresh = vi.fn(() => new Promise<boolean>((resolve) => { resolveRefresh = (value) => { token = "rotated-token"; resolve(value); }; }));
+    const refresh = vi.fn(
+      () =>
+        new Promise<boolean>((resolve) => {
+          resolveRefresh = (value) => {
+            token = "rotated-token";
+            resolve(value);
+          };
+        }),
+    );
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
       .mockImplementation(async (_input, init) => {
         const authorization = new Headers(init?.headers).get("authorization");
-        if (authorization === "Bearer expired-token") return new Response(null, { status: 401 });
-        return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
+        if (authorization === "Bearer expired-token")
+          return new Response(null, { status: 401 });
+        return new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
       });
     setAuthTokenGetter(() => token);
     setAuthRefreshHandler(refresh);
@@ -55,7 +76,10 @@ describe("authenticated request refresh", () => {
     await vi.waitFor(() => expect(refresh).toHaveBeenCalledOnce());
     resolveRefresh(true);
 
-    await expect(Promise.all([first, second])).resolves.toEqual([{ ok: true }, { ok: true }]);
+    await expect(Promise.all([first, second])).resolves.toEqual([
+      { ok: true },
+      { ok: true },
+    ]);
     expect(fetchMock).toHaveBeenCalledTimes(4);
   });
 });

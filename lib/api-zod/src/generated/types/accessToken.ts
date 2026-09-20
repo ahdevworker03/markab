@@ -6,7 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface LogoutRequest {
-  /** @minLength 1 */
-  refreshToken: string;
+export interface AccessToken {
+  accessToken: string;
+  expiresAt: Date;
 }

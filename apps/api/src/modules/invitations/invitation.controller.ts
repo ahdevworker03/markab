@@ -8,6 +8,7 @@ import type {
   AcceptEmployeeInvitationInput,
   CreateEmployeeInvitationInput,
 } from "./invitation.types";
+import { setRefreshCookie } from "../auth/auth.cookie";
 
 async function create(
   req: Request,
@@ -35,9 +36,9 @@ async function accept(
     const tokens = await acceptEmployeeInvitation(
       req.body as AcceptEmployeeInvitationInput,
     );
+    setRefreshCookie(res, tokens.refreshToken);
     created(res, {
       accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
       expiresAt: tokens.expiresAt.toISOString(),
     });
   } catch (error) {

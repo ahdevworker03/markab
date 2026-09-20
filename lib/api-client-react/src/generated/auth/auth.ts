@@ -18,13 +18,11 @@ import type {
 
 import type {
   AcceptEmployeeInvitationRequest,
-  AuthTokensResponse,
+  AccessTokenResponse,
   ConfirmPasswordResetRequest,
   CurrentUserResponseWrapper,
   ErrorResponse,
   LoginRequest,
-  LogoutRequest,
-  RefreshRequest,
   RegisterRequest,
   RequestPasswordResetRequest,
 } from "../api.schemas";
@@ -61,14 +59,14 @@ export const getRegisterOrganizationUrl = () => {
 };
 
 /**
- * Registers an organization with an OWNER user and returns access and refresh tokens.
+ * Registers an organization with an OWNER user, returns a short-lived access token, and sets the refresh token in an HttpOnly cookie.
  * @summary Register a new organization and its first user
  */
 export const registerOrganization = async (
   registerRequest: RegisterRequest,
   options?: RequestInit,
-): Promise<AuthTokensResponse> => {
-  return customFetch<AuthTokensResponse>(getRegisterOrganizationUrl(), {
+): Promise<AccessTokenResponse> => {
+  return customFetch<AccessTokenResponse>(getRegisterOrganizationUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...options?.headers },
@@ -147,14 +145,14 @@ export const getLoginUrl = () => {
 };
 
 /**
- * Authenticates a user and returns access and refresh tokens.
+ * Authenticates a user, returns a short-lived access token, and sets the refresh token in an HttpOnly cookie.
  * @summary Login
  */
 export const login = async (
   loginRequest: LoginRequest,
   options?: RequestInit,
-): Promise<AuthTokensResponse> => {
-  return customFetch<AuthTokensResponse>(getLoginUrl(), {
+): Promise<AccessTokenResponse> => {
+  return customFetch<AccessTokenResponse>(getLoginUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...options?.headers },
@@ -233,18 +231,15 @@ export const getRefreshTokenUrl = () => {
 };
 
 /**
- * Exchanges a valid refresh token for a new access and refresh token pair. The previous refresh token is invalidated.
+ * Exchanges the HttpOnly refresh-token cookie for a new access token and rotated refresh-token cookie. The previous refresh token is invalidated.
  * @summary Refresh access token
  */
 export const refreshToken = async (
-  refreshRequest: RefreshRequest,
   options?: RequestInit,
-): Promise<AuthTokensResponse> => {
-  return customFetch<AuthTokensResponse>(getRefreshTokenUrl(), {
+): Promise<AccessTokenResponse> => {
+  return customFetch<AccessTokenResponse>(getRefreshTokenUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(refreshRequest),
   });
 };
 
@@ -255,14 +250,14 @@ export const getRefreshTokenMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof refreshToken>>,
     TError,
-    { data: BodyType<RefreshRequest> },
+    void,
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof refreshToken>>,
   TError,
-  { data: BodyType<RefreshRequest> },
+  void,
   TContext
 > => {
   const mutationKey = ["refreshToken"];
@@ -276,11 +271,9 @@ export const getRefreshTokenMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof refreshToken>>,
-    { data: BodyType<RefreshRequest> }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return refreshToken(data, requestOptions);
+    void
+  > = () => {
+    return refreshToken(requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -289,7 +282,7 @@ export const getRefreshTokenMutationOptions = <
 export type RefreshTokenMutationResult = NonNullable<
   Awaited<ReturnType<typeof refreshToken>>
 >;
-export type RefreshTokenMutationBody = BodyType<RefreshRequest>;
+
 export type RefreshTokenMutationError = ErrorType<ErrorResponse>;
 
 /**
@@ -302,14 +295,14 @@ export const useRefreshToken = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof refreshToken>>,
     TError,
-    { data: BodyType<RefreshRequest> },
+    void,
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof refreshToken>>,
   TError,
-  { data: BodyType<RefreshRequest> },
+  void,
   TContext
 > => {
   return useMutation(getRefreshTokenMutationOptions(options));
@@ -319,36 +312,31 @@ export const getLogoutUrl = () => {
 };
 
 /**
- * Revokes the provided refresh token and ends the authenticated session.
+ * Revokes the refresh token held in the HttpOnly cookie, clears that cookie, and ends the authenticated session.
  * @summary Logout
  */
-export const logout = async (
-  logoutRequest: LogoutRequest,
-  options?: RequestInit,
-): Promise<void> => {
+export const logout = async (options?: RequestInit): Promise<void> => {
   return customFetch<void>(getLogoutUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(logoutRequest),
   });
 };
 
 export const getLogoutMutationOptions = <
-  TError = ErrorType<ErrorResponse>,
+  TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof logout>>,
     TError,
-    { data: BodyType<LogoutRequest> },
+    void,
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof logout>>,
   TError,
-  { data: BodyType<LogoutRequest> },
+  void,
   TContext
 > => {
   const mutationKey = ["logout"];
@@ -362,11 +350,9 @@ export const getLogoutMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof logout>>,
-    { data: BodyType<LogoutRequest> }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return logout(data, requestOptions);
+    void
+  > = () => {
+    return logout(requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -375,27 +361,27 @@ export const getLogoutMutationOptions = <
 export type LogoutMutationResult = NonNullable<
   Awaited<ReturnType<typeof logout>>
 >;
-export type LogoutMutationBody = BodyType<LogoutRequest>;
-export type LogoutMutationError = ErrorType<ErrorResponse>;
+
+export type LogoutMutationError = ErrorType<unknown>;
 
 /**
  * @summary Logout
  */
 export const useLogout = <
-  TError = ErrorType<ErrorResponse>,
+  TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof logout>>,
     TError,
-    { data: BodyType<LogoutRequest> },
+    void,
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof logout>>,
   TError,
-  { data: BodyType<LogoutRequest> },
+  void,
   TContext
 > => {
   return useMutation(getLogoutMutationOptions(options));
@@ -659,8 +645,8 @@ export const getAcceptEmployeeInvitationUrl = () => {
 export const acceptEmployeeInvitation = async (
   acceptEmployeeInvitationRequest: AcceptEmployeeInvitationRequest,
   options?: RequestInit,
-): Promise<AuthTokensResponse> => {
-  return customFetch<AuthTokensResponse>(getAcceptEmployeeInvitationUrl(), {
+): Promise<AccessTokenResponse> => {
+  return customFetch<AccessTokenResponse>(getAcceptEmployeeInvitationUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...options?.headers },

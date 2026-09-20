@@ -2,20 +2,20 @@
 
 ## Table of Contents
 
-| # | Section |
-| - | ------- |
-| 1 | [Authentication Method](#authentication-method) |
-| 2 | [JWT Policy](#jwt-policy) |
-| 3 | [Token Lifetimes](#token-lifetimes) |
-| 4 | [Password Policy](#password-policy) |
-| 5 | [Secret Management](#secret-management) |
-| 6 | [Refresh Token Policy](#refresh-token-policy) |
-| 7 | [Refresh Token Storage](#refresh-token-storage) |
-| 8 | [Authorization](#authorization) |
-| 9 | [Organization Isolation](#organization-isolation) |
-| 10 | [Security Principles](#security-principles) |
-| 11 | [Tenant Context Rule](#tenant-context-rule) |
-| 12 | [Future Authentication Features](#future-authentication-features) |
+| #   | Section                                                           |
+| --- | ----------------------------------------------------------------- |
+| 1   | [Authentication Method](#authentication-method)                   |
+| 2   | [JWT Policy](#jwt-policy)                                         |
+| 3   | [Token Lifetimes](#token-lifetimes)                               |
+| 4   | [Password Policy](#password-policy)                               |
+| 5   | [Secret Management](#secret-management)                           |
+| 6   | [Refresh Token Policy](#refresh-token-policy)                     |
+| 7   | [Refresh Token Storage](#refresh-token-storage)                   |
+| 8   | [Authorization](#authorization)                                   |
+| 9   | [Organization Isolation](#organization-isolation)                 |
+| 10  | [Security Principles](#security-principles)                       |
+| 11  | [Tenant Context Rule](#tenant-context-rule)                       |
+| 12  | [Future Authentication Features](#future-authentication-features) |
 
 This document defines the approved authentication architecture and implementation policies for the platform.
 
@@ -106,16 +106,18 @@ Rotation ensures that a refresh token is single-use. Once used to obtain new tok
 
 - Refresh tokens must never be stored in plaintext.
 - Only a cryptographic hash of the refresh token is stored.
-- The raw refresh token is returned to the client only once.
+- The raw refresh token is only transmitted in an `HttpOnly` refresh-cookie `Set-Cookie` header and is never present in JSON or browser storage.
 - A database compromise must not expose usable refresh tokens.
 
 The specific hashing implementation is an implementation detail and is not prescribed by this document.
 
-The approved web transport stores access and refresh tokens in localStorage.
-This carries a residual XSS token-theft risk. Step 61 hardens API response
-headers and request boundaries without changing the authentication API.
-HttpOnly cookie transport and its CSRF controls are a deferred, separately
-approved redesign.
+The web client stores the access token only in memory. The API stores the
+refresh token in an `HttpOnly`, path-scoped cookie for 30 days and rotates it
+on every refresh. Production Cloudflare Pages-to-API requests are credentialed
+cross-site requests, so the cookie uses `Secure; SameSite=None`; local
+development uses `SameSite=Lax`. Refresh and logout require an exact allowed
+`Origin` match before consuming or clearing the cookie, which is the CSRF
+control for the only cookie-authenticated mutation endpoints.
 
 ---
 
@@ -128,7 +130,7 @@ Current supported roles:
 - `PLATFORM_OWNER` — reserved for future secure platform administration; it has no tenant-route grant by default.
 - `OWNER` — rental-business owner with owner-only tenant permissions.
 - `EMPLOYEE` — rental-business staff with the current limited permissions.
-Permissions are determined by the user's assigned role. The backend is responsible for enforcing all authorization rules.
+  Permissions are determined by the user's assigned role. The backend is responsible for enforcing all authorization rules.
 
 ---
 
