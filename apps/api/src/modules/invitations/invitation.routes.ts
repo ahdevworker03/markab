@@ -1,5 +1,11 @@
 import { Router, type IRouter } from "express";
-import { authenticate, requireOperationalOrganization, requireRole, validateBody } from "../../middleware";
+import {
+  authenticate,
+  createRateLimiter,
+  requireOperationalOrganization,
+  requireRole,
+  validateBody,
+} from "../../middleware";
 import { accept, create } from "./invitation.controller";
 import {
   acceptEmployeeInvitationSchema,
@@ -20,6 +26,7 @@ invitationRouter.post(
 
 publicInvitationRouter.post(
   "/auth/invitations/accept",
+  createRateLimiter({ limit: 10, windowMs: 15 * 60 * 1000 }),
   validateBody(acceptEmployeeInvitationSchema),
   accept,
 );

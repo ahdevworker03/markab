@@ -17,7 +17,10 @@ import type {
   ContractResponse,
   ContractDocumentResponse,
 } from "./contract.types";
-import { parseDocumentExpiryDate } from "../media/media.validation";
+import {
+  assertFileMatchesMimeType,
+  parseDocumentExpiryDate,
+} from "../media/media.validation";
 
 const GENERATABLE_RENTAL_STATUSES = ["RESERVED", "ACTIVE"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -227,6 +230,8 @@ async function uploadSignedDocument(
     );
   }
 
+  assertFileMatchesMimeType(file.mimetype, file.buffer);
+
   if (file.size > MAX_FILE_SIZE) {
     throw new AppError(
       422,
@@ -285,7 +290,11 @@ async function updateSignedDocumentExpiry(
   const contract = await ensureActiveContract(rentalId, orgId);
   const document = await repo.findDocument(documentId, contract.id, orgId);
   if (!document || document.deleted_at) {
-    throw new AppError(404, "DOCUMENT_NOT_FOUND", "Signed contract document not found.");
+    throw new AppError(
+      404,
+      "DOCUMENT_NOT_FOUND",
+      "Signed contract document not found.",
+    );
   }
   const updated = await repo.updateDocumentExpiry(
     documentId,

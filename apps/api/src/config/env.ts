@@ -44,7 +44,40 @@ export interface EnvConfig {
   PASSWORD_RESET_EMAIL?: PasswordResetEmailConfig;
 }
 
-function parseCorsOrigins(rawOrigins: string | undefined): string[] {
+function isPlaceholder(value: string): boolean {
+  return /change-me|example|placeholder|replace|your[-_]?/i.test(value);
+}
+
+function requiredProductionValue(
+  environment: NodeJS.ProcessEnv,
+  name: string,
+  { secret = false }: { secret?: boolean } = {},
+): string {
+  const value = environment[name]?.trim();
+
+  if (!value) {
+    throw new Error(`${name} is required in production.`);
+  }
+
+  if (isPlaceholder(value)) {
+    throw new Error(`${name} must not use a placeholder value in production.`);
+  }
+
+  if (secret && value.length < 32) {
+    throw new Error(`${name} must be at least 32 characters in production.`);
+  }
+
+  return value;
+}
+
+function parseCorsOrigins(
+  rawOrigins: string | undefined,
+  nodeEnv: NodeEnv,
+): string[] {
+  if (nodeEnv === "production" && !rawOrigins?.trim()) {
+    throw new Error("CORS_ORIGINS is required in production.");
+  }
+
   const origins = rawOrigins
     ? rawOrigins
         .split(",")
@@ -61,7 +94,9 @@ function parseCorsOrigins(rawOrigins: string | undefined): string[] {
       const url = new URL(origin);
       if (
         url.origin !== origin ||
-        !["http:", "https:"].includes(url.protocol)
+        !["http:", "https:"].includes(url.protocol) ||
+        (nodeEnv === "production" &&
+          (url.protocol !== "https:" || isPlaceholder(origin)))
       ) {
         throw new Error();
       }
@@ -73,11 +108,19 @@ function parseCorsOrigins(rawOrigins: string | undefined): string[] {
   return origins;
 }
 
-function requiredR2Value(environment: NodeJS.ProcessEnv, name: string): string {
+function requiredR2Value(
+  environment: NodeJS.ProcessEnv,
+  name: string,
+  nodeEnv: NodeEnv,
+): string {
   const value = environment[name]?.trim();
 
   if (!value) {
     throw new Error(`${name} is required when STORAGE_PROVIDER=r2.`);
+  }
+
+  if (nodeEnv === "production" && isPlaceholder(value)) {
+    throw new Error(`${name} must not use a placeholder value in production.`);
   }
 
   return value;
@@ -107,6 +150,15 @@ function passwordResetEmailConfig(
   if (values.some((value) => !value)) {
     throw new Error(
       "Resend password-reset email configuration must be complete.",
+    );
+  }
+
+  if (
+    nodeEnv === "production" &&
+    [apiKey, from, origin].some((value) => isPlaceholder(value!))
+  ) {
+    throw new Error(
+      "Resend password-reset email configuration must not use placeholder values in production.",
     );
   }
 
@@ -202,13 +254,44 @@ export function loadEnv(
     );
   }
 
+  if (nodeEnv === "production") {
+    const databaseUrl = requiredProductionValue(environment, "DATABASE_URL");
+    try {
+      if (new URL(databaseUrl).protocol !== "postgresql:") throw new Error();
+    } catch {
+      throw new Error(
+        "DATABASE_URL must be a valid PostgreSQL URL in production.",
+      );
+    }
+    requiredProductionValue(environment, "JWT_SECRET", { secret: true });
+    requiredProductionValue(environment, "REFRESH_TOKEN_SECRET", {
+      secret: true,
+    });
+
+    if (storageProvider !== "r2") {
+      throw new Error("STORAGE_PROVIDER must be r2 in production.");
+    }
+  }
+
   const r2 =
     storageProvider === "r2"
       ? {
-          accountId: requiredR2Value(environment, "R2_ACCOUNT_ID"),
-          accessKeyId: requiredR2Value(environment, "R2_ACCESS_KEY_ID"),
-          secretAccessKey: requiredR2Value(environment, "R2_SECRET_ACCESS_KEY"),
-          bucket: requiredR2Value(environment, "R2_BUCKET"),
+          accountId: requiredR2Value(
+            environment,
+            "R2_ACCOUNT_ID",
+            nodeEnv as NodeEnv,
+          ),
+          accessKeyId: requiredR2Value(
+            environment,
+            "R2_ACCESS_KEY_ID",
+            nodeEnv as NodeEnv,
+          ),
+          secretAccessKey: requiredR2Value(
+            environment,
+            "R2_SECRET_ACCESS_KEY",
+            nodeEnv as NodeEnv,
+          ),
+          bucket: requiredR2Value(environment, "R2_BUCKET", nodeEnv as NodeEnv),
         }
       : undefined;
   const passwordResetEmail = passwordResetEmailConfig(
@@ -220,7 +303,10 @@ export function loadEnv(
     PORT: port,
     NODE_ENV: nodeEnv as NodeEnv,
     LOG_LEVEL: logLevel,
-    CORS_ORIGINS: parseCorsOrigins(environment["CORS_ORIGINS"]),
+    CORS_ORIGINS: parseCorsOrigins(
+      environment["CORS_ORIGINS"],
+      nodeEnv as NodeEnv,
+    ),
     STORAGE_PROVIDER: storageProvider,
     STORAGE_DIR: environment["STORAGE_DIR"],
     R2: r2,

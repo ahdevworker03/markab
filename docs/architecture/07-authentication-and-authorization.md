@@ -192,6 +192,13 @@ The refresh token allows the application to obtain new access tokens without req
 
 This provides long-lived user sessions while maintaining secure authentication.
 
+The current web client retains both tokens in localStorage and sends them in
+the existing request contract. This preserves the approved offline/session
+transport, but leaves tokens exposed if a same-origin XSS vulnerability runs.
+Step 61 adds CSP and other server-side hardening but does not remove that
+residual risk. Moving to HttpOnly cookies requires a separately approved
+cookie and CSRF redesign and is deferred.
+
 ---
 
 # Password Security
@@ -359,6 +366,7 @@ The authentication system follows these principles:
 - Protect authentication tokens.
 - Enforce organization isolation.
 - Minimize exposed information.
+- Rate-limit public authentication and authenticated upload routes.
 
 Security should be built into every authentication decision rather than added later.
 

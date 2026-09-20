@@ -7,6 +7,7 @@ import {
   MAX_FILE_SIZE,
   isPhotoMimeType,
   isDocumentMimeType,
+  assertFileMatchesMimeType,
   extensionForMimeType,
   parseDocumentExpiryDate,
 } from "./media.validation";
@@ -109,6 +110,8 @@ export async function uploadVehiclePhoto(
     );
   }
 
+  assertFileMatchesMimeType(file.mimetype, file.buffer);
+
   if (file.size > MAX_FILE_SIZE) {
     throw new AppError(
       422,
@@ -198,6 +201,8 @@ export async function uploadVehicleDocument(
       "Document type must be PDF, JPEG, or PNG.",
     );
   }
+
+  assertFileMatchesMimeType(file.mimetype, file.buffer);
 
   if (file.size > MAX_FILE_SIZE) {
     throw new AppError(
@@ -304,6 +309,8 @@ export async function uploadCustomerDocument(
     );
   }
 
+  assertFileMatchesMimeType(file.mimetype, file.buffer);
+
   if (file.size > MAX_FILE_SIZE) {
     throw new AppError(
       422,
@@ -361,7 +368,11 @@ async function updateCustomerDocumentExpiry(
   expiryDate: unknown,
 ): Promise<DocumentResponse> {
   await ensureCustomerInOrg(customerId, orgId);
-  const document = await repo.findCustomerDocument(documentId, customerId, orgId);
+  const document = await repo.findCustomerDocument(
+    documentId,
+    customerId,
+    orgId,
+  );
   if (!document || document.deleted_at) {
     throw new AppError(404, "DOCUMENT_NOT_FOUND", "Document not found.");
   }

@@ -15,6 +15,7 @@ import {
 } from "./contract.controller";
 import {
   authenticate,
+  createRateLimiter,
   requireOperationalOrganization,
   requireRole,
   validateUuidParam,
@@ -23,6 +24,11 @@ import { validateBody } from "../../middleware";
 import { documentMetadataSchema } from "../media/media.validation";
 
 const router: IRouter = Router();
+const uploadRateLimit = createRateLimiter({
+  limit: 30,
+  windowMs: 15 * 60 * 1000,
+  key: (req) => `${req.user!.sub}:${req.user!.org}`,
+});
 router.use(authenticate, requireOperationalOrganization);
 router.param("id", validateUuidParam);
 router.param("documentId", validateUuidParam);
@@ -38,26 +44,16 @@ router.patch(
   validateBody(documentMetadataSchema),
   updateSigned,
 );
-router.get(
-  "/rentals/:id/contract/signed/:documentId/download",
-  downloadSigned,
-);
-router.post(
-  "/rentals/:id/contract",
-  requireRole("OWNER"),
-  generate,
-);
+router.get("/rentals/:id/contract/signed/:documentId/download", downloadSigned);
+router.post("/rentals/:id/contract", requireRole("OWNER"), generate);
 router.post(
   "/rentals/:id/contract/signed",
   requireRole("OWNER"),
+  uploadRateLimit,
   handleUpload,
   uploadSigned,
 );
-router.delete(
-  "/rentals/:id/contract",
-  requireRole("OWNER"),
-  remove,
-);
+router.delete("/rentals/:id/contract", requireRole("OWNER"), remove);
 router.delete(
   "/rentals/:id/contract/signed/:documentId",
   requireRole("OWNER"),

@@ -1,38 +1,12 @@
 import type { Request, Response, NextFunction } from "express";
-import multer from "multer";
-import { ok, created, noContent, AppError } from "../../shared";
+import { ok, created, noContent } from "../../shared";
 import { mediaService } from "./media.service";
 import type { CreatePhotoInput, CreateDocumentInput } from "./media.types";
 import { parseDocumentExpiryDate } from "./media.validation";
+import { createUploadHandler } from "./media.upload";
 
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 },
-});
-
-function handleUpload(req: Request, res: Response, next: NextFunction): void {
-  upload.single("file")(req, res, (err: unknown) => {
-    if (err instanceof multer.MulterError) {
-      if (err.code === "LIMIT_FILE_SIZE") {
-        next(
-          new AppError(
-            422,
-            "FILE_TOO_LARGE",
-            "File exceeds the 10 MB size limit.",
-          ),
-        );
-        return;
-      }
-      next(new AppError(422, "UPLOAD_ERROR", err.message));
-      return;
-    }
-    if (err) {
-      next(err);
-      return;
-    }
-    next();
-  });
-}
+const handlePhotoUpload = createUploadHandler(["caption", "sort_order"]);
+const handleDocumentUpload = createUploadHandler(["category", "expiryDate"]);
 
 function parseSortOrder(value: unknown): number {
   const n = Number(value);
@@ -130,11 +104,9 @@ async function uploadPhoto(
     const file = req.file;
 
     if (!file) {
-      res
-        .status(422)
-        .json({
-          error: { code: "FILE_REQUIRED", message: "A file is required." },
-        });
+      res.status(422).json({
+        error: { code: "FILE_REQUIRED", message: "A file is required." },
+      });
       return;
     }
 
@@ -216,11 +188,9 @@ async function uploadDocument(
     const file = req.file;
 
     if (!file) {
-      res
-        .status(422)
-        .json({
-          error: { code: "FILE_REQUIRED", message: "A file is required." },
-        });
+      res.status(422).json({
+        error: { code: "FILE_REQUIRED", message: "A file is required." },
+      });
       return;
     }
 
@@ -302,11 +272,9 @@ async function uploadCustomerDocument(
     const file = req.file;
 
     if (!file) {
-      res
-        .status(422)
-        .json({
-          error: { code: "FILE_REQUIRED", message: "A file is required." },
-        });
+      res.status(422).json({
+        error: { code: "FILE_REQUIRED", message: "A file is required." },
+      });
       return;
     }
 
@@ -430,7 +398,8 @@ async function downloadCustomerDocument(
 }
 
 export {
-  handleUpload,
+  handlePhotoUpload,
+  handleDocumentUpload,
   listPhotos,
   getPhoto,
   servePhoto,

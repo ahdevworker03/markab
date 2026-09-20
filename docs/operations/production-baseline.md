@@ -147,6 +147,17 @@ PostgreSQL backups. The application retains authenticated server-side
 authorization and tenant checks before object retrieval; R2 objects are not
 public.
 
+Step 61 also requires production startup to reject local storage, placeholder
+or incomplete database, JWT/refresh, CORS, Resend, and R2 configuration. Set
+`STORAGE_PROVIDER=r2` and all four R2 values in the deployment secret store;
+the existing R2 client uses Cloudflare's account endpoint and `auto` region,
+so no separate R2 endpoint or region setting is configured. Development and
+test continue to use local storage. API traffic trusts exactly one Caddy
+reverse proxy in production. The API's process-local public and upload rate
+limits supplement, rather than replace, Cloudflare edge limits; each API
+instance has its own counters, so Cloudflare must coordinate the production
+edge policy.
+
 ## Pilot Capacity And Performance Gates
 
 All measurements use a warm staging environment with production-like API and

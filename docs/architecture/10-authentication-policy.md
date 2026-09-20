@@ -111,6 +111,12 @@ Rotation ensures that a refresh token is single-use. Once used to obtain new tok
 
 The specific hashing implementation is an implementation detail and is not prescribed by this document.
 
+The approved web transport stores access and refresh tokens in localStorage.
+This carries a residual XSS token-theft risk. Step 61 hardens API response
+headers and request boundaries without changing the authentication API.
+HttpOnly cookie transport and its CSRF controls are a deferred, separately
+approved redesign.
+
 ---
 
 ## Authorization
@@ -155,6 +161,7 @@ Organization boundaries are enforced by the backend and the database.
 - Use HTTPS in production.
 - Never trust client input.
 - Follow secure defaults.
+- Apply scoped rate limits to public authentication routes and uploads.
 
 ---
 
