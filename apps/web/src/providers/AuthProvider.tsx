@@ -18,9 +18,8 @@ import {
 import type { CurrentUserResponse } from "@workspace/api-client-react";
 import {
   getAccessToken,
-  getRefreshToken,
-  setTokens,
-  clearTokens,
+  setAccessToken,
+  clearAccessToken,
 } from "@/lib/auth-token";
 
 interface LoginParams {
@@ -45,23 +44,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const clearSession = useCallback(() => {
     queryClient.clear();
-    clearTokens();
+    clearAccessToken();
     setUser(null);
   }, [queryClient]);
 
   const refreshSession = useCallback(async (): Promise<boolean> => {
-    const refreshToken = getRefreshToken();
-    if (!refreshToken) {
-      clearSession();
-      return false;
-    }
     try {
-      const refreshed = await apiRefreshToken({ refreshToken });
-      setTokens(
-        refreshed.data.accessToken,
-        refreshed.data.refreshToken,
-        refreshed.data.expiresAt,
-      );
+      const refreshed = await apiRefreshToken();
+      setAccessToken(refreshed.data.accessToken);
       return true;
     } catch {
       clearSession();
@@ -78,14 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
 
     async function restoreSession() {
-      const token = getAccessToken();
-
-      if (!token) {
-        if (!cancelled) setIsLoading(false);
-        return;
-      }
-
       try {
+        if (!getAccessToken() && !(await refreshSession())) return;
         const result = await getCurrentUser();
 
         if (cancelled) return;
@@ -128,11 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         const result = await apiLogin({ email, password });
-        setTokens(
-          result.data.accessToken,
-          result.data.refreshToken,
-          result.data.expiresAt,
-        );
+        setAccessToken(result.data.accessToken);
 
         const me = await getCurrentUser();
         if (!me?.data) throw new Error("Invalid current user response.");
@@ -148,16 +128,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(async () => {
-    const refreshToken = getRefreshToken();
-
     clearSession();
 
-    if (refreshToken) {
-      try {
-        await apiLogout({ refreshToken });
-      } catch {
-        // Ignore logout errors — clear local session regardless.
-      }
+    try {
+      await apiLogout();
+    } catch {
+      // Ignore logout errors — clear the in-memory session regardless.
     }
   }, [clearSession]);
 

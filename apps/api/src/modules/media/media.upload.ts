@@ -3,9 +3,13 @@ import multer from "multer";
 import { AppError } from "../../shared";
 import { MAX_FILE_SIZE } from "./media.validation";
 
+const uploadLimits: NonNullable<multer.Options["limits"]> & {
+  fieldArrayIndexLimit: number;
+} = { fileSize: MAX_FILE_SIZE, files: 1, fieldArrayIndexLimit: 0 };
+
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: MAX_FILE_SIZE, files: 1 },
+  limits: uploadLimits,
 });
 
 export function createUploadHandler(allowedFields: readonly string[]) {

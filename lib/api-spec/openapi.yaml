@@ -54,7 +54,7 @@ paths:
       operationId: registerOrganization
       tags: [auth]
       summary: Register a new organization and its first user
-      description: Registers an organization with an OWNER user and returns access and refresh tokens.
+      description: Registers an organization with an OWNER user, returns a short-lived access token, and sets the refresh token in an HttpOnly cookie.
       requestBody:
         required: true
         content:
@@ -67,7 +67,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthTokensResponse"
+                $ref: "#/components/schemas/AccessTokenResponse"
         "409":
           description: Email already exists
           content:
@@ -86,7 +86,7 @@ paths:
       operationId: login
       tags: [auth]
       summary: Login
-      description: Authenticates a user and returns access and refresh tokens.
+      description: Authenticates a user, returns a short-lived access token, and sets the refresh token in an HttpOnly cookie.
       requestBody:
         required: true
         content:
@@ -99,7 +99,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthTokensResponse"
+                $ref: "#/components/schemas/AccessTokenResponse"
         "401":
           description: Invalid credentials
           content:
@@ -118,28 +118,16 @@ paths:
       operationId: refreshToken
       tags: [auth]
       summary: Refresh access token
-      description: Exchanges a valid refresh token for a new access and refresh token pair. The previous refresh token is invalidated.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RefreshRequest"
+      description: Exchanges the HttpOnly refresh-token cookie for a new access token and rotated refresh-token cookie. The previous refresh token is invalidated.
       responses:
         "200":
-          description: New token pair issued
+          description: New access token issued and refresh cookie rotated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthTokensResponse"
+                $ref: "#/components/schemas/AccessTokenResponse"
         "401":
           description: Invalid or expired refresh token
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "422":
-          description: Validation failed
           content:
             application/json:
               schema:
@@ -150,22 +138,10 @@ paths:
       operationId: logout
       tags: [auth]
       summary: Logout
-      description: Revokes the provided refresh token and ends the authenticated session.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LogoutRequest"
+      description: Revokes the refresh token held in the HttpOnly cookie, clears that cookie, and ends the authenticated session.
       responses:
         "204":
           description: Logged out
-        "422":
-          description: Validation failed
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
 
   /auth/me:
     get:
@@ -746,7 +722,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthTokensResponse"
+                $ref: "#/components/schemas/AccessTokenResponse"
         "409":
           description: Invitation has expired, was already used, or email is no longer available
           content:
@@ -4070,45 +4046,24 @@ components:
         - email
         - password
 
-    RefreshRequest:
-      type: object
-      properties:
-        refreshToken:
-          type: string
-          minLength: 1
-      required:
-        - refreshToken
-
-    LogoutRequest:
-      type: object
-      properties:
-        refreshToken:
-          type: string
-          minLength: 1
-      required:
-        - refreshToken
-
-    AuthTokensResponse:
+    AccessTokenResponse:
       type: object
       properties:
         data:
-          $ref: "#/components/schemas/AuthTokens"
+          $ref: "#/components/schemas/AccessToken"
       required:
         - data
 
-    AuthTokens:
+    AccessToken:
       type: object
       properties:
         accessToken:
-          type: string
-        refreshToken:
           type: string
         expiresAt:
           type: string
           format: date-time
       required:
         - accessToken
-        - refreshToken
         - expiresAt
 
     UserResponse:

@@ -1,5 +1,5 @@
 import { setBaseUrl, setAuthTokenGetter } from "@workspace/api-client-react";
-import { getAccessToken } from "@/lib/auth-token";
+import { getAccessToken, removeLegacyAuthStorage } from "@/lib/auth-token";
 
 /**
  * Base URL for the API.
@@ -11,6 +11,7 @@ import { getAccessToken } from "@/lib/auth-token";
 const DEFAULT_API_ORIGIN = "";
 
 export function configureApiClient(): void {
+  removeLegacyAuthStorage();
   const apiOrigin = import.meta.env.VITE_API_URL || DEFAULT_API_ORIGIN;
   setBaseUrl(apiOrigin);
   setAuthTokenGetter(() => getAccessToken());

@@ -34,24 +34,13 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface RefreshRequest {
-  /** @minLength 1 */
-  refreshToken: string;
-}
-
-export interface LogoutRequest {
-  /** @minLength 1 */
-  refreshToken: string;
-}
-
-export interface AuthTokens {
+export interface AccessToken {
   accessToken: string;
-  refreshToken: string;
   expiresAt: string;
 }
 
-export interface AuthTokensResponse {
-  data: AuthTokens;
+export interface AccessTokenResponse {
+  data: AccessToken;
 }
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];

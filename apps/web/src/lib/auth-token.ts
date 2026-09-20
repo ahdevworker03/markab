@@ -1,27 +1,25 @@
-const ACCESS_TOKEN_KEY = "vrap.accessToken";
-const REFRESH_TOKEN_KEY = "vrap.refreshToken";
-const ACCESS_TOKEN_EXPIRY_KEY = "vrap.accessTokenExpiresAt";
+let accessToken: string | null = null;
+const LEGACY_AUTH_STORAGE_KEYS = [
+  "vrap.accessToken",
+  "vrap.refreshToken",
+  "vrap.accessTokenExpiresAt",
+  "auth-token",
+];
 
 export function getAccessToken(): string | null {
-  return localStorage.getItem(ACCESS_TOKEN_KEY);
+  return accessToken;
 }
 
-export function getRefreshToken(): string | null {
-  return localStorage.getItem(REFRESH_TOKEN_KEY);
+export function setAccessToken(token: string): void {
+  accessToken = token;
 }
 
-export function setTokens(
-  accessToken: string,
-  refreshToken: string,
-  expiresAt?: string,
-): void {
-  localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-  localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-  if (expiresAt) localStorage.setItem(ACCESS_TOKEN_EXPIRY_KEY, expiresAt);
+export function clearAccessToken(): void {
+  accessToken = null;
 }
 
-export function clearTokens(): void {
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
-  localStorage.removeItem(ACCESS_TOKEN_EXPIRY_KEY);
+export function removeLegacyAuthStorage(): void {
+  for (const storage of [localStorage, sessionStorage]) {
+    for (const key of LEGACY_AUTH_STORAGE_KEYS) storage.removeItem(key);
+  }
 }

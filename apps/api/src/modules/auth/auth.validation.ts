@@ -1,8 +1,6 @@
 import {
   RegisterOrganizationBody,
   LoginBody,
-  RefreshTokenBody,
-  LogoutBody,
   RequestPasswordResetBody,
   ConfirmPasswordResetBody,
 } from "@workspace/api-zod";
@@ -14,8 +12,6 @@ export const registerSchema = z.preprocess(
   RegisterOrganizationBody,
 );
 export const loginSchema = z.preprocess(normalizeEmailInput, LoginBody);
-export const refreshSchema = RefreshTokenBody;
-export const logoutSchema = LogoutBody;
 export const requestPasswordResetSchema = z.preprocess(
   normalizeEmailInput,
   RequestPasswordResetBody,
@@ -31,14 +27,6 @@ export type RegisterInput = {
 export type LoginInput = {
   email: string;
   password: string;
-};
-
-export type RefreshInput = {
-  refreshToken: string;
-};
-
-export type LogoutInput = {
-  refreshToken: string;
 };
 
 export type RequestPasswordResetInput = { email: string };

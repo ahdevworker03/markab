@@ -8,7 +8,7 @@
 import * as zod from "zod";
 
 /**
- * Registers an organization with an OWNER user and returns access and refresh tokens.
+ * Registers an organization with an OWNER user, returns a short-lived access token, and sets the refresh token in an HttpOnly cookie.
  * @summary Register a new organization and its first user
  */
 export const registerOrganizationBodyPasswordMin = 8;
@@ -22,13 +22,12 @@ export const RegisterOrganizationBody = zod.object({
 export const RegisterOrganizationResponse = zod.object({
   data: zod.object({
     accessToken: zod.string(),
-    refreshToken: zod.string(),
     expiresAt: zod.coerce.date(),
   }),
 });
 
 /**
- * Authenticates a user and returns access and refresh tokens.
+ * Authenticates a user, returns a short-lived access token, and sets the refresh token in an HttpOnly cookie.
  * @summary Login
  */
 
@@ -40,37 +39,25 @@ export const LoginBody = zod.object({
 export const LoginResponse = zod.object({
   data: zod.object({
     accessToken: zod.string(),
-    refreshToken: zod.string(),
     expiresAt: zod.coerce.date(),
   }),
 });
 
 /**
- * Exchanges a valid refresh token for a new access and refresh token pair. The previous refresh token is invalidated.
+ * Exchanges the HttpOnly refresh-token cookie for a new access token and rotated refresh-token cookie. The previous refresh token is invalidated.
  * @summary Refresh access token
  */
-
-export const RefreshTokenBody = zod.object({
-  refreshToken: zod.string().min(1),
-});
-
 export const RefreshTokenResponse = zod.object({
   data: zod.object({
     accessToken: zod.string(),
-    refreshToken: zod.string(),
     expiresAt: zod.coerce.date(),
   }),
 });
 
 /**
- * Revokes the provided refresh token and ends the authenticated session.
+ * Revokes the refresh token held in the HttpOnly cookie, clears that cookie, and ends the authenticated session.
  * @summary Logout
  */
-
-export const LogoutBody = zod.object({
-  refreshToken: zod.string().min(1),
-});
-
 export const LogoutResponse = zod.void();
 
 /**
@@ -135,7 +122,6 @@ export const AcceptEmployeeInvitationBody = zod.object({
 export const AcceptEmployeeInvitationResponse = zod.object({
   data: zod.object({
     accessToken: zod.string(),
-    refreshToken: zod.string(),
     expiresAt: zod.coerce.date(),
   }),
 });
