@@ -7,6 +7,7 @@ import { generateAccessToken } from "../auth";
 import { cleanup } from "../../test/helpers";
 
 describe("media and signed contract storage reliability", () => {
+  const pdf = Buffer.from("%PDF-1.7\n");
   let organizationId: string;
   let customerId: string;
   let vehicleId: string;
@@ -133,7 +134,7 @@ describe("media and signed contract storage reliability", () => {
         .post(`/api/vehicles/${vehicleId}/documents`)
         .set("Authorization", `Bearer ${token}`)
         .field("category", "OTHER")
-        .attach("file", Buffer.from("vehicle document"), "vehicle.pdf"),
+        .attach("file", pdf, "vehicle.pdf"),
       `/api/vehicles/${vehicleId}/documents/:documentId/download`,
     );
   });
@@ -144,7 +145,7 @@ describe("media and signed contract storage reliability", () => {
         .post(`/api/customers/${customerId}/documents`)
         .set("Authorization", `Bearer ${token}`)
         .field("category", "OTHER")
-        .attach("file", Buffer.from("customer document"), "customer.pdf"),
+        .attach("file", pdf, "customer.pdf"),
       `/api/customers/${customerId}/documents/:documentId/download`,
     );
   });
@@ -154,9 +155,21 @@ describe("media and signed contract storage reliability", () => {
       request(app)
         .post(`/api/rentals/${rentalId}/contract/signed`)
         .set("Authorization", `Bearer ${token}`)
-        .attach("file", Buffer.from("signed contract"), "signed.pdf"),
+        .attach("file", pdf, "signed.pdf"),
       `/api/rentals/${rentalId}/contract/signed/:documentId/download`,
     );
+  });
+
+  it("rejects an unexpected multipart field before creating a document", async () => {
+    const response = await request(app)
+      .post(`/api/vehicles/${vehicleId}/documents`)
+      .set("Authorization", `Bearer ${token}`)
+      .field("category", "OTHER")
+      .field("unexpected", "value")
+      .attach("file", pdf, "vehicle.pdf");
+
+    expect(response.status).toBe(422);
+    expect(response.body.error.code).toBe("UPLOAD_ERROR");
   });
 
   it("stores, returns, and updates date-only document expiry metadata", async () => {
@@ -165,7 +178,7 @@ describe("media and signed contract storage reliability", () => {
       .set("Authorization", `Bearer ${token}`)
       .field("category", "INSURANCE")
       .field("expiryDate", "1900-01-01")
-      .attach("file", Buffer.from("vehicle document"), "vehicle.pdf");
+      .attach("file", pdf, "vehicle.pdf");
 
     expect(created.status).toBe(201);
     expect(created.body.data.expiryDate).toBe("1900-01-01");
@@ -193,7 +206,7 @@ describe("media and signed contract storage reliability", () => {
       .set("Authorization", `Bearer ${token}`)
       .field("category", "OTHER")
       .field("expiryDate", "2101-01-01")
-      .attach("file", Buffer.from("vehicle document"), "vehicle.pdf");
+      .attach("file", pdf, "vehicle.pdf");
 
     expect(response.status).toBe(422);
     expect(response.body.error.code).toBe("VALIDATION_ERROR");
@@ -205,7 +218,7 @@ describe("media and signed contract storage reliability", () => {
       .set("Authorization", `Bearer ${token}`)
       .field("category", "REGISTRATION")
       .field("expiryDate", "2100-12-31")
-      .attach("file", Buffer.from("customer document"), "customer.pdf");
+      .attach("file", pdf, "customer.pdf");
 
     expect(created.status).toBe(201);
     const detail = await request(app)

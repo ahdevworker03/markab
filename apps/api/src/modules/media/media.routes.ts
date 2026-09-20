@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import {
-  handleUpload,
+  handlePhotoUpload,
+  handleDocumentUpload,
   listPhotos,
   getPhoto,
   servePhoto,
@@ -21,6 +22,7 @@ import {
 } from "./media.controller";
 import {
   authenticate,
+  createRateLimiter,
   requireOperationalOrganization,
   requireRole,
   validateUuidParam,
@@ -29,6 +31,12 @@ import { validateBody } from "../../middleware";
 import { documentMetadataSchema } from "./media.validation";
 
 const router: IRouter = Router();
+const uploadRateLimit = () =>
+  createRateLimiter({
+    limit: 30,
+    windowMs: 15 * 60 * 1000,
+    key: (req) => `${req.user!.sub}:${req.user!.org}`,
+  });
 router.use(authenticate, requireOperationalOrganization);
 router.param("vehicleId", validateUuidParam);
 router.param("customerId", validateUuidParam);
@@ -41,7 +49,8 @@ router.get("/vehicles/:vehicleId/photos/:id", getPhoto);
 router.post(
   "/vehicles/:vehicleId/photos",
   requireRole("OWNER"),
-  handleUpload,
+  uploadRateLimit(),
+  handlePhotoUpload,
   uploadPhoto,
 );
 router.delete(
@@ -66,7 +75,8 @@ router.get(
 router.post(
   "/vehicles/:vehicleId/documents",
   requireRole("OWNER"),
-  handleUpload,
+  uploadRateLimit(),
+  handleDocumentUpload,
   uploadDocument,
 );
 router.delete(
@@ -76,14 +86,8 @@ router.delete(
 );
 
 // Customer documents
-router.get(
-  "/customers/:customerId/documents",
-  listCustomerDocuments,
-);
-router.get(
-  "/customers/:customerId/documents/:id",
-  getCustomerDocument,
-);
+router.get("/customers/:customerId/documents", listCustomerDocuments);
+router.get("/customers/:customerId/documents/:id", getCustomerDocument);
 router.patch(
   "/customers/:customerId/documents/:id",
   requireRole("OWNER"),
@@ -97,7 +101,8 @@ router.get(
 router.post(
   "/customers/:customerId/documents",
   requireRole("OWNER"),
-  handleUpload,
+  uploadRateLimit(),
+  handleDocumentUpload,
   uploadCustomerDocument,
 );
 router.delete(

@@ -17,10 +17,12 @@ describe("CORS", () => {
 
       expect(response.status).toBe(204);
       expect(response.headers["access-control-allow-origin"]).toBe(origin);
-      expect(response.headers["access-control-allow-headers"])
-        .toContain("Content-Type");
-      expect(response.headers["access-control-allow-headers"])
-        .toContain("Authorization");
+      expect(response.headers["access-control-allow-headers"]).toContain(
+        "Content-Type",
+      );
+      expect(response.headers["access-control-allow-headers"]).toContain(
+        "Authorization",
+      );
     },
   );
 
@@ -42,5 +44,20 @@ describe("CORS", () => {
       .set("Access-Control-Request-Method", "POST");
 
     expect(response.headers["access-control-allow-origin"]).toBeUndefined();
+  });
+
+  it("sets restrictive security headers without credentialed wildcard CORS", async () => {
+    const response = await request(app).get("/api/healthz");
+
+    expect(response.headers["content-security-policy"]).not.toContain(
+      "unsafe-eval",
+    );
+    expect(response.headers["x-content-type-options"]).toBe("nosniff");
+    expect(response.headers["x-frame-options"]).toBe("DENY");
+    expect(response.headers["referrer-policy"]).toBe("no-referrer");
+    expect(response.headers["x-powered-by"]).toBeUndefined();
+    expect(
+      response.headers["access-control-allow-credentials"],
+    ).toBeUndefined();
   });
 });

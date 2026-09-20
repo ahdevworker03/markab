@@ -5,7 +5,15 @@ const productionEnv = {
   PORT: "3000",
   NODE_ENV: "production",
   LOG_LEVEL: "info",
-  CORS_ORIGINS: "https://app.example.com",
+  CORS_ORIGINS: "https://app.markab.test",
+  DATABASE_URL: "postgresql://user:password@db.internal:5432/markab",
+  JWT_SECRET: "jwt-secret-that-is-long-enough-for-production-use",
+  REFRESH_TOKEN_SECRET: "refresh-secret-that-is-long-enough-for-production-use",
+  STORAGE_PROVIDER: "r2",
+  R2_ACCOUNT_ID: "account-id",
+  R2_ACCESS_KEY_ID: "access-key-id",
+  R2_SECRET_ACCESS_KEY: "secret-access-key",
+  R2_BUCKET: "markab-private",
 };
 
 describe("password-reset email configuration", () => {
@@ -27,13 +35,13 @@ describe("password-reset email configuration", () => {
     const env = loadEnv({
       ...productionEnv,
       RESEND_API_KEY: "re_test_key",
-      RESEND_FROM: "Markab <security@example.com>",
-      PASSWORD_RESET_FRONTEND_ORIGIN: "https://app.example.com",
+      RESEND_FROM: "Markab <security@markab.test>",
+      PASSWORD_RESET_FRONTEND_ORIGIN: "https://app.markab.test",
       PASSWORD_RESET_FRONTEND_PATH: "/password-reset",
     });
 
     expect(env.PASSWORD_RESET_EMAIL?.resetUrl.toString()).toBe(
-      "https://app.example.com/password-reset",
+      "https://app.markab.test/password-reset",
     );
   });
 
@@ -42,8 +50,8 @@ describe("password-reset email configuration", () => {
       loadEnv({
         ...productionEnv,
         RESEND_API_KEY: "re_test_key",
-        RESEND_FROM: "Markab <security@example.com>",
-        PASSWORD_RESET_FRONTEND_ORIGIN: "https://app.example.com",
+        RESEND_FROM: "Markab <security@markab.test>",
+        PASSWORD_RESET_FRONTEND_ORIGIN: "https://app.markab.test",
         PASSWORD_RESET_FRONTEND_PATH: "/\\evil.example",
       }),
     ).toThrow(

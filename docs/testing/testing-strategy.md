@@ -90,6 +90,11 @@ High-risk changes affect tenant isolation, authentication or sessions, authoriza
 
 These changes generally require strong automated regression coverage at the owning backend or logic boundary, broader affected-suite execution, and relevant manual verification. Critical cross-system behavior may also justify E2E coverage.
 
+For Step 61, focused API coverage verifies production configuration rejection,
+file-signature validation, multipart rejection, and rate-limit responses. The
+process-local rate limiter is verified at the middleware boundary; production
+coordination with Cloudflare edge limiting remains an operator responsibility.
+
 ### Medium Risk
 
 Medium-risk changes include normal CRUD workflows, forms, filtering, API-backed pages, and important user interactions.

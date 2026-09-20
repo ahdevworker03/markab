@@ -8,7 +8,7 @@ import {
   requestReset,
   confirmReset,
 } from "./auth.controller";
-import { validateBody } from "../../middleware";
+import { createRateLimiter, validateBody } from "../../middleware";
 import {
   registerSchema,
   loginSchema,
@@ -19,18 +19,32 @@ import {
 } from "./auth.validation";
 
 const router: IRouter = Router();
+const publicRateLimit = () =>
+  createRateLimiter({ limit: 30, windowMs: 15 * 60 * 1000 });
 
-router.post("/register", validateBody(registerSchema), register);
-router.post("/login", validateBody(loginSchema), login);
-router.post("/refresh", validateBody(refreshSchema), refresh);
+router.post(
+  "/register",
+  publicRateLimit(),
+  validateBody(registerSchema),
+  register,
+);
+router.post("/login", publicRateLimit(), validateBody(loginSchema), login);
+router.post(
+  "/refresh",
+  publicRateLimit(),
+  validateBody(refreshSchema),
+  refresh,
+);
 router.post("/logout", validateBody(logoutSchema), logout);
 router.post(
   "/password-reset/request",
+  publicRateLimit(),
   validateBody(requestPasswordResetSchema),
   requestReset,
 );
 router.post(
   "/password-reset/confirm",
+  publicRateLimit(),
   validateBody(confirmPasswordResetSchema),
   confirmReset,
 );
