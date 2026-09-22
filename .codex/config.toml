@@ -29,6 +29,31 @@ enabled = true
 [mcp_servers.cloudflare.headers]
 Authorization = "Bearer ${env:CLOUDFLARE_API_TOKEN}"
 
+[mcp_servers.postgresql]
+command = "npx"
+args = [
+  "-y",
+  "@modelcontextprotocol/server-postgres",
+  "postgresql://postgres:postgres@localhost:5432/vehicle_rental",
+]
+enabled = true
+
+[mcp_servers.docker]
+command = "npx"
+args = ["-y", "@alisaitteke/docker-mcp"]
+enabled = true
+
+[mcp_servers.contabo]
+command = "npx"
+args = ["-y", "@kieksme/contabo-mcp"]
+enabled = true
+
+[mcp_servers.contabo.env]
+CONTABO_CLIENT_ID = "${env:CONTABO_CLIENT_ID}"
+CONTABO_CLIENT_SECRET = "${env:CONTABO_CLIENT_SECRET}"
+CONTABO_API_USER = "${env:CONTABO_API_USER}"
+CONTABO_API_PASSWORD = "${env:CONTABO_API_PASSWORD}"
+
 [mcp_servers.openapi]
 command = "uvx"
 args = ["awslabs.openapi-mcp-server@latest"]

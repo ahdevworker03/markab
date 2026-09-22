@@ -67,11 +67,32 @@
     },
 
     "postgresql": {
-      "enabled": false
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://postgres:postgres@localhost:5432/vehicle_rental"
+      ],
+      "enabled": true
     },
 
     "docker": {
-      "enabled": false
+      "type": "local",
+      "command": ["npx", "-y", "@alisaitteke/docker-mcp"],
+      "enabled": true
+    },
+
+    "contabo": {
+      "type": "local",
+      "command": ["npx", "-y", "@kieksme/contabo-mcp"],
+      "enabled": true,
+      "environment": {
+        "CONTABO_CLIENT_ID": "{env:CONTABO_CLIENT_ID}",
+        "CONTABO_CLIENT_SECRET": "{env:CONTABO_CLIENT_SECRET}",
+        "CONTABO_API_USER": "{env:CONTABO_API_USER}",
+        "CONTABO_API_PASSWORD": "{env:CONTABO_API_PASSWORD}"
+      }
     }
   }
 }
