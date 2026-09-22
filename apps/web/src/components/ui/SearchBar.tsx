@@ -14,7 +14,7 @@ export function SearchBar({ className, onClear, ...props }: SearchBarProps) {
     <div className={cn("relative w-full", className)}>
       <input
         type="search"
-        dir="auto"
+        dir={hasValue ? "auto" : undefined}
         className={cn(
           "w-full bg-muted text-foreground placeholder:text-muted-foreground rounded-xl py-2.5 border-none focus:ring-2 focus:ring-primary/20 outline-none text-sm transition-all pr-11",
           hasValue ? "pl-10" : "pl-4"

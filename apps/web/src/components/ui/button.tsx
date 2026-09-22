@@ -27,11 +27,14 @@ const buttonVariants = cva(
         link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
-        // Custom sizes
-        default: 'min-h-10 px-4 py-2',
-        sm: 'min-h-9 px-3 text-xs',
+        // Below lg (the shell's touch-primary phone/tablet range) every size
+        // meets the 44px touch-target minimum; at lg+ (mouse/trackpad desktop,
+        // matching where AppSidebar takes over from the tablet rail) sizes
+        // return to Markab's compact operational density.
+        default: 'min-h-11 lg:min-h-10 px-4 py-2',
+        sm: 'min-h-11 lg:min-h-9 px-3 text-xs',
         lg: 'min-h-11 px-6',
-        icon: 'size-10',
+        icon: 'size-11 lg:size-10',
       },
     },
     defaultVariants: {

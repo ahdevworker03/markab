@@ -31,8 +31,8 @@ const dashboard: NavigationItem = {
 };
 
 const vehicles: NavigationItem = {
-  label: "المركبات",
-  shortLabel: "المركبات",
+  label: "السيارات",
+  shortLabel: "السيارات",
   route: "/vehicles",
   icon: Car,
 };
