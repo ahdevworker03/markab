@@ -93,7 +93,7 @@ function DashboardAction({
       variant="ghost"
       size="sm"
       onClick={onClick}
-      className="h-9 shrink-0 rounded-lg px-3 text-muted-foreground hover:bg-background hover:text-foreground focus-visible:ring-ring/40"
+      className="min-h-11 shrink-0 rounded-lg px-3 text-muted-foreground hover:bg-background hover:text-foreground focus-visible:ring-ring/40"
     >
       <Icon className="size-4" aria-hidden="true" />
       {label}
@@ -178,7 +178,7 @@ function ActiveRentalRow({
           {customerName ?? "عميل غير معروف"}
         </span>
         <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-          {vehicle ? `${vehicle.make} ${vehicle.model}` : "مركبة غير معروفة"} · {formatDate(rental.expectedReturnDate)}
+          {vehicle ? `${vehicle.make} ${vehicle.model}` : "سيارة غير معروفة"} · {formatDate(rental.expectedReturnDate)}
         </span>
       </span>
       <span className="flex shrink-0 flex-col items-end gap-1">
@@ -210,7 +210,7 @@ function RecentActivityRow({
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-foreground">تم إنهاء عقد</p>
         <p className="mt-0.5 truncate text-xs text-muted-foreground">
-          {vehicle ? `${vehicle.make} ${vehicle.model}` : "مركبة غير معروفة"} · {customerName ?? "عميل غير معروف"}
+          {vehicle ? `${vehicle.make} ${vehicle.model}` : "سيارة غير معروفة"} · {customerName ?? "عميل غير معروف"}
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
           {relativeTimeLabel(Math.abs(getDaysFromCurrentDay(rental.actualReturnDate, new Date())))}
@@ -340,12 +340,12 @@ export default function DashboardPage() {
           className="inline-flex max-w-full flex-wrap items-center justify-start gap-1 rounded-xl border border-border bg-card p-1 shadow-sm"
         >
           <DashboardAction
-            label="إعادة مركبة"
+            label="إعادة سيارة"
             icon={RotateCcw}
             onClick={() => setLocation("/rentals")}
           />
           <DashboardAction
-            label="إضافة مركبة"
+            label="إضافة سيارة"
             icon={Car}
             onClick={() => setLocation("/vehicles/add")}
           />
@@ -363,7 +363,7 @@ export default function DashboardPage() {
         )}
 
         <div className="grid items-start gap-4 lg:grid-cols-2 xl:grid-cols-12 xl:gap-5">
-        <section aria-label="التنبيهات التشغيلية" className="order-2 self-start lg:col-span-2 xl:order-2 xl:col-span-4">
+        <section aria-label="التنبيهات التشغيلية" className="order-1 self-start lg:col-span-2 xl:order-2 xl:col-span-4">
           <SectionCard
             title="ما يحتاج إلى متابعة"
             description="تنبيهات تشغيلية مرتبة حسب الأولوية"
@@ -412,7 +412,7 @@ export default function DashboardPage() {
                     key={`return-today-${rental.id}`}
                     icon={Clock3}
                     tone="warning"
-                    title="إعادة مركبة مستحقة اليوم"
+                    title="إعادة سيارة مستحقة اليوم"
                     description={`موعد الإعادة ${formatDate(rental.expectedReturnDate)}`}
                     onClick={() => setLocation(`/rentals/${rental.id}`)}
                   />
@@ -422,7 +422,7 @@ export default function DashboardPage() {
                     key={`return-soon-${rental.id}`}
                     icon={Clock3}
                     tone="info"
-                    title="إعادة مركبة قريبة"
+                    title="إعادة سيارة قريبة"
                     description={`موعد الإعادة ${formatDate(rental.expectedReturnDate)}`}
                     onClick={() => setLocation(`/rentals/${rental.id}`)}
                   />
@@ -432,8 +432,8 @@ export default function DashboardPage() {
                     <DashboardAlertRow
                       icon={Wrench}
                       tone="warning"
-                      title={`${dashboard.vehiclesUnderMaintenance} مركبات في الصيانة`}
-                      description="راجع حالة الأسطول والمواعيد المرتبطة"
+                      title={`${dashboard.vehiclesUnderMaintenance} سيارات في الصيانة`}
+                      description="راجع حالة السيارات والمواعيد المرتبطة"
                       onClick={() => setLocation("/maintenance")}
                     />
                   )}
@@ -552,8 +552,8 @@ export default function DashboardPage() {
           </SectionCard>
 
           <SectionCard
-            title="حالة الأسطول"
-            description="توفر المركبات وحالتها الحالية"
+            title="حالة السيارات"
+            description="توفر السيارات وحالتها الحالية"
             action={
               <Button
                 type="button"
@@ -561,7 +561,7 @@ export default function DashboardPage() {
                 size="sm"
                 onClick={() => setLocation("/vehicles")}
               >
-                عرض المركبات
+                عرض السيارات
                 <ChevronLeft className="size-4" aria-hidden="true" />
               </Button>
             }
@@ -569,7 +569,7 @@ export default function DashboardPage() {
           >
             {fleetState === "error" ? (
               <ErrorState
-                title="تعذر تحميل حالة الأسطول"
+                title="تعذر تحميل حالة السيارات"
                 description={getApiErrorMessage(vehiclesQuery.error).title}
                 onRetry={() => void vehiclesQuery.refetch()}
                 className="py-8"
@@ -611,7 +611,7 @@ export default function DashboardPage() {
 
         <section
           aria-label="نظرة تشغيلية سريعة"
-          className="order-3 grid grid-cols-2 gap-3 lg:col-span-2 xl:order-4 xl:col-span-full xl:grid-cols-4 xl:gap-4"
+          className="order-4 grid grid-cols-2 gap-3 lg:col-span-2 xl:order-4 xl:col-span-full xl:grid-cols-4 xl:gap-4"
         >
           <DashboardMetricCard
             label="الإيجارات النشطة"
@@ -634,7 +634,7 @@ export default function DashboardPage() {
             onClick={() => setLocation("/rentals")}
           />
           <DashboardMetricCard
-            label="المركبات المتاحة"
+            label="السيارات المتاحة"
             value={String(dashboard.availableCount)}
             context="جاهزة للتأجير"
             icon={Car}
@@ -655,7 +655,7 @@ export default function DashboardPage() {
           />
         </section>
 
-        <div className="order-4 grid gap-4 lg:col-span-2 xl:order-5 xl:col-span-full xl:grid-cols-12 xl:gap-5">
+        <div className="order-2 grid gap-4 lg:col-span-2 xl:order-5 xl:col-span-full xl:grid-cols-12 xl:gap-5">
           <SectionCard
             title="الإيجارات النشطة"
             description={`${dashboard.activeRentals.length} عقود قيد التنفيذ`}
