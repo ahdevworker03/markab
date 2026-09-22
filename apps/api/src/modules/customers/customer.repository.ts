@@ -1,5 +1,8 @@
 import { prisma } from "../../database";
+import type { TxClient } from "../../database";
 import type { CustomerRecord } from "./customer.types";
+
+type DbClient = typeof prisma | TxClient;
 
 async function findByOrg(orgId: string): Promise<CustomerRecord[]> {
   return prisma.customer.findMany({
@@ -31,8 +34,9 @@ async function searchByOrg(
 async function findById(
   customerId: string,
   orgId: string,
+  tx: DbClient = prisma,
 ): Promise<CustomerRecord | null> {
-  return prisma.customer.findFirst({
+  return tx.customer.findFirst({
     where: { id: customerId, organization_id: orgId },
   });
 }
@@ -48,8 +52,9 @@ async function create(
     license_expiry_date: Date;
   },
   orgId: string,
+  tx: DbClient = prisma,
 ): Promise<CustomerRecord> {
-  return prisma.customer.create({
+  return tx.customer.create({
     data: {
       ...data,
       organization_id: orgId,
@@ -68,8 +73,9 @@ async function update(
     license_number: string;
     license_expiry_date: Date;
   },
+  tx: DbClient = prisma,
 ): Promise<CustomerRecord> {
-  return prisma.customer.update({
+  return tx.customer.update({
     where: { id: customerId },
     data,
   });

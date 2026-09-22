@@ -1,5 +1,5 @@
 import { AppError } from "../../shared";
-import { transaction, retrySerializable } from "../../database";
+import { transaction, retrySerializable, type TxClient } from "../../database";
 import * as repo from "./rental.repository";
 import type {
   RentalResponse,
@@ -46,6 +46,21 @@ async function createRental(
   orgId: string,
   input: CreateRentalInput,
 ): Promise<RentalResponse> {
+  const run = () =>
+    transaction(
+      (tx) => createRentalWithinTx(orgId, input, tx),
+      { isolationLevel: "Serializable" },
+    );
+
+  return retrySerializable(run);
+}
+
+// Callers own the transaction and must use SERIALIZABLE isolation.
+async function createRentalWithinTx(
+  orgId: string,
+  input: CreateRentalInput,
+  tx: TxClient,
+): Promise<RentalResponse> {
   const pickupDate = new Date(input.pickup_date);
   const expectedReturnDate = new Date(input.expected_return_date);
 
@@ -56,78 +71,55 @@ async function createRental(
     input.deposit_amount,
   );
 
-  async function run(): Promise<RentalResponse> {
-    const rental = await transaction(
-      async (tx) => {
-        const customer = await repo.findCustomerWithinTx(
-          input.customer_id,
-          orgId,
-          tx,
-        );
+  const customer = await repo.findCustomerWithinTx(input.customer_id, orgId, tx);
 
-        if (!customer) {
-          throw new AppError(404, "CUSTOMER_NOT_FOUND", "Customer not found.");
-        }
-
-        const vehicle = await repo.findVehicleWithinTx(
-          input.vehicle_id,
-          orgId,
-          tx,
-        );
-
-        if (!vehicle) {
-          throw new AppError(404, "VEHICLE_NOT_FOUND", "Vehicle not found.");
-        }
-
-        assertVehicleOperationallyAvailable(vehicle.status);
-
-        const overlapping = await repo.findOverlappingWithinTx(
-          input.vehicle_id,
-          orgId,
-          pickupDate,
-          expectedReturnDate,
-          undefined,
-          tx,
-        );
-
-        if (overlapping.length > 0) {
-          throw new AppError(
-            409,
-            "VEHICLE_UNAVAILABLE",
-            "Vehicle is already reserved for the requested period.",
-          );
-        }
-
-        const rental = await repo.createWithinTx(
-          {
-            organization_id: orgId,
-            customer_id: input.customer_id,
-            vehicle_id: input.vehicle_id,
-            pickup_date: pickupDate,
-            expected_return_date: expectedReturnDate,
-            status: "RESERVED",
-            daily_rate: input.daily_rate,
-            total_amount: input.total_amount,
-            deposit_amount: input.deposit_amount,
-          },
-          tx,
-        );
-
-        await repo.updateVehicleStatusWithinTx(
-          input.vehicle_id,
-          "RESERVED",
-          tx,
-        );
-
-        return rental;
-      },
-      { isolationLevel: "Serializable" },
-    );
-
-    return toRentalResponse(rental);
+  if (!customer) {
+    throw new AppError(404, "CUSTOMER_NOT_FOUND", "Customer not found.");
   }
 
-  return retrySerializable(run);
+  const vehicle = await repo.findVehicleWithinTx(input.vehicle_id, orgId, tx);
+
+  if (!vehicle) {
+    throw new AppError(404, "VEHICLE_NOT_FOUND", "Vehicle not found.");
+  }
+
+  assertVehicleOperationallyAvailable(vehicle.status);
+
+  const overlapping = await repo.findOverlappingWithinTx(
+    input.vehicle_id,
+    orgId,
+    pickupDate,
+    expectedReturnDate,
+    undefined,
+    tx,
+  );
+
+  if (overlapping.length > 0) {
+    throw new AppError(
+      409,
+      "VEHICLE_UNAVAILABLE",
+      "Vehicle is already reserved for the requested period.",
+    );
+  }
+
+  const rental = await repo.createWithinTx(
+    {
+      organization_id: orgId,
+      customer_id: input.customer_id,
+      vehicle_id: input.vehicle_id,
+      pickup_date: pickupDate,
+      expected_return_date: expectedReturnDate,
+      status: "RESERVED",
+      daily_rate: input.daily_rate,
+      total_amount: input.total_amount,
+      deposit_amount: input.deposit_amount,
+    },
+    tx,
+  );
+
+  await repo.updateVehicleStatusWithinTx(input.vehicle_id, "RESERVED", tx);
+
+  return toRentalResponse(rental);
 }
 
 async function updateRental(
@@ -539,6 +531,7 @@ export {
   listRentals,
   getRental,
   createRental,
+  createRentalWithinTx,
   updateRental,
   pickupRental,
   returnRental,

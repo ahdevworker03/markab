@@ -1,5 +1,5 @@
 import { AppError } from "../../shared";
-import { isUniqueConstraintError } from "../../database";
+import { isUniqueConstraintError, type TxClient } from "../../database";
 import * as repo from "./customer.repository";
 import {
   isSupportedLicenseExpiryDate,
@@ -71,6 +71,22 @@ async function createCustomer(
   orgId: string,
   input: CreateCustomerInput,
 ): Promise<CustomerResponse> {
+  return createCustomerInternal(orgId, input);
+}
+
+async function createCustomerWithinTx(
+  orgId: string,
+  input: CreateCustomerInput,
+  tx: TxClient,
+): Promise<CustomerResponse> {
+  return createCustomerInternal(orgId, input, tx);
+}
+
+async function createCustomerInternal(
+  orgId: string,
+  input: CreateCustomerInput,
+  tx?: TxClient,
+): Promise<CustomerResponse> {
   try {
     const customer = await repo.create(
       {
@@ -83,6 +99,7 @@ async function createCustomer(
         license_expiry_date: input.license_expiry_date,
       },
       orgId,
+      tx,
     );
 
     return toResponse(customer);
@@ -103,7 +120,25 @@ async function updateCustomer(
   orgId: string,
   input: UpdateCustomerInput,
 ): Promise<CustomerResponse> {
-  const customer = await repo.findById(customerId, orgId);
+  return updateCustomerInternal(customerId, orgId, input);
+}
+
+async function updateCustomerWithinTx(
+  customerId: string,
+  orgId: string,
+  input: UpdateCustomerInput,
+  tx: TxClient,
+): Promise<CustomerResponse> {
+  return updateCustomerInternal(customerId, orgId, input, tx);
+}
+
+async function updateCustomerInternal(
+  customerId: string,
+  orgId: string,
+  input: UpdateCustomerInput,
+  tx?: TxClient,
+): Promise<CustomerResponse> {
+  const customer = await repo.findById(customerId, orgId, tx);
 
   if (!customer || customer.deleted_at) {
     throw new AppError(404, "CUSTOMER_NOT_FOUND", "Customer not found.");
@@ -118,7 +153,7 @@ async function updateCustomer(
       national_id: input.national_id,
       license_number: input.license_number,
       license_expiry_date: input.license_expiry_date,
-    });
+    }, tx);
 
     return toResponse(updated);
   } catch (err) {
@@ -150,6 +185,8 @@ export {
   listCustomers,
   getCustomer,
   createCustomer,
+  createCustomerWithinTx,
   updateCustomer,
+  updateCustomerWithinTx,
   deleteCustomer,
 };
