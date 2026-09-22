@@ -13,6 +13,7 @@ import expensesRouter from "../modules/expenses/expense.routes";
 import paymentsRouter from "../modules/payments/payment.routes";
 import tasksRouter from "../modules/tasks/task.routes";
 import mediaRouter from "../modules/media/media.routes";
+import syncRouter from "../modules/sync/sync.routes";
 import {
   invitationRouter,
   publicInvitationRouter,
@@ -36,5 +37,6 @@ router.use(expensesRouter);
 router.use(paymentsRouter);
 router.use(tasksRouter);
 router.use(mediaRouter);
+router.use(syncRouter);
 
 export default router;

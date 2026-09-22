@@ -189,4 +189,5 @@ export {
   updateCustomer,
   updateCustomerWithinTx,
   deleteCustomer,
+  toResponse as toCustomerResponse,
 };
