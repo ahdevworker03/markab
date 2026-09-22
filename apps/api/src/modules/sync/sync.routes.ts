@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import {
   authenticate,
+  requireRole,
   requireOperationalOrganization,
   validateBody,
   validateQuery,
@@ -10,7 +11,7 @@ import { syncPullQuerySchema, syncPushSchema } from "./sync.validation";
 
 const router: IRouter = Router();
 router.use(authenticate, requireOperationalOrganization);
-router.post("/sync/push", validateBody(syncPushSchema), push);
+router.post("/sync/push", requireRole("OWNER"), validateBody(syncPushSchema), push);
 router.get("/sync/pull", validateQuery(syncPullQuerySchema), pull);
 
 export default router;
