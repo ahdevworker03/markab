@@ -89,7 +89,7 @@ export function VehiclesDataList({ vehicles, onOpen }: VehiclesDataListProps) {
               <div><div className="ui-label">العداد الحالي</div><div className="mt-1"><Mileage value={vehicle.currentMileage} /></div></div>
             </div>
             <div className="flex justify-end border-t border-border pt-3">
-              <Button type="button" variant="outline" size="sm" className="min-h-11" onClick={() => onOpen(vehicle.id)}>عرض التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => onOpen(vehicle.id)}>عرض التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button>
             </div>
           </article>
         ))}
@@ -108,7 +108,7 @@ export function VehiclesDataList({ vehicles, onOpen }: VehiclesDataListProps) {
             </div>
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Gauge className="size-3.5" aria-hidden="true" />{vehicle.transmission === "AUTOMATIC" ? "أوتوماتيك" : "يدوي"} · {vehicle.seats} مقاعد</div>
-              <Button type="button" variant="outline" size="sm" className="min-h-11" onClick={() => onOpen(vehicle.id)}>التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => onOpen(vehicle.id)}>التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button>
             </div>
           </article>
         ))}

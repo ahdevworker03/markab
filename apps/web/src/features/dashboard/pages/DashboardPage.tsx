@@ -93,7 +93,7 @@ function DashboardAction({
       variant="ghost"
       size="sm"
       onClick={onClick}
-      className="min-h-11 shrink-0 rounded-lg px-3 text-muted-foreground hover:bg-background hover:text-foreground focus-visible:ring-ring/40"
+      className="shrink-0 rounded-lg px-3 text-muted-foreground hover:bg-background hover:text-foreground focus-visible:ring-ring/40"
     >
       <Icon className="size-4" aria-hidden="true" />
       {label}
