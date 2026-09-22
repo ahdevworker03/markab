@@ -66,12 +66,12 @@ export default function ExpensesPage() {
     }),
     [filtered, vehicleById],
   );
-  const countLabel = `${items.length} ${items.length === 1 ? "مصروف" : "مصروفات"}`;
+  const countLabel = `${items.length} ${items.length === 1 ? "مصروف" : "مصاريف"}`;
 
   return (
     <div className="min-h-full">
       <PageHeader
-        title="المصروفات"
+        title="المصاريف"
         action={
           isOwner ? (
             <Button type="button" onClick={() => setLocation("/expenses/add")}>
@@ -83,9 +83,9 @@ export default function ExpensesPage() {
       />
 
       <div className="space-y-4 px-4 pb-6 pt-4 sm:px-6 lg:space-y-5">
-        <SectionCard title="سجل المصروفات" description="تابع مصروفات المنظمة والمركبات حسب الفئة والتاريخ." className="shadow-none">
+        <SectionCard title="سجل المصاريف" description="تابع مصاريف المنظمة والسيارات حسب الفئة والتاريخ." className="shadow-none">
           <div className="space-y-3">
-            <SearchBar placeholder="ابحث بالمركبة أو الفئة أو الوصف..." value={search} onChange={(event) => setSearch(event.target.value)} onClear={() => setSearch("")} />
+            <SearchBar placeholder="ابحث بالسيارة أو الفئة أو الوصف..." value={search} onChange={(event) => setSearch(event.target.value)} onClear={() => setSearch("")} />
             <FilterChips
               options={EXPENSE_CATEGORY_FILTER_OPTIONS}
               value={filter}
@@ -101,15 +101,15 @@ export default function ExpensesPage() {
         {isLoading ? (
           <SectionCard className="overflow-hidden p-0 shadow-none"><ExpensesDataListSkeleton /></SectionCard>
         ) : isError ? (
-          <SectionCard className="shadow-none"><ErrorState title="تعذر تحميل المصروفات" description={error ? getApiErrorMessage(error).title : "تحقق من الاتصال ثم أعد المحاولة."} onRetry={() => void refetch()} /></SectionCard>
+          <SectionCard className="shadow-none"><ErrorState title="تعذر تحميل المصاريف" description={error ? getApiErrorMessage(error).title : "تحقق من الاتصال ثم أعد المحاولة."} onRetry={() => void refetch()} /></SectionCard>
         ) : items.length === 0 ? (
           search || filter !== "all" ? (
             <SectionCard className="shadow-none"><EmptyState icon={Wallet} title="لا توجد نتائج مطابقة" description="جرّب تغيير كلمة البحث أو إزالة بعض عوامل التصفية." /></SectionCard>
           ) : (
-            <SectionCard className="shadow-none"><EmptyState icon={Wallet} title="لا توجد مصروفات" description={isOwner ? "سجّل أول مصروف لبدء متابعة تكاليف المنظمة والمركبات." : "لا توجد مصروفات في هذه المنظمة حالياً."} action={isOwner ? { label: "تسجيل مصروف", onClick: () => setLocation("/expenses/add") } : undefined} /></SectionCard>
+            <SectionCard className="shadow-none"><EmptyState icon={Wallet} title="لا توجد مصاريف" description={isOwner ? "سجّل أول مصروف لبدء متابعة تكاليف المنظمة والسيارات." : "لا توجد مصاريف في هذه المنظمة حالياً."} action={isOwner ? { label: "تسجيل مصروف", onClick: () => setLocation("/expenses/add") } : undefined} /></SectionCard>
           )
         ) : (
-          <SectionCard title="المصروفات" action={<span className="text-xs font-medium text-muted-foreground">{countLabel}</span>} className="overflow-hidden p-0 shadow-none"><ExpensesDataList items={items} onOpen={(expenseId) => setLocation(`/expenses/${expenseId}`)} /></SectionCard>
+          <SectionCard title="المصاريف" action={<span className="text-xs font-medium text-muted-foreground">{countLabel}</span>} className="overflow-hidden p-0 shadow-none"><ExpensesDataList items={items} onOpen={(expenseId) => setLocation(`/expenses/${expenseId}`)} /></SectionCard>
         )}
       </div>
     </div>

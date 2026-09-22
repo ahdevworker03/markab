@@ -61,7 +61,7 @@ export function ExpensesDataList({ items, onOpen }: ExpensesDataListProps) {
             <TableRow>
               <TableHead className="w-[14%]">التاريخ</TableHead>
               <TableHead className="w-[15%]">الفئة</TableHead>
-              <TableHead className="w-[23%]">المركبة</TableHead>
+              <TableHead className="w-[23%]">السيارة</TableHead>
               <TableHead className="w-[24%]">الوصف</TableHead>
               <TableHead className="w-[13%] text-end">المبلغ</TableHead>
               <TableHead className="w-[11%] text-end">الإجراء</TableHead>
@@ -88,7 +88,7 @@ export function ExpensesDataList({ items, onOpen }: ExpensesDataListProps) {
             <div className="flex items-start justify-between gap-4"><ExpenseCategoryBadge category={item.expense.category} /><AmountValue expense={item.expense} /></div>
             <div className="grid gap-3 sm:grid-cols-3">
               <div><div className="ui-label">التاريخ</div><div className="mt-1"><DateValue expense={item.expense} /></div></div>
-              <div className="sm:col-span-2"><div className="ui-label">المركبة</div><div className="mt-1"><VehicleValue item={item} /></div></div>
+              <div className="sm:col-span-2"><div className="ui-label">السيارة</div><div className="mt-1"><VehicleValue item={item} /></div></div>
             </div>
             <div className="flex items-center justify-between gap-3 border-t border-border pt-3"><span className="flex min-w-0 items-center gap-1.5 truncate text-xs text-muted-foreground"><FileText className="size-3.5 shrink-0" aria-hidden="true" />{item.expense.description || "لا يوجد وصف"}</span><Button type="button" variant="outline" size="sm" onClick={() => onOpen(item.expense.id)}>عرض التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button></div>
           </article>
@@ -99,7 +99,7 @@ export function ExpensesDataList({ items, onOpen }: ExpensesDataListProps) {
         {items.map((item) => (
           <article key={item.expense.id} className="space-y-4 px-4 py-4">
             <div className="flex items-start justify-between gap-3"><ExpenseCategoryBadge category={item.expense.category} /><AmountValue expense={item.expense} /></div>
-            <div className="space-y-3 rounded-lg bg-muted/45 p-3"><div><div className="ui-label">التاريخ</div><div className="mt-1"><DateValue expense={item.expense} /></div></div><div className="border-t border-border/70 pt-2"><div className="ui-label">المركبة</div><div className="mt-1"><VehicleValue item={item} compact /></div></div></div>
+            <div className="space-y-3 rounded-lg bg-muted/45 p-3"><div><div className="ui-label">التاريخ</div><div className="mt-1"><DateValue expense={item.expense} /></div></div><div className="border-t border-border/70 pt-2"><div className="ui-label">السيارة</div><div className="mt-1"><VehicleValue item={item} compact /></div></div></div>
             <div className="flex items-center justify-between gap-3"><span className="flex min-w-0 items-center gap-1.5 truncate text-xs text-muted-foreground"><CircleDollarSign className="size-3.5 shrink-0" aria-hidden="true" />{item.expense.description || "مصروف مسجّل"}</span><Button type="button" variant="outline" size="sm" onClick={() => onOpen(item.expense.id)}>التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button></div>
           </article>
         ))}
@@ -109,5 +109,5 @@ export function ExpensesDataList({ items, onOpen }: ExpensesDataListProps) {
 }
 
 export function ExpensesDataListSkeleton() {
-  return <div aria-label="جارٍ تحميل المصروفات" className="space-y-0">{[0, 1, 2, 3].map((row) => <div key={row} className="grid grid-cols-4 gap-5 border-b border-border px-5 py-5 last:border-b-0"><div className="h-5 animate-pulse rounded-md bg-muted" /><div className="h-6 animate-pulse rounded-md bg-muted" /><div className="h-9 animate-pulse rounded-lg bg-muted" /><div className="h-8 animate-pulse rounded-md bg-muted" /></div>)}</div>;
+  return <div aria-label="جارٍ تحميل المصاريف" className="space-y-0">{[0, 1, 2, 3].map((row) => <div key={row} className="grid grid-cols-4 gap-5 border-b border-border px-5 py-5 last:border-b-0"><div className="h-5 animate-pulse rounded-md bg-muted" /><div className="h-6 animate-pulse rounded-md bg-muted" /><div className="h-9 animate-pulse rounded-lg bg-muted" /><div className="h-8 animate-pulse rounded-md bg-muted" /></div>)}</div>;
 }

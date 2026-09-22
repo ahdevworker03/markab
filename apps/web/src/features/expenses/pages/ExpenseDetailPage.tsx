@@ -122,14 +122,14 @@ export default function ExpenseDetailPage({ params }: DetailPageParams) {
             </SummaryActionPanel>
           </aside>
 
-          <section aria-label="بيانات المصروف" className="order-2 space-y-4 xl:order-1 xl:col-span-8">
+          <section aria-label="بيانات المصروف" className="order-2 min-w-0 space-y-4 xl:order-1 xl:col-span-8">
             {editing ? (
-              <DetailSection title="تعديل المصروف" description="حدّث بيانات المصروف المسجّلة من دون تغيير ارتباطه الحالي بالمركبة.">
+              <DetailSection title="تعديل المصروف" description="حدّث بيانات المصروف المسجّلة من دون تغيير ارتباطه الحالي بالسيارة.">
                 <div className="space-y-4">
                   {formError && <InlineError className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5">{formError}</InlineError>}
                   <div className="grid gap-4 sm:grid-cols-2">
                     <FormField label="الفئة" required htmlFor="expense-category"><select id="expense-category" className={inputClass} value={category} onChange={(event) => setCategory(event.target.value)}>{(Object.keys(EXPENSE_CATEGORY_LABELS) as Array<keyof typeof EXPENSE_CATEGORY_LABELS>).map((value) => <option key={value} value={value}>{EXPENSE_CATEGORY_LABELS[value].label}</option>)}</select></FormField>
-                    <FormField label="المبلغ" required hint="USD" htmlFor="expense-amount"><input id="expense-amount" type="number" dir="ltr" inputMode="decimal" min={0} value={amount} onChange={(event) => setAmount(event.target.value)} className={inputClass} /></FormField>
+                    <FormField label="المبلغ" required hint="USD" htmlFor="expense-amount"><input id="expense-amount" type="number" dir="ltr" inputMode="decimal" min={0} step={0.01} value={amount} onChange={(event) => setAmount(event.target.value)} className={inputClass} /></FormField>
                     <FormField label="تاريخ المصروف" required htmlFor="expense-date"><DatePicker id="expense-date" value={expenseDate} onChange={setExpenseDate} /></FormField>
                     <FormField label="الوصف" hint="اختياري" htmlFor="expense-description"><input id="expense-description" className={inputClass} value={description} onChange={(event) => setDescription(event.target.value)} /></FormField>
                   </div>
@@ -146,8 +146,8 @@ export default function ExpenseDetailPage({ params }: DetailPageParams) {
                   </div>
                 </DetailSection>
 
-                <DetailSection title="المركبة المرتبطة" description="تظهر المركبة فقط عندما يكون المصروف مسجّلاً عليها.">
-                  {expense.vehicleId ? <div className="flex items-center gap-3"><span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Car className="size-5" aria-hidden="true" /></span><div className="min-w-0">{vehicle ? <button type="button" onClick={() => setLocation(`/vehicles/${vehicle.id}`)} className="block truncate text-start text-base font-semibold text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40">{vehicle.make} {vehicle.model}</button> : <span className="text-sm text-muted-foreground">جارٍ تحميل بيانات المركبة</span>}{vehicle && <div dir="ltr" className="number-ltr mt-1 text-sm text-muted-foreground">{vehicle.plateNumber}</div>}</div></div> : <p className="text-sm text-muted-foreground">هذا مصروف عام غير مرتبط بمركبة.</p>}
+                <DetailSection title="السيارة المرتبطة" description="تظهر السيارة فقط عندما يكون المصروف مسجّلاً عليها.">
+                  {expense.vehicleId ? <div className="flex items-center gap-3"><span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Car className="size-5" aria-hidden="true" /></span><div className="min-w-0">{vehicle ? <button type="button" dir="ltr" onClick={() => setLocation(`/vehicles/${vehicle.id}`)} className="block w-full truncate text-start text-base font-semibold text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40">{vehicle.make} {vehicle.model}</button> : <span className="text-sm text-muted-foreground">جارٍ تحميل بيانات السيارة</span>}{vehicle && <div dir="ltr" className="number-ltr mt-1 text-sm text-muted-foreground">{vehicle.plateNumber}</div>}</div></div> : <p className="text-sm text-muted-foreground">هذا مصروف عام غير مرتبط بسيارة.</p>}
                 </DetailSection>
 
                 {expense.description && <DetailSection title="الوصف"><div className="flex items-start gap-2"><FileText className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" /><p className="whitespace-pre-wrap text-sm leading-6 text-foreground">{expense.description}</p></div></DetailSection>}
