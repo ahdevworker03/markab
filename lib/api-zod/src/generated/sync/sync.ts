@@ -257,4 +257,10 @@ export const SyncPullResponse = zod.object({
     }),
   ),
   next_cursor: zod.string().nullable(),
+  completion_cursor: zod
+    .string()
+    .nullable()
+    .describe(
+      "Opaque signed cursor representing the completed traversal upper watermark. Present only on the final page; send it as cursor to begin the next pull cycle.",
+    ),
 });

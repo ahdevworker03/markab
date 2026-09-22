@@ -5796,7 +5796,8 @@ components:
         rental: { $ref: "#/components/schemas/RentalResponse", nullable: true }
     SyncPullResponse:
       type: object
-      required: [changes, next_cursor]
+      required: [changes, next_cursor, completion_cursor]
       properties:
         changes: { type: array, items: { $ref: "#/components/schemas/SyncPullChange" } }
         next_cursor: { type: string, nullable: true }
+        completion_cursor: { type: string, nullable: true, description: Opaque signed cursor representing the completed traversal upper watermark. Present only on the final page; send it as cursor to begin the next pull cycle. }

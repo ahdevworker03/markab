@@ -10,4 +10,6 @@ import type { SyncPullChange } from "./syncPullChange";
 export interface SyncPullResponse {
   changes: SyncPullChange[];
   next_cursor: string | null;
+  /** Opaque signed cursor representing the completed traversal upper watermark. Present only on the final page; send it as cursor to begin the next pull cycle. */
+  completion_cursor: string | null;
 }
