@@ -49,7 +49,7 @@ export function NavigationDrawer({
               <p className="text-xs font-semibold text-primary">مَركب</p>
               <SheetTitle>{title}</SheetTitle>
               <SheetDescription id="navigation-drawer-description">
-                إدارة عمليات تأجير المركبات
+                إدارة عمليات تأجير السيارات
               </SheetDescription>
             </div>
           </div>
