@@ -103,7 +103,7 @@ export default function RentalsPage() {
         >
           <div className="space-y-3">
             <SearchBar
-              placeholder="ابحث بالعميل أو المركبة..."
+              placeholder="ابحث بالعميل أو السيارة..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               onClear={() => setSearch("")}

@@ -138,7 +138,7 @@ function PrimaryAction({
     rental.status === "RESERVED"
       ? "تسجيل الاستلام"
       : rental.status === "ACTIVE"
-        ? "إعادة المركبة"
+        ? "إعادة السيارة"
         : "عرض التفاصيل";
 
   return (
@@ -164,7 +164,7 @@ function RentalIdentity({
 }) {
   return (
     <div className="min-w-0 space-y-1">
-      <div className="truncate font-semibold text-foreground">
+      <div dir="auto" className="break-words font-semibold text-foreground">
         {item.customerName}
       </div>
       {withPhone && item.customerPhone && (
@@ -270,7 +270,7 @@ export function RentalsDataList({ items, onOpen }: RentalsDataListProps) {
             <TableRow>
               <TableHead className="text-start">الحالة</TableHead>
               <TableHead className="text-start">العميل</TableHead>
-              <TableHead className="text-start">المركبة</TableHead>
+              <TableHead className="text-start">السيارة</TableHead>
               <TableHead className="text-center">الاستلام</TableHead>
               <TableHead className="text-center">الإرجاع المتوقع</TableHead>
               <TableHead className="text-start">المبلغ والدفع</TableHead>

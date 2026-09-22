@@ -80,7 +80,7 @@ describe("NewRentalPage", () => {
       screen.getByText("العميل المحدد").parentElement?.textContent,
     ).toContain("أحمد حسن");
     expect(
-      screen.getByText("المركبة المحددة").parentElement?.textContent,
+      screen.getByText("السيارة المحددة").parentElement?.textContent,
     ).toContain("Toyota Camry");
     expect(screen.getAllByText("+9613012345")[0].className).toContain(
       "number-ltr mt-0.5 block truncate text-right",
