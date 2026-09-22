@@ -142,10 +142,10 @@ describe("DashboardPage operational dashboard", () => {
     expect(
       screen.getByRole("region", { name: "التنبيهات التشغيلية" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("حالة الأسطول")).toBeInTheDocument();
+    expect(screen.getByText("حالة السيارات")).toBeInTheDocument();
     expect(screen.getByText("الملخص المالي")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "إعادة مركبة" }),
+      screen.getByRole("button", { name: "إعادة سيارة" }),
     ).toBeInTheDocument();
   });
 
