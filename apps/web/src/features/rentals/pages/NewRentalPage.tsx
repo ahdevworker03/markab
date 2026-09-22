@@ -490,6 +490,7 @@ export default function NewRentalPage() {
                 id="daily-rate"
                 type="number"
                 inputMode="decimal"
+                step={0.01}
                 placeholder="0"
                 value={dailyRate}
                 onChange={(event) => {
@@ -512,6 +513,7 @@ export default function NewRentalPage() {
                 id="deposit-amount"
                 type="number"
                 inputMode="decimal"
+                step={0.01}
                 placeholder="0"
                 value={depositAmount}
                 onChange={(event) => setDepositAmount(event.target.value)}
