@@ -21,6 +21,11 @@ type Form = {
   mileageInterval: string;
   dueMileage: string;
 };
+const BASIS_LABELS: Record<Basis, string> = {
+  DATE: "بالتاريخ",
+  MILEAGE: "بالعداد",
+  DATE_OR_MILEAGE: "بالتاريخ أو العداد",
+};
 const empty: Form = {
   vehicleId: "",
   maintenanceType: "PREVENTIVE_SERVICE",
@@ -136,13 +141,13 @@ export function MaintenanceScheduleManager({
       {open && (
         <div className="grid gap-3 rounded-lg border border-border bg-muted/35 p-4 sm:grid-cols-2">
           <select
-            aria-label="المركبة"
+            aria-label="السيارة"
             className={inputClass}
             value={form.vehicleId}
             onChange={(e) => set("vehicleId", e.target.value)}
             disabled={Boolean(editing)}
           >
-            <option value="">اختر مركبة</option>
+            <option value="">اختر سيارة</option>
             {vehicles.map((v) => (
               <option key={v.id} value={v.id}>
                 {v.make} {v.model} - {v.plateNumber}
@@ -244,7 +249,7 @@ export function MaintenanceScheduleManager({
                 {MAINTENANCE_TYPES[s.maintenanceType].label}
               </div>
               <div className="text-xs text-muted-foreground">
-                {s.scheduleType} · {s.isActive ? "مفعّل" : "متوقف"}
+                {BASIS_LABELS[s.scheduleType]} · {s.isActive ? "مفعّل" : "متوقف"}
               </div>
             </div>
             {isOwner && (

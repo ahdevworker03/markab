@@ -84,7 +84,7 @@ export default function MaintenancePage() {
 
         <SectionCard title="سجل الصيانة" description="تابع المواعيد وحالة الأعمال وتكاليف الصيانة." className="shadow-none">
           <div className="space-y-3">
-            <SearchBar placeholder="ابحث بالمركبة أو نوع الصيانة..." value={search} onChange={(event) => setSearch(event.target.value)} onClear={() => setSearch("")} />
+            <SearchBar placeholder="ابحث بالسيارة أو نوع الصيانة..." value={search} onChange={(event) => setSearch(event.target.value)} onClear={() => setSearch("")} />
             <FilterChips options={FILTER_OPTIONS} value={filter} onChange={(value) => { const next = value as FilterValue; setSearchParams(next === "all" ? {} : { filter: next }, { replace: true }); }} className="-mb-1 flex-wrap overflow-visible sm:flex-nowrap sm:overflow-x-auto [&_button]:px-3 [&_button]:text-xs" />
           </div>
         </SectionCard>
@@ -94,7 +94,7 @@ export default function MaintenancePage() {
         ) : maintenanceQuery.isError ? (
           <SectionCard className="shadow-none"><ErrorState title="تعذر تحميل سجلات الصيانة" description={getApiErrorMessage(maintenanceQuery.error).title} onRetry={() => void maintenanceQuery.refetch()} /></SectionCard>
         ) : items.length === 0 ? (
-          <SectionCard className="shadow-none"><EmptyState icon={Wrench} title={search || filter !== "all" ? "لا توجد نتائج مطابقة" : "لا توجد سجلات صيانة"} description={search || filter !== "all" ? "جرّب تغيير كلمة البحث أو إزالة بعض عوامل التصفية." : isOwner ? "سجّل أول عملية صيانة لبدء متابعة أعمال الأسطول." : "لا توجد سجلات صيانة في هذه المنظمة حالياً."} action={isOwner && !search && filter === "all" ? { label: "تسجيل صيانة", onClick: () => setLocation("/maintenance/add") } : undefined} /></SectionCard>
+          <SectionCard className="shadow-none"><EmptyState icon={Wrench} title={search || filter !== "all" ? "لا توجد نتائج مطابقة" : "لا توجد سجلات صيانة"} description={search || filter !== "all" ? "جرّب تغيير كلمة البحث أو إزالة بعض عوامل التصفية." : isOwner ? "سجّل أول عملية صيانة لبدء المتابعة." : "لا توجد سجلات صيانة في هذه المنظمة حالياً."} action={isOwner && !search && filter === "all" ? { label: "تسجيل صيانة", onClick: () => setLocation("/maintenance/add") } : undefined} /></SectionCard>
         ) : (
           <SectionCard title="السجلات" action={<span className="text-xs font-medium text-muted-foreground">{countLabel}</span>} className="overflow-hidden p-0 shadow-none"><MaintenanceDataList items={items} onOpen={(maintenanceId) => setLocation(`/maintenance/${maintenanceId}`)} /></SectionCard>
         )}
