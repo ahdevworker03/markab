@@ -35,6 +35,14 @@ catalog:
 
 autoInstallPeers: false
 
+auditLevel: high
+
+auditConfig:
+  # Temporary: Prisma pulls deepmerge-ts 7.1.5 through tooling/configuration paths only; it is not imported by the production API runtime.
+  # Fixing it requires a reviewed Prisma 8 migration. Remove when Prisma provides a compatible fix or this project intentionally upgrades Prisma.
+  ignoreGhsas:
+    - GHSA-ggr8-5vv4-36mx
+
 onlyBuiltDependencies:
   - "@prisma/engines"
   - "@swc/core"
@@ -44,6 +52,9 @@ onlyBuiltDependencies:
   - unrs-resolver
 
 overrides:
+  fast-uri: 3.1.6
+  mysql2: 3.23.1
+  qs: 6.16.0
   # Production runtime is linux-x64; exclude all other platform binaries
   "esbuild>@esbuild/darwin-arm64": "-"
   "esbuild>@esbuild/darwin-x64": "-"

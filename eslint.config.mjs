@@ -7,6 +7,7 @@ export default tseslint.config(
       "**/node_modules/**",
       "**/.tsbuildinfo",
       "**/generated/**",
+      ".agents/**",
       "docs/audits/frontend-work/**",
       "docs/audits/backend-work/backend-reference/**",
       "docs/ui-reference/replit-approved-code/**",
