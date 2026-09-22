@@ -1050,6 +1050,146 @@ export interface ErrorResponse {
   error: ErrorResponseError;
 }
 
+export type SyncOperationType =
+  (typeof SyncOperationType)[keyof typeof SyncOperationType];
+
+export const SyncOperationType = {
+  CUSTOMER_CREATE: "CUSTOMER_CREATE",
+  CUSTOMER_UPDATE: "CUSTOMER_UPDATE",
+  RENTAL_CREATE: "RENTAL_CREATE",
+} as const;
+
+export type SyncOperationStatus =
+  (typeof SyncOperationStatus)[keyof typeof SyncOperationStatus];
+
+export const SyncOperationStatus = {
+  APPLIED: "APPLIED",
+  DUPLICATE: "DUPLICATE",
+  CONFLICT: "CONFLICT",
+  REJECTED: "REJECTED",
+  EXPIRED: "EXPIRED",
+} as const;
+
+export type SyncResultCode =
+  (typeof SyncResultCode)[keyof typeof SyncResultCode];
+
+export const SyncResultCode = {
+  SYNC_APPLIED: "SYNC_APPLIED",
+  SYNC_DUPLICATE: "SYNC_DUPLICATE",
+  SYNC_CUSTOMER_STALE: "SYNC_CUSTOMER_STALE",
+  SYNC_OPERATION_PAYLOAD_MISMATCH: "SYNC_OPERATION_PAYLOAD_MISMATCH",
+  SYNC_OPERATION_EXPIRED: "SYNC_OPERATION_EXPIRED",
+  SYNC_DEPENDENCY_NOT_APPLIED: "SYNC_DEPENDENCY_NOT_APPLIED",
+  SYNC_UNSUPPORTED_OPERATION: "SYNC_UNSUPPORTED_OPERATION",
+  SYNC_OPERATION_INVALID: "SYNC_OPERATION_INVALID",
+  CUSTOMER_NOT_FOUND: "CUSTOMER_NOT_FOUND",
+  VEHICLE_NOT_FOUND: "VEHICLE_NOT_FOUND",
+  VEHICLE_UNAVAILABLE: "VEHICLE_UNAVAILABLE",
+  DUPLICATE_CUSTOMER: "DUPLICATE_CUSTOMER",
+  INVALID_RENTAL_PERIOD: "INVALID_RENTAL_PERIOD",
+  INVALID_RENTAL_AMOUNT: "INVALID_RENTAL_AMOUNT",
+} as const;
+
+/**
+ * Exactly one reference is required. customer_create_operation_id references an earlier CUSTOMER_CREATE in this ordered batch or a previously applied receipt.
+ */
+export interface SyncCustomerReference {
+  customer_id?: string | null;
+  customer_create_operation_id?: string | null;
+}
+
+export interface SyncCustomerUpdatePayload {
+  customer_id: string;
+  expected_updated_at: string;
+  first_name: string;
+  last_name: string;
+  phone: string;
+  address: string;
+  national_id: string;
+  license_number: string;
+  license_expiry_date: string;
+}
+
+export type SyncRentalCreatePayload = CreateRentalRequest & {
+  customer_reference: SyncCustomerReference;
+};
+
+/**
+ * Backend validation requires exactly one payload matching type.
+ */
+export interface SyncOperation {
+  operation_id: string;
+  type: SyncOperationType;
+  customer_create?: CreateCustomerRequest | null;
+  customer_update?: SyncCustomerUpdatePayload | null;
+  rental_create?: SyncRentalCreatePayload | null;
+}
+
+export interface SyncPushRequest {
+  /**
+   * @minItems 1
+   * @maxItems 25
+   */
+  operations: SyncOperation[];
+}
+
+export type SyncOperationResultResourceType =
+  | (typeof SyncOperationResultResourceType)[keyof typeof SyncOperationResultResourceType]
+  | null;
+
+export const SyncOperationResultResourceType = {
+  CUSTOMER: "CUSTOMER",
+  RENTAL: "RENTAL",
+} as const;
+
+export interface SyncOperationResult {
+  operation_id: string;
+  type: SyncOperationType;
+  status: SyncOperationStatus;
+  code: SyncResultCode;
+  resource_type: SyncOperationResultResourceType;
+  customer?: CustomerResponse | null;
+  rental?: RentalResponse | null;
+  current_customer?: CustomerResponse | null;
+}
+
+export interface SyncPushResponse {
+  results: SyncOperationResult[];
+}
+
+export type SyncPullChangeResourceType =
+  (typeof SyncPullChangeResourceType)[keyof typeof SyncPullChangeResourceType];
+
+export const SyncPullChangeResourceType = {
+  CUSTOMER: "CUSTOMER",
+  VEHICLE: "VEHICLE",
+  RENTAL: "RENTAL",
+} as const;
+
+export interface SyncPullChange {
+  resource_type: SyncPullChangeResourceType;
+  resource_id: string;
+  updated_at: string;
+  deleted: boolean;
+  customer?: CustomerResponse | null;
+  vehicle?: VehicleResponse | null;
+  rental?: RentalResponse | null;
+}
+
+export interface SyncPullResponse {
+  changes: SyncPullChange[];
+  next_cursor: string | null;
+}
+
+export type SyncPullParams = {
+  cursor?: string;
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number;
+};
+
 export type ListPlatformOrganizationsParams = {
   /**
    * @minimum 1
