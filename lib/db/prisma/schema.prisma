@@ -34,6 +34,7 @@ model Organization {
   tasks      Task[]
   audit_logs AuditLog[]
   employee_invitations EmployeeInvitation[]
+  sync_operation_receipts SyncOperationReceipt[]
 
   @@index([deleted_at])
 }
@@ -130,6 +131,23 @@ enum TaskRecurrenceUnit {
   MONTH
 }
 
+enum SyncOperationType {
+  CUSTOMER_CREATE
+  CUSTOMER_UPDATE
+  RENTAL_CREATE
+}
+
+enum SyncOperationOutcome {
+  APPLIED
+  CONFLICT
+  REJECTED
+}
+
+enum SyncResourceType {
+  CUSTOMER
+  RENTAL
+}
+
 model User {
   id              String         @id @default(uuid()) @db.Uuid
   email           String         @unique
@@ -209,6 +227,23 @@ model PasswordResetToken {
   created_at  DateTime @default(now())
 
   @@index([user_id, consumed_at])
+  @@index([expires_at])
+}
+
+model SyncOperationReceipt {
+  id                  String               @id @default(uuid()) @db.Uuid
+  organization_id     String               @db.Uuid
+  organization        Organization         @relation(fields: [organization_id], references: [id], onDelete: Restrict)
+  operation_id        String               @db.Uuid
+  request_fingerprint String
+  operation_type      SyncOperationType
+  outcome             SyncOperationOutcome
+  resource_type       SyncResourceType?
+  resource_id         String?              @db.Uuid
+  created_at          DateTime             @default(now())
+  expires_at          DateTime
+
+  @@unique([organization_id, operation_id])
   @@index([expires_at])
 }
 
