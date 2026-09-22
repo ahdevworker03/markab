@@ -62,7 +62,7 @@ function actionCopy(action: Action) {
       };
     case "return":
       return {
-        title: "تأكيد إرجاع المركبة",
+        title: "تأكيد إرجاع السيارة",
         dateLabel: "تاريخ ووقت الإرجاع الفعلي",
       };
     case "extend":
@@ -147,7 +147,7 @@ export default function RentalDetailPage({ params }: Props) {
           id: rental.id,
           data: { actual_return_date: new Date(dateValue).toISOString() },
         });
-        setSuccessMsg("تم تسجيل إرجاع المركبة.");
+        setSuccessMsg("تم تسجيل إرجاع السيارة.");
       } else if (activeAction === "extend") {
         if (!dateValue)
           return setActionError("أدخل تاريخ ووقت الإرجاع الجديد.");
@@ -252,11 +252,11 @@ export default function RentalDetailPage({ params }: Props) {
             />
             <SummaryIdentity
               icon={Car}
-              label="المركبة"
+              label="السيارة"
               name={
                 vehicle
                   ? `${vehicle.make} ${vehicle.model}`
-                  : "جارٍ تحميل المركبة"
+                  : "جارٍ تحميل السيارة"
               }
               identifier={vehicle?.plateNumber}
               onClick={
@@ -274,7 +274,7 @@ export default function RentalDetailPage({ params }: Props) {
             title={currentAction.title}
             description={
               activeAction === "cancel"
-                ? "سيتم تحرير المركبة وفقاً لقواعد الإيجار الحالية."
+                ? "سيتم تحرير السيارة وفقاً لقواعد الإيجار الحالية."
                 : undefined
             }
           >
@@ -333,39 +333,42 @@ export default function RentalDetailPage({ params }: Props) {
           <InlineFeedback variant="info">لا تملك صلاحية تنفيذ إجراءات العقد.</InlineFeedback>
         )}
 
+        <DetailSection
+          title="فترة الإيجار"
+          description="تواريخ وأوقات الاستلام والإرجاع."
+          className="shadow-none"
+        >
+          <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
+            <DateTimeValue
+              label="الاستلام المخطط"
+              value={rental.pickupDate}
+            />
+            {rental.actualPickupDate && (
+              <DateTimeValue
+                label="الاستلام الفعلي"
+                value={rental.actualPickupDate}
+              />
+            )}
+            <DateTimeValue
+              label="الإرجاع المتوقع"
+              value={rental.expectedReturnDate}
+            />
+            {rental.actualReturnDate && (
+              <DateTimeValue
+                label="الإرجاع الفعلي"
+                value={rental.actualReturnDate}
+              />
+            )}
+          </div>
+        </DetailSection>
+
+        <PaymentSection rentalId={rental.id} totalAmount={rental.totalAmount} />
+        <ContractSection rentalId={rental.id} />
+
         <section
-          aria-label="تفاصيل العقد"
+          aria-label="بيانات العميل والسيارة"
           className="grid gap-4 lg:grid-cols-2 lg:gap-5"
         >
-          <DetailSection
-            title="فترة الإيجار"
-            description="تواريخ وأوقات الاستلام والإرجاع."
-            className="lg:col-span-2"
-          >
-            <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
-              <DateTimeValue
-                label="الاستلام المخطط"
-                value={rental.pickupDate}
-              />
-              {rental.actualPickupDate && (
-                <DateTimeValue
-                  label="الاستلام الفعلي"
-                  value={rental.actualPickupDate}
-                />
-              )}
-              <DateTimeValue
-                label="الإرجاع المتوقع"
-                value={rental.expectedReturnDate}
-              />
-              {rental.actualReturnDate && (
-                <DateTimeValue
-                  label="الإرجاع الفعلي"
-                  value={rental.actualReturnDate}
-                />
-              )}
-            </div>
-          </DetailSection>
-
           <DetailSection
             title="بيانات العميل"
             description="معلومات التواصل والهوية ورخصة القيادة."
@@ -400,8 +403,8 @@ export default function RentalDetailPage({ params }: Props) {
           </DetailSection>
 
           <DetailSection
-            title="بيانات المركبة"
-            description="الهوية والمواصفات الأساسية للمركبة."
+            title="بيانات السيارة"
+            description="الهوية والمواصفات الأساسية للسيارة."
           >
             {vehicle ? (
               <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
@@ -409,7 +412,7 @@ export default function RentalDetailPage({ params }: Props) {
                 <KeyValue label="الطراز" value={vehicle.model} ltr />
                 <KeyValue label="رقم اللوحة" value={vehicle.plateNumber} ltr />
                 <KeyValue
-                  label="حالة المركبة"
+                  label="حالة السيارة"
                   value={<StatusBadge status={vehicle.status} />}
                 />
                 <KeyValue
@@ -425,9 +428,6 @@ export default function RentalDetailPage({ params }: Props) {
             )}
           </DetailSection>
         </section>
-
-        <PaymentSection rentalId={rental.id} totalAmount={rental.totalAmount} />
-        <ContractSection rentalId={rental.id} />
       </div>
     </div>
   );
@@ -471,7 +471,7 @@ function RentalActions({
       <div className={className}>
         <Button type="button" size={size} onClick={() => onOpen("return")}>
           <RotateCcw className="size-4" aria-hidden="true" />
-          إرجاع المركبة
+          إرجاع السيارة
         </Button>
         <Button
           type="button"

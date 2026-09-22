@@ -206,7 +206,7 @@ export default function NewRentalPage() {
 
   function validate(): boolean {
     const nextErrors: Record<string, string> = {};
-    if (!selectedVehicleId) nextErrors.vehicle = "اختر مركبة.";
+    if (!selectedVehicleId) nextErrors.vehicle = "اختر سيارة.";
     if (!selectedCustomerId) nextErrors.customer = "اختر عميلاً.";
     if (!pickupDate) nextErrors.pickupDate = "أدخل تاريخ الاستلام.";
     if (!pickupTime) nextErrors.pickupTime = "أدخل وقت الاستلام.";
@@ -273,7 +273,7 @@ export default function NewRentalPage() {
           <div>
             <h2 className="ui-page-title">بيانات عقد الإيجار</h2>
             <p className="ui-secondary-text mt-1">
-              اختر العميل والمركبة ثم حدّد فترة الإيجار والتسعير.
+              اختر العميل والسيارة ثم حدّد فترة الإيجار والتسعير.
             </p>
           </div>
 
@@ -359,12 +359,12 @@ export default function NewRentalPage() {
           </FormSection>
 
           <FormSection
-            title="المركبة والتوافر"
-            description="اختر المركبة المناسبة لفترة الإيجار المحددة."
+            title="السيارة والتوافر"
+            description="اختر السيارة المناسبة لفترة الإيجار المحددة."
             contentClassName="md:grid-cols-1"
           >
             <div className="space-y-4">
-              <FormField label="البحث عن مركبة" htmlFor="vehicle-search">
+              <FormField label="البحث عن سيارة" htmlFor="vehicle-search">
                 <div className="relative">
                   <Search
                     className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
@@ -385,11 +385,11 @@ export default function NewRentalPage() {
               </FormField>
               <SelectionTrigger
                 icon={Car}
-                label="المركبة المحددة"
+                label="السيارة المحددة"
                 value={
                   selectedVehicle
                     ? `${selectedVehicle.make} ${selectedVehicle.model}`
-                    : "اختر مركبة"
+                    : "اختر سيارة"
                 }
                 description={selectedVehicle?.plateNumber ?? ""}
                 valueDir="ltr"
@@ -422,7 +422,7 @@ export default function NewRentalPage() {
                   <InlineFeedback variant="success" icon={Check}>متاحة للفترة المحددة</InlineFeedback>
                 ) : (
                   <InlineError className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5">
-                    هذه المركبة غير متاحة في الفترة المحددة.
+                    هذه السيارة غير متاحة في الفترة المحددة.
                   </InlineError>
                 ))}
             </div>
@@ -720,8 +720,8 @@ function VehicleOptions({
     return (
       <InlineFeedback variant="info">
         {periodSet
-          ? "لا توجد مركبات متاحة في هذه الفترة."
-          : "حدّد فترة الإيجار لعرض المركبات المتاحة."}
+          ? "لا توجد سيارات متاحة في هذه الفترة."
+          : "حدّد فترة الإيجار لعرض السيارات المتاحة."}
       </InlineFeedback>
     );
   return (
