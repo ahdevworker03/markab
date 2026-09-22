@@ -210,6 +210,7 @@ export function PaymentSection({ rentalId, totalAmount }: PaymentSectionProps) {
                   type="number"
                   inputMode="decimal"
                   min={0}
+                  step={0.01}
                   placeholder="0"
                   value={amount}
                   onChange={(event) => {
