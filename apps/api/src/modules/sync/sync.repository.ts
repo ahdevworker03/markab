@@ -1,4 +1,5 @@
 import { prisma, type TxClient } from "../../database";
+import type { SyncPosition } from "./sync.cursor";
 
 type DbClient = typeof prisma | TxClient;
 
@@ -57,4 +58,48 @@ async function findRental(
   });
 }
 
-export { createReceipt, findCustomer, findRental, findReceipt };
+function changeWhere(
+  organizationId: string,
+  after?: SyncPosition,
+  upper?: SyncPosition,
+) {
+  return {
+    organization_id: organizationId,
+    ...(after
+      ? {
+          OR: [
+            { updated_at: { gt: after.updatedAt } },
+            { updated_at: after.updatedAt, id: { gt: after.id } },
+          ],
+        }
+      : {}),
+    ...(upper
+      ? {
+          AND: [
+            {
+              OR: [
+                { updated_at: { lt: upper.updatedAt } },
+                { updated_at: upper.updatedAt, id: { lte: upper.id } },
+              ],
+            },
+          ],
+        }
+      : {}),
+  };
+}
+
+async function findChanges(
+  organizationId: string,
+  after?: SyncPosition,
+  upper?: SyncPosition,
+) {
+  const where = changeWhere(organizationId, after, upper);
+  const [customers, vehicles, rentals] = await Promise.all([
+    prisma.customer.findMany({ where }),
+    prisma.vehicle.findMany({ where }),
+    prisma.rental.findMany({ where }),
+  ]);
+  return { customers, vehicles, rentals };
+}
+
+export { createReceipt, findChanges, findCustomer, findRental, findReceipt };
