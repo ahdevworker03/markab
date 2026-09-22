@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -31,80 +32,132 @@ interface AuthContextValue {
   user: CurrentUserResponse | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  sessionState: "unauthenticated" | "indeterminate" | "authenticated";
   login: (params: LoginParams) => Promise<CurrentUserResponse>;
   logout: () => Promise<void>;
+  retry: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+type RefreshResult = "restored" | "unauthenticated" | "indeterminate";
+
+function isAuthenticationFailure(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    error.status === 401
+  );
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [user, setUser] = useState<CurrentUserResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionState, setSessionState] = useState<
+    AuthContextValue["sessionState"]
+  >("unauthenticated");
+  const refreshWasAttempted = useRef(false);
+  const lastRefreshResult = useRef<RefreshResult | null>(null);
 
   const clearSession = useCallback(() => {
     queryClient.clear();
     clearAccessToken();
     setUser(null);
+    setSessionState("unauthenticated");
   }, [queryClient]);
 
-  const refreshSession = useCallback(async (): Promise<boolean> => {
+  const refreshSession = useCallback(async (): Promise<RefreshResult> => {
     try {
       const refreshed = await apiRefreshToken();
       setAccessToken(refreshed.data.accessToken);
-      return true;
-    } catch {
-      clearSession();
-      return false;
+      lastRefreshResult.current = "restored";
+      return "restored";
+    } catch (error) {
+      if (isAuthenticationFailure(error)) {
+        clearSession();
+        lastRefreshResult.current = "unauthenticated";
+        return "unauthenticated";
+      }
+
+      setUser(null);
+      setSessionState("indeterminate");
+      lastRefreshResult.current = "indeterminate";
+      return "indeterminate";
     }
   }, [clearSession]);
 
   useEffect(() => {
-    setAuthRefreshHandler(refreshSession);
+    setAuthRefreshHandler(async () => {
+      refreshWasAttempted.current = true;
+      return (await refreshSession()) === "restored";
+    });
     return () => setAuthRefreshHandler(null);
   }, [refreshSession]);
 
-  useEffect(() => {
-    let cancelled = false;
+  const restoreSession = useCallback(async () => {
+    setIsLoading(true);
+    setSessionState("unauthenticated");
+    refreshWasAttempted.current = false;
+    lastRefreshResult.current = null;
 
-    async function restoreSession() {
+    const loadCurrentUser = async () => {
+      const result = await getCurrentUser();
+
+      if (!result?.data) {
+        clearSession();
+        return;
+      }
+
+      setUser(result.data);
+      setSessionState("authenticated");
+    };
+
+    const loadAfterRefresh = async () => {
+      if ((await refreshSession()) !== "restored") return;
+
       try {
-        if (!getAccessToken() && !(await refreshSession())) return;
-        const result = await getCurrentUser();
-
-        if (cancelled) return;
-
-        if (result?.data) {
-          setUser(result.data);
-        } else {
+        await loadCurrentUser();
+      } catch (error) {
+        if (!isAuthenticationFailure(error)) {
+          setSessionState("indeterminate");
+        } else if (
+          !refreshWasAttempted.current ||
+          lastRefreshResult.current === "restored"
+        ) {
           clearSession();
         }
-      } catch {
-        if (await refreshSession()) {
-          try {
-            const result = await getCurrentUser();
-            if (cancelled) return;
-
-            if (result?.data) {
-              setUser(result.data);
-            } else {
-              clearSession();
-            }
-          } catch {
-            if (!cancelled) clearSession();
-          }
-        }
-      } finally {
-        if (!cancelled) setIsLoading(false);
       }
-    }
-
-    restoreSession();
-
-    return () => {
-      cancelled = true;
     };
+
+    try {
+      if (!getAccessToken()) {
+        await loadAfterRefresh();
+        return;
+      }
+
+      await loadCurrentUser();
+    } catch (error) {
+      if (!isAuthenticationFailure(error)) {
+        setSessionState("indeterminate");
+        return;
+      }
+
+      if (refreshWasAttempted.current) {
+        if (lastRefreshResult.current === "restored") clearSession();
+        return;
+      }
+
+      await loadAfterRefresh();
+    } finally {
+      setIsLoading(false);
+    }
   }, [clearSession, refreshSession]);
+
+  useEffect(() => {
+    void restoreSession();
+  }, [restoreSession]);
 
   const login = useCallback(
     async ({ email, password }: LoginParams) => {
@@ -118,6 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!me?.data) throw new Error("Invalid current user response.");
 
         setUser(me.data);
+        setSessionState("authenticated");
         return me.data;
       } catch (error) {
         clearSession();
@@ -137,15 +191,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [clearSession]);
 
+  const retry = useCallback(async () => {
+    await restoreSession();
+  }, [restoreSession]);
+
   const value = useMemo(
     () => ({
       user,
       isAuthenticated: user !== null,
       isLoading,
+      sessionState,
       login,
       logout,
+      retry,
     }),
-    [user, isLoading, login, logout],
+    [user, isLoading, sessionState, login, logout, retry],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

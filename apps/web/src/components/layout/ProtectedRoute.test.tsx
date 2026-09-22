@@ -92,4 +92,20 @@ describe("ProtectedRoute", () => {
     );
     expect(screen.queryByText("tenant shell")).not.toBeInTheDocument();
   });
+
+  it("keeps tenant users on a recoverable screen when session state is indeterminate", () => {
+    useAuth.mockReturnValue({
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      retry: vi.fn(),
+      sessionState: "indeterminate",
+    });
+
+    renderRoute();
+
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(setLocation).not.toHaveBeenCalled();
+    expect(screen.queryByText("tenant shell")).not.toBeInTheDocument();
+  });
 });

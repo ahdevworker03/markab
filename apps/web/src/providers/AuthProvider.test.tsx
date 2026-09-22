@@ -31,7 +31,8 @@ const tenantB = {
 };
 
 function AuthControls() {
-  const { isAuthenticated, isLoading, login, logout, user } = useAuth();
+  const { isAuthenticated, isLoading, login, logout, retry, sessionState, user } =
+    useAuth();
 
   return (
     <>
@@ -40,7 +41,9 @@ function AuthControls() {
           ? "loading"
           : isAuthenticated
             ? user?.organizationId
-            : "signed-out"}
+            : sessionState === "unauthenticated"
+              ? "signed-out"
+              : sessionState}
       </p>
       <button
         type="button"
@@ -52,6 +55,9 @@ function AuthControls() {
       </button>
       <button type="button" onClick={() => void logout()}>
         Logout
+      </button>
+      <button type="button" onClick={() => void retry()}>
+        Retry
       </button>
     </>
   );
@@ -71,6 +77,7 @@ describe("AuthProvider", () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
+    api.refreshToken.mockRejectedValue({ status: 401 });
     api.logout.mockResolvedValue(undefined);
     api.login.mockResolvedValue({
       data: {
@@ -108,12 +115,12 @@ describe("AuthProvider", () => {
     });
   });
 
-  it("clears tenant cache and fails closed when session restoration cannot refresh", async () => {
+  it("clears the session after a 401 refresh failure", async () => {
     const queryClient = new QueryClient();
     queryClient.setQueryData(["/api/vehicles"], [{ id: "vehicle-a" }]);
     setAccessToken("expired-access-token");
     api.getCurrentUser.mockRejectedValueOnce(new Error("unauthorized"));
-    api.refreshToken.mockRejectedValueOnce(new Error("refresh rejected"));
+    api.refreshToken.mockRejectedValueOnce({ status: 401 });
 
     renderAuth(queryClient);
 
@@ -135,6 +142,50 @@ describe("AuthProvider", () => {
     await waitFor(() => {
       expect(screen.getByText("tenant-a")).toBeInTheDocument();
       expect(getAccessToken()).toBe("restored-access-token");
+    });
+  });
+
+  it("keeps session restoration recoverable after a network refresh failure", async () => {
+    const queryClient = new QueryClient();
+    queryClient.setQueryData(["/api/vehicles"], [{ id: "vehicle-a" }]);
+    api.refreshToken.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+
+    renderAuth(queryClient);
+
+    await waitFor(() => {
+      expect(screen.getByText("indeterminate")).toBeInTheDocument();
+      expect(queryClient.getQueryData(["/api/vehicles"])).toEqual([
+        { id: "vehicle-a" },
+      ]);
+    });
+  });
+
+  it("restores the session when retrying after a network refresh failure", async () => {
+    const queryClient = new QueryClient();
+    api.refreshToken
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockResolvedValueOnce({ data: { accessToken: "restored-access-token" } });
+    api.getCurrentUser.mockResolvedValueOnce({ data: tenantA });
+
+    renderAuth(queryClient);
+
+    await screen.findByText("indeterminate");
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("tenant-a")).toBeInTheDocument();
+      expect(getAccessToken()).toBe("restored-access-token");
+    });
+  });
+
+  it("keeps session restoration indeterminate after a 5xx refresh failure", async () => {
+    const queryClient = new QueryClient();
+    api.refreshToken.mockRejectedValueOnce({ status: 503 });
+
+    renderAuth(queryClient);
+
+    await waitFor(() => {
+      expect(screen.getByText("indeterminate")).toBeInTheDocument();
     });
   });
 
