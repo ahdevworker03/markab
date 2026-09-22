@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { ApiError, type TaskResponse } from "@workspace/api-client-react";
 
 import TaskDetailPage from "./TaskDetailPage";
@@ -56,10 +62,15 @@ function makeTask(overrides: Partial<TaskResponse> = {}): TaskResponse {
 }
 
 function mockAuth(role = "OWNER") {
-  mockedUseAuth.mockReturnValue({ user: { role } } as ReturnType<typeof useAuth>);
+  mockedUseAuth.mockReturnValue({ user: { role } } as ReturnType<
+    typeof useAuth
+  >);
 }
 
-function mockTask(task: TaskResponse | null, overrides: Partial<ReturnType<typeof useTask>> = {}) {
+function mockTask(
+  task: TaskResponse | null,
+  overrides: Partial<ReturnType<typeof useTask>> = {},
+) {
   mockedUseTask.mockReturnValue({
     data: task ? { data: task } : undefined,
     isLoading: false,
@@ -71,12 +82,26 @@ function mockTask(task: TaskResponse | null, overrides: Partial<ReturnType<typeo
 
 function mockMutations() {
   const mutations = {
-    create: { isPending: false, mutateAsync: vi.fn().mockResolvedValue(undefined) },
-    complete: { isPending: false, mutateAsync: vi.fn().mockResolvedValue(undefined) },
-    update: { isPending: false, mutateAsync: vi.fn().mockResolvedValue(undefined) },
-    remove: { isPending: false, mutateAsync: vi.fn().mockResolvedValue(undefined) },
+    create: {
+      isPending: false,
+      mutateAsync: vi.fn().mockResolvedValue(undefined),
+    },
+    complete: {
+      isPending: false,
+      mutateAsync: vi.fn().mockResolvedValue(undefined),
+    },
+    update: {
+      isPending: false,
+      mutateAsync: vi.fn().mockResolvedValue(undefined),
+    },
+    remove: {
+      isPending: false,
+      mutateAsync: vi.fn().mockResolvedValue(undefined),
+    },
   };
-  mockedUseTaskMutations.mockReturnValue(mutations as unknown as ReturnType<typeof useTaskMutations>);
+  mockedUseTaskMutations.mockReturnValue(
+    mutations as unknown as ReturnType<typeof useTaskMutations>,
+  );
   return mutations;
 }
 
@@ -100,14 +125,18 @@ describe("TaskDetailPage", () => {
     render(<TaskDetailPage params={{ id: "task-1" }} />);
 
     expect(screen.getAllByText("تجديد الترخيص").length).toBeGreaterThan(0);
-    expect(screen.getByText("لا توجد ملاحظات لهذه المهمة.")).toBeInTheDocument();
+    expect(
+      screen.getByText("لا توجد ملاحظات لهذه المهمة."),
+    ).toBeInTheDocument();
   });
 
   it("keeps summary labels, values, and status badges in compact RTL field groups", () => {
     mockTask(makeTask({ title: "mahmoud", notes: "راجع tires قبل التسليم" }));
     render(<TaskDetailPage params={{ id: "task-1" }} />);
 
-    const summaryCard = screen.getByRole("heading", { name: "ملخص المهمة" }).closest("section");
+    const summaryCard = screen
+      .getByRole("heading", { name: "ملخص المهمة" })
+      .closest("section");
     expect(summaryCard).not.toBeNull();
 
     const summary = within(summaryCard!);
@@ -118,52 +147,89 @@ describe("TaskDetailPage", () => {
 
     expect(titleGroup).toHaveClass("min-w-0", "space-y-1.5");
     expect(titleValue).toHaveAttribute("dir", "auto");
-    expect(titleValue).toHaveClass("inline-block", "max-w-full", "text-base", "font-bold");
+    expect(titleValue).toHaveClass(
+      "inline-block",
+      "max-w-full",
+      "text-base",
+      "font-bold",
+    );
     expect(titleValue.parentElement).toHaveClass("text-start");
     expect(statusGroup).toHaveClass("min-w-0", "space-y-1.5");
-    expect(within(statusGroup!).getByText("قيد الانتظار")).toHaveAttribute("data-status", "PENDING");
+    expect(within(statusGroup!).getByText("قيد الانتظار")).toHaveAttribute(
+      "data-status",
+      "PENDING",
+    );
     expect(dueDateGroup).toHaveClass("min-w-0", "space-y-1.5");
-    expect(within(dueDateGroup!).getByText("01/09/2026")).toHaveAttribute("dir", "ltr");
-    expect(screen.getByText("راجع tires قبل التسليم")).toHaveAttribute("dir", "auto");
-    expect(summaryCard?.querySelector(".grid")).toHaveClass("grid-cols-1", "gap-x-8", "gap-y-5", "sm:grid-cols-2", "xl:grid-cols-3");
+    expect(within(dueDateGroup!).getByText("01/09/2026")).toHaveAttribute(
+      "dir",
+      "ltr",
+    );
+    expect(screen.getByText("راجع tires قبل التسليم")).toHaveAttribute(
+      "dir",
+      "auto",
+    );
+    expect(summaryCard?.querySelector(".grid")).toHaveClass(
+      "grid-cols-1",
+      "gap-x-8",
+      "gap-y-5",
+      "sm:grid-cols-2",
+      "xl:grid-cols-3",
+    );
     expect(titleGroup?.parentElement).toHaveClass("min-w-0");
   });
 
-  it.each(["فحص السيارة", "mahmoud", "فحص Engine"])("keeps the %s title aligned to its RTL summary label", (title) => {
-    mockTask(makeTask({ title }));
-    render(<TaskDetailPage params={{ id: "task-1" }} />);
+  it.each(["فحص السيارة", "mahmoud", "فحص Engine"])(
+    "keeps the %s title aligned to its RTL summary label",
+    (title) => {
+      mockTask(makeTask({ title }));
+      render(<TaskDetailPage params={{ id: "task-1" }} />);
 
-    const summaryCard = screen.getByRole("heading", { name: "ملخص المهمة" }).closest("section");
-    const titleValue = within(summaryCard!).getByText(title);
+      const summaryCard = screen
+        .getByRole("heading", { name: "ملخص المهمة" })
+        .closest("section");
+      const titleValue = within(summaryCard!).getByText(title);
 
-    expect(titleValue).toHaveAttribute("dir", "auto");
-    expect(titleValue.parentElement).toHaveClass("text-start");
-  });
+      expect(titleValue).toHaveAttribute("dir", "auto");
+      expect(titleValue.parentElement).toHaveClass("text-start");
+    },
+  );
 
   it("shows the new recurrence and end-date summaries", () => {
-    mockTask(makeTask({
-      recurrenceInterval: 15,
-      recurrenceUnit: "DAY",
-      recurrenceEndDate: "2026-12-31",
-    }));
+    mockTask(
+      makeTask({
+        recurrenceInterval: 15,
+        recurrenceUnit: "DAY",
+        recurrenceEndDate: "2026-12-31",
+      }),
+    );
     render(<TaskDetailPage params={{ id: "task-1" }} />);
     expect(screen.getAllByText("كل 15 يوم").length).toBeGreaterThan(0);
     expect(screen.getByText("حتى 31/12/2026")).toBeInTheDocument();
-    const summaryCard = screen.getByRole("heading", { name: "ملخص المهمة" }).closest("section");
+    const summaryCard = screen
+      .getByRole("heading", { name: "ملخص المهمة" })
+      .closest("section");
     const recurrenceValue = within(summaryCard!).getByText("كل 15 يوم");
     expect(recurrenceValue).toHaveAttribute("dir", "auto");
     expect(recurrenceValue.parentElement).toHaveClass("text-start");
   });
 
   it("shows an occurrence-count end summary", () => {
-    mockTask(makeTask({ recurrenceInterval: 1, recurrenceUnit: "WEEK", recurrenceEndCount: 5 }));
+    mockTask(
+      makeTask({
+        recurrenceInterval: 1,
+        recurrenceUnit: "WEEK",
+        recurrenceEndCount: 5,
+      }),
+    );
     render(<TaskDetailPage params={{ id: "task-1" }} />);
     expect(screen.getAllByText("أسبوعي").length).toBeGreaterThan(0);
     expect(screen.getByText("بعد 5 مرات")).toBeInTheDocument();
   });
 
   it("shows previous-occurrence context for a generated task", () => {
-    mockTask(makeTask({ occurrenceNumber: 2, predecessorId: "previous-task-id" }));
+    mockTask(
+      makeTask({ occurrenceNumber: 2, predecessorId: "previous-task-id" }),
+    );
     render(<TaskDetailPage params={{ id: "task-1" }} />);
     expect(screen.getByText("المهمة السابقة")).toBeInTheDocument();
     expect(screen.getByText("التكرار رقم 1")).toBeInTheDocument();
@@ -178,37 +244,61 @@ describe("TaskDetailPage", () => {
   it("shows Stop Recurrence only for a pending recurring task", () => {
     mockTask(makeTask({ recurrenceInterval: 2, recurrenceUnit: "WEEK" }));
     const { rerender } = render(<TaskDetailPage params={{ id: "task-1" }} />);
-    expect(screen.getByRole("button", { name: "إيقاف التكرار" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "إيقاف التكرار" }),
+    ).toBeInTheDocument();
 
     mockTask(makeTask());
     rerender(<TaskDetailPage params={{ id: "task-1" }} />);
-    expect(screen.queryByRole("button", { name: "إيقاف التكرار" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "إيقاف التكرار" }),
+    ).not.toBeInTheDocument();
   });
 
   it("stops recurrence by clearing all recurrence fields", async () => {
     const mutations = mockMutations();
-    mockTask(makeTask({ recurrenceInterval: 1, recurrenceUnit: "MONTH", recurrenceEndCount: 5 }));
+    mockTask(
+      makeTask({
+        recurrenceInterval: 1,
+        recurrenceUnit: "MONTH",
+        recurrenceEndCount: 5,
+      }),
+    );
     render(<TaskDetailPage params={{ id: "task-1" }} />);
     fireEvent.click(screen.getByRole("button", { name: "إيقاف التكرار" }));
-    expect(screen.getByText(/ستبقى المهمة الحالية وسجل المهام السابقة/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/ستبقى المهمة الحالية وسجل المهام السابقة/),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "تأكيد الإيقاف" }));
 
-    await waitFor(() => expect(mutations.update.mutateAsync).toHaveBeenCalledWith({
-      id: "task-1",
-      data: {
-        recurrence_interval: null,
-        recurrence_unit: null,
-        recurrence_end_date: null,
-        recurrence_end_count: null,
-      },
-    }));
+    await waitFor(() =>
+      expect(mutations.update.mutateAsync).toHaveBeenCalledWith({
+        id: "task-1",
+        data: {
+          recurrence_interval: null,
+          recurrence_unit: null,
+          recurrence_end_date: null,
+          recurrence_end_count: null,
+        },
+      }),
+    );
   });
 
   it("does not expose Stop Recurrence for a completed recurring task", () => {
-    mockTask(makeTask({ status: "COMPLETED", recurrenceInterval: 1, recurrenceUnit: "DAY" }));
+    mockTask(
+      makeTask({
+        status: "COMPLETED",
+        recurrenceInterval: 1,
+        recurrenceUnit: "DAY",
+      }),
+    );
     render(<TaskDetailPage params={{ id: "task-1" }} />);
-    expect(screen.queryByRole("button", { name: "إيقاف التكرار" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "إكمال المهمة" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "إيقاف التكرار" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "إكمال المهمة" }),
+    ).not.toBeInTheDocument();
     expect(screen.getAllByText("يومي").length).toBeGreaterThan(0);
   });
 
@@ -217,10 +307,16 @@ describe("TaskDetailPage", () => {
     mockTask(makeTask({ recurrenceInterval: 1, recurrenceUnit: "DAY" }));
     render(<TaskDetailPage params={{ id: "task-1" }} />);
     fireEvent.click(screen.getByRole("button", { name: "حذف المهمة" }));
-    expect(screen.getByText(/ستُحذف المهمة المحددة من القوائم والعروض المعتادة فقط/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/ستُحذف المهمة المحددة من القوائم والعروض المعتادة فقط/),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "تأكيد الحذف" }));
 
-    await waitFor(() => expect(mutations.remove.mutateAsync).toHaveBeenCalledWith({ id: "task-1" }));
+    await waitFor(() =>
+      expect(mutations.remove.mutateAsync).toHaveBeenCalledWith({
+        id: "task-1",
+      }),
+    );
     expect(setLocationMock).toHaveBeenCalledWith("/tasks");
   });
 
@@ -230,7 +326,11 @@ describe("TaskDetailPage", () => {
     render(<TaskDetailPage params={{ id: "task-1" }} />);
     fireEvent.click(screen.getByRole("button", { name: "إكمال المهمة" }));
     fireEvent.click(screen.getByRole("button", { name: "تأكيد الإكمال" }));
-    await waitFor(() => expect(mutations.complete.mutateAsync).toHaveBeenCalledWith({ id: "task-1" }));
+    await waitFor(() =>
+      expect(mutations.complete.mutateAsync).toHaveBeenCalledWith({
+        id: "task-1",
+      }),
+    );
   });
 
   it("edits a pending task with interval recurrence fields", async () => {
@@ -238,26 +338,44 @@ describe("TaskDetailPage", () => {
     mockTask(makeTask({ recurrenceInterval: 1, recurrenceUnit: "DAY" }));
     render(<TaskDetailPage params={{ id: "task-1" }} />);
     fireEvent.click(screen.getByRole("button", { name: "تعديل المهمة" }));
-    fireEvent.change(screen.getByLabelText(/اسم المهمة/), { target: { value: "تجديد الفحص" } });
-    fireEvent.change(screen.getByLabelText("التكرار"), { target: { value: "CUSTOM" } });
-    fireEvent.change(screen.getByLabelText(/الفاصل/), { target: { value: "4" } });
-    fireEvent.change(screen.getByLabelText(/الوحدة/), { target: { value: "MONTH" } });
+    fireEvent.change(screen.getByLabelText(/اسم المهمة/), {
+      target: { value: "تجديد الفحص" },
+    });
+    fireEvent.change(screen.getByLabelText("التكرار"), {
+      target: { value: "CUSTOM" },
+    });
+    fireEvent.change(screen.getByLabelText(/الفاصل/), {
+      target: { value: "4" },
+    });
+    fireEvent.change(screen.getByLabelText(/الوحدة/), {
+      target: { value: "MONTH" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "حفظ التعديلات" }));
 
-    await waitFor(() => expect(mutations.update.mutateAsync).toHaveBeenCalledWith({
-      id: "task-1",
-      data: expect.objectContaining({ title: "تجديد الفحص", recurrence_interval: 4, recurrence_unit: "MONTH" }),
-    }));
+    await waitFor(() =>
+      expect(mutations.update.mutateAsync).toHaveBeenCalledWith({
+        id: "task-1",
+        data: expect.objectContaining({
+          title: "تجديد الفحص",
+          recurrence_interval: 4,
+          recurrence_unit: "MONTH",
+        }),
+      }),
+    );
   });
 
   it("shows an API error without false success", async () => {
     const mutations = mockMutations();
-    mutations.complete.mutateAsync.mockRejectedValue(makeApiError("المهمة مكتملة بالفعل"));
+    mutations.complete.mutateAsync.mockRejectedValue(
+      makeApiError("المهمة مكتملة بالفعل"),
+    );
     mockTask(makeTask());
     render(<TaskDetailPage params={{ id: "task-1" }} />);
     fireEvent.click(screen.getByRole("button", { name: "إكمال المهمة" }));
     fireEvent.click(screen.getByRole("button", { name: "تأكيد الإكمال" }));
-    expect(await screen.findByText("المهمة مكتملة بالفعل")).toBeInTheDocument();
+    expect(
+      await screen.findByText("المهمة مكتملة بالفعل."),
+    ).toBeInTheDocument();
     expect(screen.queryByText("تم إكمال المهمة.")).not.toBeInTheDocument();
   });
 
@@ -265,9 +383,15 @@ describe("TaskDetailPage", () => {
     mockAuth("EMPLOYEE");
     mockTask(makeTask({ recurrenceInterval: 1, recurrenceUnit: "DAY" }));
     render(<TaskDetailPage params={{ id: "task-1" }} />);
-    expect(screen.queryByRole("button", { name: "إكمال المهمة" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "إيقاف التكرار" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "حذف المهمة" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "إكمال المهمة" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "إيقاف التكرار" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "حذف المهمة" }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows the error state when the task is not found", () => {

@@ -1,6 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiError, type MaintenanceResponse } from "@workspace/api-client-react";
+import {
+  ApiError,
+  type MaintenanceResponse,
+} from "@workspace/api-client-react";
 
 vi.mock("wouter", () => ({
   useLocation: () => ["/maintenance/maintenance-1", vi.fn()],
@@ -74,7 +77,10 @@ function mockRecord(record: MaintenanceResponse) {
 function mockMutations() {
   const mutations = {
     create: { isPending: false, mutateAsync: vi.fn() },
-    update: { isPending: false, mutateAsync: vi.fn().mockResolvedValue(undefined) },
+    update: {
+      isPending: false,
+      mutateAsync: vi.fn().mockResolvedValue(undefined),
+    },
     complete: { isPending: false, mutateAsync: vi.fn() },
     remove: { isPending: false, mutateAsync: vi.fn() },
   };
@@ -90,7 +96,14 @@ beforeEach(() => {
     typeof useAuth
   >);
   mockedUseGetVehicle.mockReturnValue({
-    data: { data: { id: "vehicle-1", make: "Toyota", model: "Camry", plateNumber: "A-1" } },
+    data: {
+      data: {
+        id: "vehicle-1",
+        make: "Toyota",
+        model: "Camry",
+        plateNumber: "A-1",
+      },
+    },
   } as ReturnType<typeof useGetVehicle>);
   mockRecord(makeRecord());
   mockMutations();
@@ -101,7 +114,9 @@ describe("MaintenanceDetailPage", () => {
     render(<MaintenanceDetailPage params={{ id: "maintenance-1" }} />);
 
     const startButton = screen.getByRole("button", { name: "بدء الصيانة" });
-    const completeButton = screen.getByRole("button", { name: "إكمال الصيانة" });
+    const completeButton = screen.getByRole("button", {
+      name: "إكمال الصيانة",
+    });
 
     expect(startButton).toHaveClass("bg-primary");
     expect(completeButton).toHaveClass("border");
@@ -110,7 +125,9 @@ describe("MaintenanceDetailPage", () => {
 
   it("starts maintenance and hides the start action after refreshed data is in progress", async () => {
     const mutations = mockMutations();
-    const { rerender } = render(<MaintenanceDetailPage params={{ id: "maintenance-1" }} />);
+    const { rerender } = render(
+      <MaintenanceDetailPage params={{ id: "maintenance-1" }} />,
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "بدء الصيانة" }));
 
@@ -124,8 +141,12 @@ describe("MaintenanceDetailPage", () => {
     mockRecord(makeRecord({ status: "IN_PROGRESS" }));
     rerender(<MaintenanceDetailPage params={{ id: "maintenance-1" }} />);
 
-    expect(screen.queryByRole("button", { name: "بدء الصيانة" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "إكمال الصيانة" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "بدء الصيانة" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "إكمال الصيانة" }),
+    ).toBeInTheDocument();
   });
 
   it("shows Arabic feedback for a vehicle-unavailable start error", async () => {
@@ -143,18 +164,24 @@ describe("MaintenanceDetailPage", () => {
       ),
     ).toBeInTheDocument();
     expect(
-      screen.queryByText("Vehicle has an active rental and cannot enter maintenance"),
+      screen.queryByText(
+        "Vehicle has an active rental and cannot enter maintenance",
+      ),
     ).not.toBeInTheDocument();
   });
 
-  it("keeps the generic API message for unknown start errors", async () => {
+  it("uses safe Arabic feedback for unknown start errors", async () => {
     const mutations = mockMutations();
-    mutations.update.mutateAsync.mockRejectedValue(makeApiError("تعذر بدء الصيانة", "OTHER"));
+    mutations.update.mutateAsync.mockRejectedValue(
+      makeApiError("تعذر بدء الصيانة", "OTHER"),
+    );
     render(<MaintenanceDetailPage params={{ id: "maintenance-1" }} />);
 
     fireEvent.click(screen.getByRole("button", { name: "بدء الصيانة" }));
 
-    expect(await screen.findByText("تعذر بدء الصيانة")).toBeInTheDocument();
+    expect(
+      await screen.findByText("تعذر تنفيذ الطلب. حاول مرة أخرى."),
+    ).toBeInTheDocument();
   });
 
   it.each(["IN_PROGRESS", "COMPLETED"] as const)(
@@ -163,11 +190,17 @@ describe("MaintenanceDetailPage", () => {
       mockRecord(makeRecord({ status }));
       render(<MaintenanceDetailPage params={{ id: "maintenance-1" }} />);
 
-      expect(screen.queryByRole("button", { name: "بدء الصيانة" })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "بدء الصيانة" }),
+      ).not.toBeInTheDocument();
       if (status === "IN_PROGRESS") {
-        expect(screen.getByRole("button", { name: "إكمال الصيانة" })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: "إكمال الصيانة" }),
+        ).toBeInTheDocument();
       } else {
-        expect(screen.queryByRole("button", { name: "إكمال الصيانة" })).not.toBeInTheDocument();
+        expect(
+          screen.queryByRole("button", { name: "إكمال الصيانة" }),
+        ).not.toBeInTheDocument();
       }
     },
   );
@@ -178,6 +211,8 @@ describe("MaintenanceDetailPage", () => {
     >);
     render(<MaintenanceDetailPage params={{ id: "maintenance-1" }} />);
 
-    expect(screen.queryByRole("button", { name: "بدء الصيانة" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "بدء الصيانة" }),
+    ).not.toBeInTheDocument();
   });
 });

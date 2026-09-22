@@ -55,14 +55,14 @@ function mockEmployee() {
   } as ReturnType<typeof useAuth>);
 }
 
-function makeApiError(message: string): ApiError {
+function makeApiError(message: string, code = "ERROR"): ApiError {
   const response = new Response(null, {
     status: 400,
     statusText: "Bad Request",
   });
   return new ApiError(
     response,
-    { error: { code: "ERROR", message } },
+    { error: { code, message } },
     { method: "GET", url: "/api/rentals/r1/payments" },
   );
 }
@@ -115,7 +115,9 @@ describe("PaymentSection", () => {
     } as unknown as ReturnType<typeof useRentalPayments>);
 
     render(<PaymentSection rentalId="r1" />);
-    expect(screen.getByText("فشل تحميل المدفوعات")).toBeInTheDocument();
+    expect(
+      screen.getByText("تعذر تنفيذ الطلب. حاول مرة أخرى."),
+    ).toBeInTheDocument();
   });
 
   it("shows the outstanding balance and an empty state when there are no payments", () => {
@@ -221,9 +223,14 @@ describe("PaymentSection", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows the backend error message when a payment fails", async () => {
+  it("shows localized feedback when a payment exceeds the outstanding balance", async () => {
     const create = mockCreate();
-    create.mutateAsync.mockRejectedValue(makeApiError("الرصيد غير كافٍ"));
+    create.mutateAsync.mockRejectedValue(
+      makeApiError(
+        "Outstanding balance exceeded",
+        "PAYMENT_EXCEEDS_OUTSTANDING_BALANCE",
+      ),
+    );
     mockData([], 120);
 
     render(<PaymentSection rentalId="r1" />);
@@ -238,7 +245,9 @@ describe("PaymentSection", () => {
     });
     fireEvent.click(screen.getByText("تسجيل الدفعة"));
 
-    expect(await screen.findByText("الرصيد غير كافٍ")).toBeInTheDocument();
+    expect(
+      await screen.findByText("لا يمكن أن تتجاوز الدفعة الرصيد المستحق."),
+    ).toBeInTheDocument();
   });
 
   it("hides the record-payment button for non-owner users", () => {
