@@ -48,7 +48,7 @@ export function VehiclesDataList({ vehicles, onOpen }: VehiclesDataListProps) {
         <Table className="min-w-[73rem] table-fixed">
           <TableHeader className="bg-muted/45">
             <TableRow>
-              <TableHead className="w-[22rem] min-w-[22rem]">المركبة</TableHead>
+              <TableHead className="w-[22rem] min-w-[22rem]">السيارة</TableHead>
               <TableHead className="w-[9rem] min-w-[9rem]">الحالة</TableHead>
               <TableHead className="w-[16rem] min-w-[16rem]">المواصفات</TableHead>
               <TableHead className="w-[6rem] min-w-[6rem] text-end">السنة</TableHead>
@@ -89,7 +89,7 @@ export function VehiclesDataList({ vehicles, onOpen }: VehiclesDataListProps) {
               <div><div className="ui-label">العداد الحالي</div><div className="mt-1"><Mileage value={vehicle.currentMileage} /></div></div>
             </div>
             <div className="flex justify-end border-t border-border pt-3">
-              <Button type="button" variant="outline" size="sm" onClick={() => onOpen(vehicle.id)}>عرض التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button>
+              <Button type="button" variant="outline" size="sm" className="min-h-11" onClick={() => onOpen(vehicle.id)}>عرض التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button>
             </div>
           </article>
         ))}
@@ -108,7 +108,7 @@ export function VehiclesDataList({ vehicles, onOpen }: VehiclesDataListProps) {
             </div>
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Gauge className="size-3.5" aria-hidden="true" />{vehicle.transmission === "AUTOMATIC" ? "أوتوماتيك" : "يدوي"} · {vehicle.seats} مقاعد</div>
-              <Button type="button" variant="outline" size="sm" onClick={() => onOpen(vehicle.id)}>التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button>
+              <Button type="button" variant="outline" size="sm" className="min-h-11" onClick={() => onOpen(vehicle.id)}>التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button>
             </div>
           </article>
         ))}
@@ -119,7 +119,7 @@ export function VehiclesDataList({ vehicles, onOpen }: VehiclesDataListProps) {
 
 export function VehiclesDataListSkeleton() {
   return (
-    <div className="space-y-0" aria-label="جارٍ تحميل المركبات">
+    <div className="space-y-0" aria-label="جارٍ تحميل السيارات">
       {[0, 1, 2, 3].map((row) => <div key={row} className="grid grid-cols-4 gap-5 border-b border-border px-5 py-5 last:border-b-0"><div className="h-9 animate-pulse rounded-lg bg-muted" /><div className="h-6 animate-pulse rounded-md bg-muted" /><div className="h-8 animate-pulse rounded-md bg-muted" /><div className="h-8 animate-pulse rounded-md bg-muted" /></div>)}
     </div>
   );

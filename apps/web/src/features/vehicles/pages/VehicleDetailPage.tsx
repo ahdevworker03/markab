@@ -80,16 +80,16 @@ export default function VehicleDetailPage({ params }: DetailPageParams) {
     }
   }
 
-  if (vehicleQuery.isLoading) return <div className="min-h-full"><PageHeader title="تفاصيل المركبة" showBack /><div className="px-4 py-6 sm:px-6"><LoadingState rows={5} /></div></div>;
+  if (vehicleQuery.isLoading) return <div className="min-h-full"><PageHeader title="تفاصيل السيارة" showBack /><div className="px-4 py-6 sm:px-6"><LoadingState rows={5} /></div></div>;
   const vehicle = vehicleQuery.data?.data;
-  if (vehicleQuery.isError || !vehicle) return <div className="min-h-full"><PageHeader title="تفاصيل المركبة" showBack /><ErrorState className="py-16" title="تعذر تحميل المركبة" description={vehicleQuery.error ? getApiErrorMessage(vehicleQuery.error).title : "لم يتم العثور على هذه المركبة."} onRetry={() => void vehicleQuery.refetch()} /></div>;
+  if (vehicleQuery.isError || !vehicle) return <div className="min-h-full"><PageHeader title="تفاصيل السيارة" showBack /><ErrorState className="py-16" title="تعذر تحميل السيارة" description={vehicleQuery.error ? getApiErrorMessage(vehicleQuery.error).title : "لم يتم العثور على هذه السيارة."} onRetry={() => void vehicleQuery.refetch()} /></div>;
 
   const currentRental = vehicleRentals.rentals.find((rental) => rental.status === "ACTIVE" || rental.status === "RESERVED");
 
   return (
     <div className="min-h-full pb-8">
       <PageHeader
-        title="تفاصيل المركبة"
+        title="تفاصيل السيارة"
         showBack
         action={isOwner ? (
           <div className="flex flex-wrap items-center justify-end gap-2">
@@ -105,14 +105,14 @@ export default function VehicleDetailPage({ params }: DetailPageParams) {
               <span className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Car className="size-7" aria-hidden="true" /></span>
               <div className="min-w-0"><div dir="ltr" className="truncate text-lg font-bold text-foreground">{vehicle.make} {vehicle.model}</div><div dir="ltr" className="number-ltr mt-1 text-sm text-muted-foreground">{vehicle.plateNumber} · {vehicle.year}</div></div>
             </div>
-            <div className="flex flex-wrap items-center gap-3 rounded-lg bg-muted/45 px-3 py-2.5"><div><div className="ui-label mb-1">حالة المركبة</div><StatusBadge status={vehicle.status} /></div>{currentRental ? <div className="border-s border-border ps-3"><div className="ui-label mb-1">الإيجار الحالي</div><Button type="button" variant="ghost" size="sm" onClick={() => setLocation(`/rentals/${currentRental.id}`)}>عرض الإيجار</Button></div> : <p className="border-s border-border ps-3 text-sm text-muted-foreground">لا يوجد إيجار نشط أو حجز مرتبط.</p>}</div>
+            <div className="flex flex-wrap items-center gap-3 rounded-lg bg-muted/45 px-3 py-2.5"><div><div className="ui-label mb-1">حالة السيارة</div><StatusBadge status={vehicle.status} /></div>{currentRental ? <div className="border-s border-border ps-3"><div className="ui-label mb-1">الإيجار الحالي</div><Button type="button" variant="ghost" size="sm" onClick={() => setLocation(`/rentals/${currentRental.id}`)}>عرض الإيجار</Button></div> : <p className="border-s border-border ps-3 text-sm text-muted-foreground">لا يوجد إيجار نشط أو حجز مرتبط.</p>}</div>
           </div>
         </DetailSection>
 
-        {confirmingDelete && <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-foreground">سيتم أرشفة المركبة وإخفاؤها من السجلات النشطة. أكد الحذف للمتابعة.</div>}
+        {confirmingDelete && <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-foreground">سيتم أرشفة السيارة وإخفاؤها من السجلات النشطة. أكد الحذف للمتابعة.</div>}
         {deleteError && <InlineError>{deleteError}</InlineError>}
-        <section aria-label="بيانات المركبة" className="space-y-4">
-            <DetailSection title="بيانات المركبة" description="الهوية والمواصفات الأساسية للمركبة.">
+        <section aria-label="بيانات السيارة" className="space-y-4">
+            <DetailSection title="بيانات السيارة" description="الهوية والمواصفات الأساسية للسيارة.">
               <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-3 lg:grid-cols-4">
                 <KeyValue label="الشركة المصنعة" value={vehicle.make} ltr />
                 <KeyValue label="الطراز" value={vehicle.model} ltr />
@@ -132,7 +132,7 @@ export default function VehicleDetailPage({ params }: DetailPageParams) {
             </DetailSection>
 
             <DetailSection><DocumentList documents={documents.query.data?.data ?? []} isLoading={documents.query.isLoading} isError={documents.query.isError} error={documents.query.error} isOwner={isOwner} uploading={documents.upload.isPending} updating={documents.update.isPending} deleting={documents.remove.isPending} onUpload={handleUploadDocument} onDelete={handleDeleteDocument} onDownload={handleDownloadDocument} onUpdateExpiry={handleUpdateDocumentExpiry} /></DetailSection>
-            <RentalHistorySection rentals={vehicleRentals.rentals} isLoading={vehicleRentals.isLoading} isError={vehicleRentals.isError} error={vehicleRentals.error} title="سجل الإيجارات" emptyMessage="لا توجد إيجارات لهذه المركبة" />
+            <RentalHistorySection rentals={vehicleRentals.rentals} isLoading={vehicleRentals.isLoading} isError={vehicleRentals.isError} error={vehicleRentals.error} title="سجل الإيجارات" emptyMessage="لا توجد إيجارات لهذه السيارة" />
             <MaintenanceHistorySection vehicleId={vehicle.id} />
         </section>
       </div>
