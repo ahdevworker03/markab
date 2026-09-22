@@ -1,5 +1,8 @@
 import { ApiError } from "@workspace/api-client-react";
 
+export const FILE_TOO_LARGE_MESSAGE =
+  "حجم الملف يتجاوز الحد الأقصى المسموح به وهو 10 ميغابايت.";
+
 export interface ApiErrorMessage {
   title: string;
   description?: string;
@@ -25,8 +28,17 @@ export function getApiErrorMessage(error: unknown): ApiErrorMessage {
 
     if (body?.error?.code === "VEHICLE_UNAVAILABLE") {
       return {
-        title: "لا يمكن بدء الصيانة لأن المركبة مرتبطة بإيجار قائم أو غير متاحة حالياً.",
+        title:
+          "لا يمكن بدء الصيانة لأن المركبة مرتبطة بإيجار قائم أو غير متاحة حالياً.",
       };
+    }
+
+    if (body?.error?.code === "INVALID_RENTAL_STATE") {
+      return { title: "لا يمكن إنشاء العقد إلا للإيجار المحجوز أو النشط." };
+    }
+
+    if (body?.error?.code === "FILE_TOO_LARGE") {
+      return { title: FILE_TOO_LARGE_MESSAGE };
     }
 
     if (body?.error?.message) {

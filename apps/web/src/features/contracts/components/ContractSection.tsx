@@ -13,7 +13,7 @@ import { InfoRow } from "@/components/ui/InfoRow";
 import { Spinner } from "@/components/ui/spinner";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useAuth } from "@/providers/AuthProvider";
-import { getApiErrorMessage } from "@/lib/api-error";
+import { FILE_TOO_LARGE_MESSAGE, getApiErrorMessage } from "@/lib/api-error";
 import { formatDate, formatDateTime } from "@/lib/format";
 import {
   useRentalContract,
@@ -106,7 +106,7 @@ export function ContractSection({ rentalId }: ContractSectionProps) {
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
-      setLocalError("حجم الملف يتجاوز الحد الأقصى (10 م.ب).");
+      setLocalError(FILE_TOO_LARGE_MESSAGE);
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
@@ -169,7 +169,9 @@ export function ContractSection({ rentalId }: ContractSectionProps) {
         {(localError || successMsg) && (
           <InlineFeedback
             variant={localError ? "error" : "success"}
-            onDismiss={successMsg && !localError ? () => setSuccessMsg(null) : undefined}
+            onDismiss={
+              successMsg && !localError ? () => setSuccessMsg(null) : undefined
+            }
           >
             {localError ?? successMsg}
           </InlineFeedback>
@@ -304,9 +306,9 @@ export function ContractSection({ rentalId }: ContractSectionProps) {
                     : "حدث خطأ في تحميل المستندات"}
                 </p>
               ) : (signed.query.data?.data ?? []).length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-3">
-                لا يوجد عقد موقّع مرفوع
-              </p>
+                <p className="text-xs text-muted-foreground text-center py-3">
+                  لا يوجد عقد موقّع مرفوع
+                </p>
               ) : (
                 <div className="space-y-2">
                   {(signed.query.data?.data ?? []).map((doc) => (
