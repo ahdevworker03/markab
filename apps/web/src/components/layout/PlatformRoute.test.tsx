@@ -50,4 +50,22 @@ describe("PlatformRoute", () => {
       expect(setLocation).toHaveBeenCalledWith("/login", { replace: true }),
     );
   });
+
+  it("keeps platform users on a recoverable screen when session state is indeterminate", () => {
+    useAuth.mockReturnValue({
+      user: null,
+      isLoading: false,
+      retry: vi.fn(),
+      sessionState: "indeterminate",
+    });
+    render(
+      <PlatformRoute>
+        <p>platform console</p>
+      </PlatformRoute>,
+    );
+
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(setLocation).not.toHaveBeenCalled();
+    expect(screen.queryByText("platform console")).not.toBeInTheDocument();
+  });
 });
