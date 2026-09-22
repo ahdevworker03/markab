@@ -33,7 +33,7 @@ export default function CustomersPage() {
       />
 
       <div className="space-y-4 px-4 pb-6 pt-4 sm:px-6 lg:space-y-5">
-        <SectionCard title="قائمة العملاء" description="ابحث عن المستأجرين وراجع بيانات الهوية والرخصة بسرعة." className="shadow-none">
+        <SectionCard title="قائمة العملاء" description="ابحث عن العملاء وراجع بيانات الهوية والرخصة بسرعة." className="shadow-none">
           <SearchBar placeholder="ابحث بالاسم أو الهوية أو رقم الرخصة أو الهاتف..." value={search} onChange={(event) => { const value = event.target.value; setSearch(value); setSearchParams(value ? { search: value } : {}, { replace: true }); }} onClear={() => { setSearch(""); setSearchParams({}, { replace: true }); }} />
         </SectionCard>
 
@@ -46,7 +46,7 @@ export default function CustomersPage() {
             <EmptyState
               icon={Users}
               title={search ? "لا توجد نتائج مطابقة" : "لا يوجد عملاء بعد"}
-              description={search ? "جرّب اسماً أو رقماً مختلفاً." : isOwner ? "أضف أول عميل لبدء إدارة بيانات المستأجرين." : "لا يوجد عملاء في هذه المنظمة حالياً."}
+              description={search ? "جرّب اسماً أو رقماً مختلفاً." : isOwner ? "أضف أول عميل لبدء العمل." : "لا يوجد عملاء في هذه المنظمة حالياً."}
               action={isOwner && !search ? { label: "إضافة عميل", onClick: () => setLocation("/customers/add") } : undefined}
             />
           </SectionCard>
