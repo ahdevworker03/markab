@@ -73,7 +73,7 @@ export function AppSidebar() {
               مَركب
             </p>
             <p className="mt-1 truncate text-xs text-sidebar-foreground/65">
-              إدارة تأجير المركبات
+              إدارة تأجير السيارات
             </p>
           </div>
         </div>

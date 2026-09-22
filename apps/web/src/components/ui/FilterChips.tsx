@@ -22,7 +22,7 @@ export function FilterChips({ options, value, onChange, className }: FilterChips
           aria-pressed={value === opt.value}
           onClick={() => onChange(opt.value)}
           className={cn(
-            "flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all active:scale-95",
+            "inline-flex min-h-11 flex-shrink-0 items-center justify-center rounded-full px-4 py-1.5 text-sm font-medium transition-all active:scale-95 lg:min-h-0",
             value === opt.value
               ? "bg-primary text-primary-foreground shadow-sm"
               : "bg-card border border-border text-muted-foreground"
