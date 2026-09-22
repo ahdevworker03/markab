@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { z } from "zod";
 import {
   isUniqueConstraintError,
   retrySerializable,
@@ -13,6 +14,7 @@ import {
 } from "../customers/customer.service";
 import { createRentalWithinTx } from "../rentals/rental.service";
 import { toRentalResponse } from "../rentals/rental.mapper";
+import type { CustomerResponse } from "../customers/customer.types";
 import * as repo from "./sync.repository";
 import type { SyncOperationInput, SyncPushInput } from "./sync.validation";
 
@@ -41,6 +43,46 @@ type SyncResult = {
 };
 
 const receiptLifetimeMs = 30 * 24 * 60 * 60 * 1000;
+
+const staleCustomerSnapshotSchema: z.ZodType<CustomerResponse> = z
+  .object({
+    id: z.string().uuid(),
+    firstName: z.string(),
+    lastName: z.string(),
+    phone: z.string(),
+    address: z.string(),
+    nationalId: z.string(),
+    licenseNumber: z.string(),
+    licenseExpiryDate: z.string().datetime({ offset: true }),
+    createdAt: z.string().datetime({ offset: true }),
+    updatedAt: z.string().datetime({ offset: true }),
+  })
+  .strict();
+
+function staleCustomerSnapshot(customer: CustomerResponse): CustomerResponse {
+  return staleCustomerSnapshotSchema.parse({
+    id: customer.id,
+    firstName: customer.firstName,
+    lastName: customer.lastName,
+    phone: customer.phone,
+    address: customer.address,
+    nationalId: customer.nationalId,
+    licenseNumber: customer.licenseNumber,
+    licenseExpiryDate: customer.licenseExpiryDate,
+    createdAt: customer.createdAt,
+    updatedAt: customer.updatedAt,
+  });
+}
+
+function readStaleCustomerSnapshot(snapshot: unknown): CustomerResponse {
+  const parsed = staleCustomerSnapshotSchema.safeParse(snapshot);
+  if (parsed.success) return parsed.data;
+  throw new AppError(
+    500,
+    "SYNC_CONFLICT_SNAPSHOT_INVALID",
+    "Sync conflict snapshot is unavailable.",
+  );
+}
 
 function canonicalize(value: unknown): unknown {
   if (value instanceof Date) return value.toISOString();
@@ -116,6 +158,19 @@ async function reconciliationResult(
 
   if (receipt.request_fingerprint !== requestFingerprint) {
     return result(operation, "REJECTED", "SYNC_OPERATION_PAYLOAD_MISMATCH");
+  }
+
+  if (
+    receipt.outcome === "CONFLICT" &&
+    receipt.operation_type === "CUSTOMER_UPDATE" &&
+    receipt.resource_type === "CUSTOMER"
+  ) {
+    return {
+      ...result(operation, "CONFLICT", "SYNC_CUSTOMER_STALE", "CUSTOMER"),
+      current_customer: readStaleCustomerSnapshot(
+        receipt.stale_customer_snapshot,
+      ),
+    };
   }
 
   if (receipt.resource_type === "CUSTOMER" && receipt.resource_id) {
@@ -293,6 +348,12 @@ async function createReceiptForResult(
         operationResult.rental?.id ??
         operationResult.current_customer?.id ??
         null,
+      stale_customer_snapshot:
+        operation.type === "CUSTOMER_UPDATE" &&
+        operationResult.status === "CONFLICT" &&
+        operationResult.current_customer
+          ? staleCustomerSnapshot(operationResult.current_customer)
+          : null,
       expires_at: new Date(Date.now() + receiptLifetimeMs),
     },
     tx,

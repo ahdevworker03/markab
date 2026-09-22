@@ -1,8 +1,13 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { AppError } from "../../shared";
 
+const resourceTypes = ["CUSTOMER", "VEHICLE", "RENTAL"] as const;
+
+export type SyncResourceType = (typeof resourceTypes)[number];
+
 export interface SyncPosition {
   updatedAt: Date;
+  resourceType: SyncResourceType;
   id: string;
 }
 
@@ -13,9 +18,9 @@ export interface PullCursor {
 }
 
 interface CursorPayload {
-  v: 1;
-  a: [string, string];
-  u?: [string, string];
+  v: 2;
+  a: [string, SyncResourceType, string];
+  u?: [string, SyncResourceType, string];
   c?: true;
 }
 
@@ -35,18 +40,40 @@ function signature(encoded: string, organizationId: string): string {
     .digest("base64url");
 }
 
+function isSyncResourceType(value: unknown): value is SyncResourceType {
+  return typeof value === "string" && resourceTypes.includes(value as SyncResourceType);
+}
+
+function resourceTypeRank(resourceType: SyncResourceType): number {
+  return resourceTypes.indexOf(resourceType);
+}
+
+function comparePositions(left: SyncPosition, right: SyncPosition): number {
+  const byTimestamp = left.updatedAt.getTime() - right.updatedAt.getTime();
+  if (byTimestamp) return byTimestamp;
+  const byResourceType = resourceTypeRank(left.resourceType) - resourceTypeRank(right.resourceType);
+  return byResourceType || left.id.localeCompare(right.id);
+}
+
 function toPosition(value: unknown): SyncPosition {
   if (
     !Array.isArray(value) ||
-    value.length !== 2 ||
+    value.length !== 3 ||
     typeof value[0] !== "string" ||
-    typeof value[1] !== "string"
+    !isSyncResourceType(value[1]) ||
+    typeof value[2] !== "string"
   ) {
     throw cursorError();
   }
   const updatedAt = new Date(value[0]);
   if (Number.isNaN(updatedAt.getTime())) throw cursorError();
-  return { updatedAt, id: value[1] };
+  return { updatedAt, resourceType: value[1], id: value[2] };
+}
+
+function serializePosition(
+  position: SyncPosition,
+): [string, SyncResourceType, string] {
+  return [position.updatedAt.toISOString(), position.resourceType, position.id];
 }
 
 function encodeCursor(
@@ -55,10 +82,10 @@ function encodeCursor(
   upper?: SyncPosition,
 ): string {
   const payload: CursorPayload = {
-    v: 1,
-    a: [after.updatedAt.toISOString(), after.id],
+    v: 2,
+    a: serializePosition(after),
     ...(upper
-      ? { u: [upper.updatedAt.toISOString(), upper.id] as [string, string] }
+      ? { u: serializePosition(upper) }
       : { c: true as const }),
   };
   const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
@@ -83,11 +110,16 @@ function decodeCursor(organizationId: string, cursor: string): PullCursor {
     throw cursorError();
   }
 
-  if (!payload || payload.v !== 1) throw cursorError();
+  if (!payload || payload.v !== 2) throw cursorError();
   const after = toPosition(payload.a);
   if (payload.c === true && !payload.u) return { after, completed: true };
   if (payload.c || !payload.u) throw cursorError();
   return { after, upper: toPosition(payload.u), completed: false };
 }
 
-export { decodeCursor, encodeCursor };
+export {
+  comparePositions,
+  decodeCursor,
+  encodeCursor,
+  resourceTypeRank,
+};

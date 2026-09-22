@@ -4,6 +4,7 @@ import app from "../../app";
 import { prisma } from "../../database";
 import { generateAccessToken } from "../auth";
 import { cleanup } from "../../test/helpers";
+import * as syncRepository from "./sync.repository";
 
 describe("sync pull routes", () => {
   let organizationId: string;
@@ -95,7 +96,7 @@ describe("sync pull routes", () => {
     });
   });
 
-  it("globally orders mixed active and deleted resources by updated_at and id", async () => {
+  it("globally orders mixed active and deleted resources by updated_at, resource type, and id", async () => {
     const timestamp = new Date("2030-01-01T00:00:00.000Z");
     const { customer, vehicle, rental } = await createResources(timestamp);
     await prisma.vehicle.update({
@@ -105,9 +106,7 @@ describe("sync pull routes", () => {
 
     const response = await pull(undefined, 100).expect(200);
     const changes = response.body.data.changes;
-    const expected = [customer, vehicle, rental]
-      .map(({ id }) => id)
-      .sort();
+    const expected = [customer.id, vehicle.id, rental.id];
 
     expect(changes.map((change: { resource_id: string }) => change.resource_id)).toEqual(expected);
     expect(changes.find((change: { resource_id: string }) => change.resource_id === customer.id)).toMatchObject({
@@ -148,6 +147,84 @@ describe("sync pull routes", () => {
     expect(retry.body.data).toEqual(retryAgain.body.data);
     expect(final.body.data).toMatchObject({ next_cursor: null });
     expect(final.body.data.completion_cursor).toEqual(expect.any(String));
+  });
+
+  it("keeps equal timestamps and IDs from different resources across pages", async () => {
+    const id = "00000000-0000-4000-8000-000000000020";
+    const updatedAt = new Date("2030-01-01T00:00:00.000Z");
+    await prisma.customer.create({
+      data: {
+        id,
+        organization_id: organizationId,
+        first_name: "Amina",
+        last_name: "Haddad",
+        phone: "70123456",
+        address: "Beirut",
+        national_id: "SHARED-ID-NID",
+        license_number: "SHARED-ID-LIC",
+        license_expiry_date: new Date("2030-01-01T00:00:00.000Z"),
+        updated_at: updatedAt,
+      },
+    });
+    await prisma.vehicle.create({
+      data: {
+        id,
+        organization_id: organizationId,
+        make: "Toyota",
+        model: "Corolla",
+        plate_number: "SHARED-ID-PLATE",
+        year: 2024,
+        color: "White",
+        transmission: "AUTOMATIC",
+        fuel_type: "PETROL",
+        seats: 5,
+        current_mileage: 1000,
+        status: "AVAILABLE",
+        updated_at: updatedAt,
+      },
+    });
+
+    const first = await pull(undefined, 1).expect(200);
+    const second = await pull(first.body.data.next_cursor, 1).expect(200);
+
+    expect(first.body.data.changes[0]).toMatchObject({
+      resource_type: "CUSTOMER",
+      resource_id: id,
+    });
+    expect(second.body.data.changes[0]).toMatchObject({
+      resource_type: "VEHICLE",
+      resource_id: id,
+    });
+    expect(second.body.data.next_cursor).toBeNull();
+  });
+
+  it("delivers a change made after the upper watermark in the next cycle", async () => {
+    const before = new Date("2030-01-01T00:00:00.000Z");
+    const upperTime = new Date("2030-01-02T00:00:00.000Z");
+    const after = new Date("2030-01-03T00:00:00.000Z");
+    const { customer, vehicle } = await createResources(before);
+    await prisma.vehicle.update({
+      where: { id: vehicle.id },
+      data: { updated_at: upperTime },
+    });
+
+    const upper = await syncRepository.findUpperWatermark(organizationId);
+    await prisma.customer.update({
+      where: { id: customer.id },
+      data: { phone: "70999999", updated_at: after },
+    });
+
+    const currentCycle = await syncRepository.findChanges(
+      organizationId,
+      undefined,
+      upper!,
+    );
+    const nextCycle = await syncRepository.findChanges(organizationId, upper!);
+
+    expect(currentCycle.customers).toEqual([]);
+    expect(nextCycle.customers).toMatchObject([
+      { id: customer.id, phone: "70999999" },
+    ]);
   });
 
   it("defers an update and soft deletion beyond the current watermark to the next cycle", async () => {

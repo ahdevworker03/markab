@@ -176,7 +176,7 @@ export const SyncPushResponse = zod.object({
 });
 
 /**
- * Cursor is opaque and server-owned. It encodes after_updated_at, after_id, upper_updated_at, and upper_id; ordering is updated_at ASC, id ASC. The first page establishes the upper watermark and later pages remain within it.
+ * Cursor is opaque and server-owned. It encodes after and upper positions as updated_at, resource_type, resource_id; ordering is updated_at ASC, resource_type ASC (CUSTOMER, VEHICLE, RENTAL), resource_id ASC. The first page establishes the upper watermark before resource reads and later pages remain within it.
  * @summary Pull authoritative tenant changes
  */
 export const syncPullQueryLimitDefault = 100;

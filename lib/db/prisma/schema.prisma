@@ -20,20 +20,20 @@ model Organization {
   updated_at           DateTime           @updatedAt
   deleted_at           DateTime?
 
-  users      User[]
-  customers  Customer[]
-  vehicles   Vehicle[]
-  rentals    Rental[]
-  contracts  Contract[]
-  documents  Document[]
-  photos     Photo[]
-  maintenance Maintenance[]
-  maintenance_schedules MaintenanceSchedule[]
-  expenses   Expense[]
-  payments   Payment[]
-  tasks      Task[]
-  audit_logs AuditLog[]
-  employee_invitations EmployeeInvitation[]
+  users                   User[]
+  customers               Customer[]
+  vehicles                Vehicle[]
+  rentals                 Rental[]
+  contracts               Contract[]
+  documents               Document[]
+  photos                  Photo[]
+  maintenance             Maintenance[]
+  maintenance_schedules   MaintenanceSchedule[]
+  expenses                Expense[]
+  payments                Payment[]
+  tasks                   Task[]
+  audit_logs              AuditLog[]
+  employee_invitations    EmployeeInvitation[]
   sync_operation_receipts SyncOperationReceipt[]
 
   @@index([deleted_at])
@@ -149,20 +149,20 @@ enum SyncResourceType {
 }
 
 model User {
-  id              String         @id @default(uuid()) @db.Uuid
-  email           String         @unique
-  password_hash   String
-  role            Role           @default(OWNER)
-  organization_id String         @db.Uuid
-  organization    Organization   @relation(fields: [organization_id], references: [id])
-  refresh_tokens  RefreshToken[]
-  password_reset_tokens PasswordResetToken[]
-  audit_logs      AuditLog[]
+  id                           String               @id @default(uuid()) @db.Uuid
+  email                        String               @unique
+  password_hash                String
+  role                         Role                 @default(OWNER)
+  organization_id              String               @db.Uuid
+  organization                 Organization         @relation(fields: [organization_id], references: [id])
+  refresh_tokens               RefreshToken[]
+  password_reset_tokens        PasswordResetToken[]
+  audit_logs                   AuditLog[]
   created_employee_invitations EmployeeInvitation[] @relation("EmployeeInvitationCreator")
-  accepted_employee_invitation EmployeeInvitation? @relation("EmployeeInvitationAcceptedUser")
-  created_at      DateTime       @default(now())
-  updated_at      DateTime       @updatedAt
-  deleted_at      DateTime?
+  accepted_employee_invitation EmployeeInvitation?  @relation("EmployeeInvitationAcceptedUser")
+  created_at                   DateTime             @default(now())
+  updated_at                   DateTime             @updatedAt
+  deleted_at                   DateTime?
 
   @@index([organization_id])
   @@index([deleted_at])
@@ -218,38 +218,39 @@ model RefreshToken {
 }
 
 model PasswordResetToken {
-  id          String   @id @default(uuid()) @db.Uuid
-  token_hash  String   @unique
-  user_id     String   @db.Uuid
-  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  id          String    @id @default(uuid()) @db.Uuid
+  token_hash  String    @unique
+  user_id     String    @db.Uuid
+  user        User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   expires_at  DateTime
   consumed_at DateTime?
-  created_at  DateTime @default(now())
+  created_at  DateTime  @default(now())
 
   @@index([user_id, consumed_at])
   @@index([expires_at])
 }
 
 model SyncOperationReceipt {
-  id                  String               @id @default(uuid()) @db.Uuid
-  organization_id     String               @db.Uuid
-  organization        Organization         @relation(fields: [organization_id], references: [id], onDelete: Restrict)
-  operation_id        String               @db.Uuid
-  request_fingerprint String
-  operation_type      SyncOperationType
-  outcome             SyncOperationOutcome
-  resource_type       SyncResourceType?
-  resource_id         String?              @db.Uuid
-  created_at          DateTime             @default(now())
-  expires_at          DateTime
+  id                      String               @id @default(uuid()) @db.Uuid
+  organization_id         String               @db.Uuid
+  organization            Organization         @relation(fields: [organization_id], references: [id], onDelete: Restrict)
+  operation_id            String               @db.Uuid
+  request_fingerprint     String
+  operation_type          SyncOperationType
+  outcome                 SyncOperationOutcome
+  resource_type           SyncResourceType?
+  resource_id             String?              @db.Uuid
+  stale_customer_snapshot Json?
+  created_at              DateTime             @default(now())
+  expires_at              DateTime
 
   @@unique([organization_id, operation_id])
   @@index([expires_at])
 }
 
 model Customer {
-  id                  String    @id @default(uuid()) @db.Uuid
-  organization_id     String    @db.Uuid
+  id                  String       @id @default(uuid()) @db.Uuid
+  organization_id     String       @db.Uuid
   organization        Organization @relation(fields: [organization_id], references: [id])
   first_name          String
   last_name           String
@@ -258,9 +259,12 @@ model Customer {
   national_id         String
   license_number      String
   license_expiry_date DateTime
-  created_at          DateTime  @default(now())
-  updated_at          DateTime  @updatedAt
+  created_at          DateTime     @default(now())
+  updated_at          DateTime     @updatedAt
   deleted_at          DateTime?
+
+  rentals   Rental[]
+  documents Document[]
 
   @@unique([organization_id, national_id])
   @@unique([organization_id, license_number])
@@ -271,36 +275,33 @@ model Customer {
   @@index([phone])
   @@index([national_id])
   @@index([license_number])
-
-  rentals   Rental[]
-  documents Document[]
 }
 
 model Vehicle {
-  id               String         @id @default(uuid()) @db.Uuid
-  organization_id  String         @db.Uuid
-  organization     Organization   @relation(fields: [organization_id], references: [id])
-  make             String
-  model            String
-  plate_number     String
-  year             Int
-  color            String
-  notes            String?
-  transmission     Transmission
-  fuel_type        FuelType
-  seats            Int
-  current_mileage  Int            @default(0)
-  status           VehicleStatus  @default(AVAILABLE)
-  created_at       DateTime       @default(now())
-  updated_at       DateTime       @updatedAt
-  deleted_at       DateTime?
+  id              String        @id @default(uuid()) @db.Uuid
+  organization_id String        @db.Uuid
+  organization    Organization  @relation(fields: [organization_id], references: [id])
+  make            String
+  model           String
+  plate_number    String
+  year            Int
+  color           String
+  notes           String?
+  transmission    Transmission
+  fuel_type       FuelType
+  seats           Int
+  current_mileage Int           @default(0)
+  status          VehicleStatus @default(AVAILABLE)
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+  deleted_at      DateTime?
 
-  documents Document[]
-  photos    Photo[]
-  rentals   Rental[]
-  maintenance Maintenance[]
+  documents             Document[]
+  photos                Photo[]
+  rentals               Rental[]
+  maintenance           Maintenance[]
   maintenance_schedules MaintenanceSchedule[]
-  expenses  Expense[]
+  expenses              Expense[]
 
   @@unique([organization_id, plate_number])
   @@index([organization_id])
@@ -337,21 +338,21 @@ model Maintenance {
 }
 
 model MaintenanceSchedule {
-  id                  String                  @id @default(uuid()) @db.Uuid
-  organization_id     String                  @db.Uuid
-  organization        Organization            @relation(fields: [organization_id], references: [id])
-  vehicle_id          String                  @db.Uuid
-  vehicle             Vehicle                 @relation(fields: [vehicle_id], references: [id])
-  maintenance_type    MaintenanceType
-  schedule_type       MaintenanceScheduleType
-  date_interval_days  Int?
-  next_due_date       DateTime?               @db.Date
-  mileage_interval    Int?
-  next_due_mileage    Int?
-  is_active           Boolean                 @default(true)
-  created_at          DateTime                @default(now())
-  updated_at          DateTime                @updatedAt
-  deleted_at          DateTime?
+  id                 String                  @id @default(uuid()) @db.Uuid
+  organization_id    String                  @db.Uuid
+  organization       Organization            @relation(fields: [organization_id], references: [id])
+  vehicle_id         String                  @db.Uuid
+  vehicle            Vehicle                 @relation(fields: [vehicle_id], references: [id])
+  maintenance_type   MaintenanceType
+  schedule_type      MaintenanceScheduleType
+  date_interval_days Int?
+  next_due_date      DateTime?               @db.Date
+  mileage_interval   Int?
+  next_due_mileage   Int?
+  is_active          Boolean                 @default(true)
+  created_at         DateTime                @default(now())
+  updated_at         DateTime                @updatedAt
+  deleted_at         DateTime?
 
   @@index([organization_id])
   @@index([vehicle_id])
@@ -362,18 +363,18 @@ model MaintenanceSchedule {
 }
 
 model Expense {
-  id               String           @id @default(uuid()) @db.Uuid
-  organization_id  String           @db.Uuid
-  organization     Organization     @relation(fields: [organization_id], references: [id])
-  vehicle_id       String?          @db.Uuid
-  vehicle          Vehicle?         @relation(fields: [vehicle_id], references: [id], onDelete: Restrict)
-  expense_date     DateTime
-  amount           Decimal          @db.Decimal(10, 2)
-  category         ExpenseCategory
-  description      String?
-  created_at       DateTime         @default(now())
-  updated_at       DateTime         @updatedAt
-  deleted_at       DateTime?
+  id              String          @id @default(uuid()) @db.Uuid
+  organization_id String          @db.Uuid
+  organization    Organization    @relation(fields: [organization_id], references: [id])
+  vehicle_id      String?         @db.Uuid
+  vehicle         Vehicle?        @relation(fields: [vehicle_id], references: [id], onDelete: Restrict)
+  expense_date    DateTime
+  amount          Decimal         @db.Decimal(10, 2)
+  category        ExpenseCategory
+  description     String?
+  created_at      DateTime        @default(now())
+  updated_at      DateTime        @updatedAt
+  deleted_at      DateTime?
 
   @@index([organization_id])
   @@index([vehicle_id])
@@ -412,19 +413,19 @@ model Document {
 }
 
 model Photo {
-  id                String   @id @default(uuid()) @db.Uuid
-  organization_id   String   @db.Uuid
+  id                String       @id @default(uuid()) @db.Uuid
+  organization_id   String       @db.Uuid
   organization      Organization @relation(fields: [organization_id], references: [id])
-  vehicle_id        String   @db.Uuid
-  vehicle           Vehicle  @relation(fields: [vehicle_id], references: [id])
-  sort_order        Int      @default(0)
+  vehicle_id        String       @db.Uuid
+  vehicle           Vehicle      @relation(fields: [vehicle_id], references: [id])
+  sort_order        Int          @default(0)
   caption           String?
   original_filename String
   mime_type         String
   file_size         Int
-  storage_key       String   @unique
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
+  storage_key       String       @unique
+  created_at        DateTime     @default(now())
+  updated_at        DateTime     @updatedAt
   deleted_at        DateTime?
 
   @@index([organization_id])
@@ -434,27 +435,27 @@ model Photo {
 }
 
 model Rental {
-  id                   String        @id @default(uuid()) @db.Uuid
-  organization_id      String        @db.Uuid
-  organization         Organization  @relation(fields: [organization_id], references: [id])
-  customer_id          String        @db.Uuid
-  customer             Customer      @relation(fields: [customer_id], references: [id])
-  vehicle_id           String        @db.Uuid
-  vehicle              Vehicle       @relation(fields: [vehicle_id], references: [id])
+  id                   String       @id @default(uuid()) @db.Uuid
+  organization_id      String       @db.Uuid
+  organization         Organization @relation(fields: [organization_id], references: [id])
+  customer_id          String       @db.Uuid
+  customer             Customer     @relation(fields: [customer_id], references: [id])
+  vehicle_id           String       @db.Uuid
+  vehicle              Vehicle      @relation(fields: [vehicle_id], references: [id])
   pickup_date          DateTime
   expected_return_date DateTime
   actual_pickup_date   DateTime?
   actual_return_date   DateTime?
-  status               RentalStatus  @default(RESERVED)
-  daily_rate           Decimal       @db.Decimal(10, 2)
-  total_amount         Decimal       @db.Decimal(10, 2)
-  deposit_amount       Decimal       @db.Decimal(10, 2)
-  created_at           DateTime      @default(now())
-  updated_at           DateTime      @updatedAt
+  status               RentalStatus @default(RESERVED)
+  daily_rate           Decimal      @db.Decimal(10, 2)
+  total_amount         Decimal      @db.Decimal(10, 2)
+  deposit_amount       Decimal      @db.Decimal(10, 2)
+  created_at           DateTime     @default(now())
+  updated_at           DateTime     @updatedAt
   deleted_at           DateTime?
 
-  contract  Contract?
-  payments  Payment[]
+  contract Contract?
+  payments Payment[]
 
   @@index([organization_id])
   @@index([customer_id])
@@ -512,24 +513,24 @@ model Task {
 }
 
 model Contract {
-  id                   String        @id @default(uuid()) @db.Uuid
-  organization_id      String        @db.Uuid
-  organization         Organization  @relation(fields: [organization_id], references: [id])
-  rental_id            String        @db.Uuid
-  rental               Rental        @relation(fields: [rental_id], references: [id])
+  id                   String       @id @default(uuid()) @db.Uuid
+  organization_id      String       @db.Uuid
+  organization         Organization @relation(fields: [organization_id], references: [id])
+  rental_id            String       @db.Uuid
+  rental               Rental       @relation(fields: [rental_id], references: [id])
   pickup_date          DateTime
   expected_return_date DateTime
-  daily_rate           Decimal       @db.Decimal(10, 2)
-  total_amount         Decimal       @db.Decimal(10, 2)
-  deposit_amount       Decimal       @db.Decimal(10, 2)
+  daily_rate           Decimal      @db.Decimal(10, 2)
+  total_amount         Decimal      @db.Decimal(10, 2)
+  deposit_amount       Decimal      @db.Decimal(10, 2)
   customer_first_name  String
   customer_last_name   String
   customer_national_id String
   vehicle_make         String
   vehicle_model        String
   vehicle_plate_number String
-  created_at           DateTime      @default(now())
-  updated_at           DateTime      @updatedAt
+  created_at           DateTime     @default(now())
+  updated_at           DateTime     @updatedAt
   deleted_at           DateTime?
 
   documents Document[]

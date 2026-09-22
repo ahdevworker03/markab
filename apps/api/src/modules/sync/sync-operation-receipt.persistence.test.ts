@@ -49,12 +49,46 @@ describe("sync operation receipt persistence", () => {
       outcome: "APPLIED",
       resource_type: "CUSTOMER",
       resource_id: resourceId,
+      stale_customer_snapshot: null,
       created_at: createdAt,
       expires_at: expiresAt,
     });
     expect(receipt.expires_at.getTime() - receipt.created_at.getTime()).toBe(
       30 * 24 * 60 * 60 * 1000,
     );
+  });
+
+  it("persists a stale customer conflict snapshot without using it for applied operations", async () => {
+    const snapshot = {
+      id: resourceId,
+      firstName: "Original",
+      lastName: "Customer",
+      phone: "70123456",
+      address: "Beirut",
+      nationalId: "SNAPSHOT-NID",
+      licenseNumber: "SNAPSHOT-LIC",
+      licenseExpiryDate: "2030-01-01T00:00:00.000Z",
+      createdAt: "2030-01-01T00:00:00.000Z",
+      updatedAt: "2030-01-01T00:00:00.000Z",
+    };
+    const conflict = await prisma.syncOperationReceipt.create({
+      data: {
+        organization_id: organizationId,
+        operation_id: "00000000-0000-4000-8000-000000000003",
+        request_fingerprint: "sha256:conflict-request",
+        operation_type: "CUSTOMER_UPDATE",
+        outcome: "CONFLICT",
+        resource_type: "CUSTOMER",
+        resource_id: resourceId,
+        stale_customer_snapshot: snapshot,
+        expires_at: expiresAt,
+      },
+    });
+
+    expect(conflict.stale_customer_snapshot).toEqual(snapshot);
+    await expect(createReceipt()).resolves.toMatchObject({
+      stale_customer_snapshot: null,
+    });
   });
 
   it("looks up a receipt only within its organization", async () => {

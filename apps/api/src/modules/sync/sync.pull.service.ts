@@ -1,7 +1,12 @@
 import { toCustomerResponse } from "../customers/customer.service";
 import { toRentalResponse } from "../rentals/rental.mapper";
 import { toVehicleResponse } from "../vehicles/vehicle.service";
-import { decodeCursor, encodeCursor, type SyncPosition } from "./sync.cursor";
+import {
+  comparePositions,
+  decodeCursor,
+  encodeCursor,
+  type SyncPosition,
+} from "./sync.cursor";
 import * as repo from "./sync.repository";
 import type { SyncPullQuery } from "./sync.validation";
 
@@ -16,12 +21,15 @@ type PullChange = {
 };
 
 function position(change: PullChange): SyncPosition {
-  return { updatedAt: change.updated_at, id: change.resource_id };
+  return {
+    updatedAt: change.updated_at,
+    resourceType: change.resource_type,
+    id: change.resource_id,
+  };
 }
 
 function compareChanges(left: PullChange, right: PullChange): number {
-  const byTimestamp = left.updated_at.getTime() - right.updated_at.getTime();
-  return byTimestamp || left.resource_id.localeCompare(right.resource_id);
+  return comparePositions(position(left), position(right));
 }
 
 function toChanges(records: Awaited<ReturnType<typeof repo.findChanges>>): PullChange[] {
@@ -67,43 +75,33 @@ async function pullChanges(
   const cursor = query.cursor
     ? decodeCursor(organizationId, query.cursor)
     : undefined;
+  const upper = cursor?.completed
+    ? await repo.findUpperWatermark(organizationId)
+    : cursor?.upper ?? (await repo.findUpperWatermark(organizationId));
+  if (!upper || (cursor?.after && comparePositions(upper, cursor.after) <= 0)) {
+    return { changes: [], next_cursor: null, completion_cursor: null };
+  }
   const records = await repo.findChanges(
     organizationId,
     cursor?.after,
-    cursor?.completed ? undefined : cursor?.upper,
+    upper,
   );
   const changes = toChanges(records);
-  const upper = cursor?.completed
-    ? changes.at(-1)
-    : cursor?.upper
-      ? { resource_id: cursor.upper.id, updated_at: cursor.upper.updatedAt }
-      : changes.at(-1);
-
-  if (!upper) {
-    return { changes: [], next_cursor: null, completion_cursor: null };
-  }
 
   const page = changes.slice(0, query.limit);
   if (page.length === 0) {
     return {
-      changes: [],
-      next_cursor: null,
-      completion_cursor: encodeCursor(organizationId, {
-        updatedAt: upper.updated_at,
-        id: upper.resource_id,
-      }),
+        changes: [],
+        next_cursor: null,
+        completion_cursor: encodeCursor(organizationId, upper),
     };
   }
 
   const last = position(page.at(-1)!);
-  const upperPosition = {
-    updatedAt: upper.updated_at,
-    id: upper.resource_id,
-  };
   if (page.length < changes.length) {
     return {
       changes: page,
-      next_cursor: encodeCursor(organizationId, last, upperPosition),
+      next_cursor: encodeCursor(organizationId, last, upper),
       completion_cursor: null,
     };
   }
@@ -111,7 +109,7 @@ async function pullChanges(
   return {
     changes: page,
     next_cursor: null,
-    completion_cursor: encodeCursor(organizationId, upperPosition),
+    completion_cursor: encodeCursor(organizationId, upper),
   };
 }
 

@@ -421,7 +421,7 @@ Do not pre-approve operation-receipt tables, global versioning, revision columns
 
 ### Scope
 
-- Implement only the Step 57 approved offline operation matrix. Confirmed operations (customer/vehicle search, customer creation, rental creation, approved editing of existing records) are supported; vehicle creation, payments, rental return/extension/cancellation, other lifecycle commands, and file/media operations remain online-only unless Step 57's authoritative decision includes them.
+- Implement only the Step 57 approved offline operation matrix. Confirmed operations (customer/vehicle search, customer creation, customer editing, rental creation) are supported; vehicle mutation, payments, rental return/extension/cancellation, other lifecycle commands, and file/media operations remain online-only unless Step 57's authoritative decision includes them.
 - Choose the smallest stable identity strategy that lets offline-created records be referenced by dependent queued operations without temporary-ID ambiguity, and preserve command dependency/order rules (e.g., customer/vehicle before rental).
 - Choose the smallest idempotency mechanism that guarantees duplicate-safe retries: repeating the same queued mutation must return/reconstruct the original outcome and cannot create a second record, payment, rental, or lifecycle transition.
 - Choose revision/version/conflict semantics appropriate to the records and workflows that actually require concurrent-change detection. Do not use client clocks as authority, and do not add version fields to resources that do not need them.
