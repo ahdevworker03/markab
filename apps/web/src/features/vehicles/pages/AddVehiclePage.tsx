@@ -179,7 +179,7 @@ export default function AddVehiclePage() {
     } catch (error) {
       setFormError(
         vehicleId
-          ? "تم إنشاء المركبة، لكن تعذر رفع بعض الصور أو المستندات. أعد المحاولة أو أضفها من صفحة المركبة."
+          ? "تم إنشاء السيارة، لكن تعذر رفع بعض الصور أو المستندات. أعد المحاولة أو أضفها من صفحة السيارة."
           : getApiErrorMessage(error).title,
       );
     }
@@ -197,12 +197,12 @@ export default function AddVehiclePage() {
 
   return (
     <div className="min-h-full pb-6">
-      <PageHeader title="إضافة مركبة" showBack />
+      <PageHeader title="إضافة سيارة" showBack />
       <div className="mx-auto max-w-5xl space-y-4 px-4 pb-6 pt-4 sm:px-6 lg:space-y-5">
         <div>
-          <h2 className="ui-page-title">بيانات المركبة</h2>
+          <h2 className="ui-page-title">بيانات السيارة</h2>
           <p className="ui-secondary-text mt-1">
-            أدخل هوية المركبة ومواصفاتها قبل إضافتها إلى الأسطول.
+            أدخل هوية السيارة ومواصفاتها قبل إضافتها.
           </p>
         </div>
         {formError && (
@@ -212,8 +212,8 @@ export default function AddVehiclePage() {
         )}
         <VehicleFormFields form={form} errors={errors} onChange={set} />
         <SectionCard
-          title="ملفات المركبة"
-          description="اختيارية. تُرفع الصور والمستندات بعد حفظ بيانات المركبة بنجاح."
+          title="ملفات السيارة"
+          description="اختيارية. تُرفع الصور والمستندات بعد حفظ بيانات السيارة بنجاح."
         >
           <div className="grid gap-5 lg:grid-cols-2">
             <section
@@ -225,7 +225,7 @@ export default function AddVehiclePage() {
                   id="vehicle-photos-title"
                   className="text-sm font-semibold text-foreground"
                 >
-                  صور المركبة
+                  صور السيارة
                 </h3>
                 <p className="ui-secondary-text mt-1">صور JPG وPNG وWEBP.</p>
               </div>
@@ -297,7 +297,7 @@ export default function AddVehiclePage() {
                 </div>
               ) : (
                 <p className="ui-secondary-text">
-                  يمكن إضافة الصور الآن أو لاحقاً من صفحة المركبة.
+                  يمكن إضافة الصور الآن أو لاحقاً من صفحة السيارة.
                 </p>
               )}
             </section>
@@ -310,7 +310,7 @@ export default function AddVehiclePage() {
                   id="vehicle-documents-title"
                   className="text-sm font-semibold text-foreground"
                 >
-                  مستندات المركبة
+                  مستندات السيارة
                 </h3>
                 <p className="ui-secondary-text mt-1">
                   ملفات PDF أو صور JPG وPNG.
@@ -407,7 +407,7 @@ export default function AddVehiclePage() {
                 </div>
               ) : (
                 <p className="ui-secondary-text">
-                  يمكن إضافة الملفات الآن أو لاحقاً من صفحة المركبة.
+                  يمكن إضافة الملفات الآن أو لاحقاً من صفحة السيارة.
                 </p>
               )}
             </section>
@@ -441,7 +441,7 @@ export default function AddVehiclePage() {
             ) : createdVehicleId ? (
               "إعادة رفع الملفات"
             ) : (
-              "حفظ المركبة"
+              "حفظ السيارة"
             )}
           </Button>
         </div>

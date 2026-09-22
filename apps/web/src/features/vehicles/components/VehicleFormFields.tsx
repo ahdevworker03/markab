@@ -39,7 +39,7 @@ function fieldClass(error?: string) {
 export function VehicleFormFields({ form, errors, onChange }: VehicleFormFieldsProps) {
   return (
     <>
-      <FormSection title="هوية المركبة" description="أدخل البيانات التي تميّز المركبة في الأسطول.">
+      <FormSection title="هوية السيارة" description="أدخل البيانات التي تميّز السيارة.">
         <FormField label="الشركة المصنعة" required error={errors.make} htmlFor="vehicle-make">
           <input id="vehicle-make" dir="ltr" className={fieldClass(errors.make)} placeholder="Toyota" value={form.make} onChange={(event) => onChange("make", event.target.value)} />
         </FormField>
@@ -57,7 +57,7 @@ export function VehicleFormFields({ form, errors, onChange }: VehicleFormFieldsP
         </FormField>
       </FormSection>
 
-      <FormSection title="المواصفات والتشغيل" description="حدّد مواصفات المركبة وحالتها الحالية.">
+      <FormSection title="المواصفات والتشغيل" description="حدّد مواصفات السيارة وحالتها الحالية.">
         <FormField label="ناقل الحركة" required htmlFor="vehicle-transmission">
           <select id="vehicle-transmission" className={inputClass} value={form.transmission} onChange={(event) => onChange("transmission", event.target.value as VehicleResponseTransmission)}>
             {(Object.keys(TRANSMISSION_LABELS) as VehicleResponseTransmission[]).map((transmission) => <option key={transmission} value={transmission}>{TRANSMISSION_LABELS[transmission]}</option>)}
@@ -81,7 +81,7 @@ export function VehicleFormFields({ form, errors, onChange }: VehicleFormFieldsP
         </FormField>
       </FormSection>
 
-      <FormSection title="ملاحظات" description="أضف أي معلومات تشغيلية مفيدة عن المركبة.">
+      <FormSection title="ملاحظات" description="أضف أي معلومات تشغيلية مفيدة عن السيارة.">
         <FormField label="ملاحظات" htmlFor="vehicle-notes" className="md:col-span-2">
           <textarea id="vehicle-notes" className={`${inputClass} min-h-28 resize-y`} placeholder="اختياري" value={form.notes} onChange={(event) => onChange("notes", event.target.value)} />
         </FormField>

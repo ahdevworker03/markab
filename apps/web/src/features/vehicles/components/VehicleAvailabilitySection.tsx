@@ -48,10 +48,10 @@ export function VehicleAvailabilitySection({ compact = false }: { compact?: bool
         {submitted && (
           <div className="border-t border-border pt-3">
             {query.isLoading ? <LoadingState rows={2} /> : query.isError ? <ErrorState title="تعذر التحقق من التوفر" description={query.error ? getApiErrorMessage(query.error).title : "تعذر التحقق من التوفر. حاول مرة أخرى."} onRetry={() => void query.refetch()} /> : vehicles.length === 0 ? (
-              <EmptyState icon={Car} title="لا توجد مركبات متاحة" description="جرّب فترة إيجار مختلفة أو راجع المركبات الحالية." className="py-6" />
+              <EmptyState icon={Car} title="لا توجد سيارات متاحة" description="جرّب فترة إيجار مختلفة أو راجع السيارات الحالية." className="py-6" />
             ) : (
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">{vehicles.length} مركبات متاحة للفترة المحددة.</p>
+                <p className="text-xs text-muted-foreground">{vehicles.length} سيارات متاحة للفترة المحددة.</p>
                 <div className="divide-y divide-border rounded-lg border border-border">
                   {vehicles.map((vehicle) => <div key={vehicle.id} className="flex items-center justify-between gap-3 px-3 py-3"><div className="flex min-w-0 items-center gap-3"><span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Car className="size-4" aria-hidden="true" /></span><span className="min-w-0"><span dir="ltr" className="block truncate text-sm font-semibold text-foreground">{vehicle.make} {vehicle.model}</span><span dir="ltr" className="number-ltr mt-0.5 block text-xs text-muted-foreground">{vehicle.plateNumber}</span></span></div><StatusBadge status={vehicle.status} /></div>)}
                 </div>
@@ -62,5 +62,5 @@ export function VehicleAvailabilitySection({ compact = false }: { compact?: bool
     </div>
   );
 
-  return compact ? content : <SectionCard title="فحص التوفر" description="تحقق من المركبات المتاحة ضمن فترة إيجار محددة." className="shadow-none">{content}</SectionCard>;
+  return compact ? content : <SectionCard title="فحص التوفر" description="تحقق من السيارات المتاحة ضمن فترة إيجار محددة." className="shadow-none">{content}</SectionCard>;
 }

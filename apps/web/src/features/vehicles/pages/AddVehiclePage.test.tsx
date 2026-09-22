@@ -68,7 +68,7 @@ describe("AddVehiclePage", () => {
     fireEvent.change(screen.getByLabelText("ملاحظات"), {
       target: { value: "  فحص الإطارات دورياً  " },
     });
-    fireEvent.click(screen.getByText("حفظ المركبة"));
+    fireEvent.click(screen.getByText("حفظ السيارة"));
 
     await waitFor(() => {
       expect(create.mutateAsync).toHaveBeenCalledWith({
@@ -125,7 +125,7 @@ describe("AddVehiclePage", () => {
     fireEvent.change(screen.getByLabelText("نوع المستند registration.pdf"), {
       target: { value: "REGISTRATION" },
     });
-    fireEvent.click(screen.getByText("حفظ المركبة"));
+    fireEvent.click(screen.getByText("حفظ السيارة"));
 
     await waitFor(() => {
       expect(uploadPhoto.mutateAsync).toHaveBeenCalledWith({
@@ -171,12 +171,12 @@ describe("AddVehiclePage", () => {
       container.querySelector<HTMLInputElement>('input[type="file"]')!,
       { target: { files: [photo] } },
     );
-    fireEvent.click(screen.getByText("حفظ المركبة"));
+    fireEvent.click(screen.getByText("حفظ السيارة"));
 
     await waitFor(() =>
       expect(
         screen.getByText(
-          /تم إنشاء المركبة، لكن تعذر رفع بعض الصور أو المستندات/,
+          /تم إنشاء السيارة، لكن تعذر رفع بعض الصور أو المستندات/,
         ),
       ).toBeTruthy(),
     );

@@ -35,13 +35,13 @@ export default function VehiclesPage() {
     [filter, vehicles],
   );
 
-  const countLabel = `${filteredVehicles.length} ${filteredVehicles.length === 1 ? "مركبة" : "مركبات"}`;
+  const countLabel = `${filteredVehicles.length} ${filteredVehicles.length === 1 ? "سيارة" : "سيارات"}`;
 
   return (
     <div className="min-h-full">
       <PageHeader
-        title="المركبات"
-        action={isOwner ? <Button type="button" onClick={() => setLocation("/vehicles/add")}><Plus className="size-4" aria-hidden="true" />إضافة مركبة</Button> : undefined}
+        title="السيارات"
+        action={isOwner ? <Button type="button" onClick={() => setLocation("/vehicles/add")}><Plus className="size-4" aria-hidden="true" />إضافة سيارة</Button> : undefined}
       />
 
       <div className="space-y-3 px-4 pb-6 pt-4 sm:px-6 lg:space-y-4">
@@ -66,18 +66,18 @@ export default function VehiclesPage() {
         {vehiclesQuery.isLoading ? (
           <SectionCard className="overflow-hidden p-0 shadow-none"><VehiclesDataListSkeleton /></SectionCard>
         ) : vehiclesQuery.isError ? (
-          <SectionCard className="shadow-none"><ErrorState title="تعذر تحميل المركبات" description={getApiErrorMessage(vehiclesQuery.error).title} onRetry={() => void vehiclesQuery.refetch()} /></SectionCard>
+          <SectionCard className="shadow-none"><ErrorState title="تعذر تحميل السيارات" description={getApiErrorMessage(vehiclesQuery.error).title} onRetry={() => void vehiclesQuery.refetch()} /></SectionCard>
         ) : filteredVehicles.length === 0 ? (
           <SectionCard className="shadow-none">
             <EmptyState
               icon={Car}
-              title={search || filter !== "all" ? "لا توجد نتائج مطابقة" : "لا توجد مركبات بعد"}
-              description={search || filter !== "all" ? "جرّب تغيير كلمة البحث أو إزالة بعض عوامل التصفية." : isOwner ? "أضف أول مركبة لبدء إدارة الأسطول." : "لا توجد مركبات في هذه المنظمة حالياً."}
-              action={isOwner && !search && filter === "all" ? { label: "إضافة مركبة", onClick: () => setLocation("/vehicles/add") } : undefined}
+              title={search || filter !== "all" ? "لا توجد نتائج مطابقة" : "لا توجد سيارات بعد"}
+              description={search || filter !== "all" ? "جرّب تغيير كلمة البحث أو إزالة بعض عوامل التصفية." : isOwner ? "أضف أول سيارة لبدء العمل." : "لا توجد سيارات في هذه المنظمة حالياً."}
+              action={isOwner && !search && filter === "all" ? { label: "إضافة سيارة", onClick: () => setLocation("/vehicles/add") } : undefined}
             />
           </SectionCard>
         ) : (
-          <SectionCard title="المركبات" action={<span className="text-xs font-medium text-muted-foreground">{countLabel}</span>} className="overflow-hidden p-0 shadow-none">
+          <SectionCard title="السيارات" action={<span className="text-xs font-medium text-muted-foreground">{countLabel}</span>} className="overflow-hidden p-0 shadow-none">
             <VehiclesDataList vehicles={filteredVehicles} onOpen={(vehicleId) => setLocation(`/vehicles/${vehicleId}`)} />
           </SectionCard>
         )}

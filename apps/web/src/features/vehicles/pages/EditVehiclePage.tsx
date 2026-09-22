@@ -74,16 +74,16 @@ export default function EditVehiclePage({ params }: DetailPageParams) {
     }
   }
 
-  if (vehicleQuery.isLoading || !form && !vehicleQuery.isError) return <div className="min-h-full"><PageHeader title="تعديل المركبة" showBack /><div className="px-4 py-6 sm:px-6"><LoadingState rows={4} /></div></div>;
-  if (vehicleQuery.isError || !form) return <div className="min-h-full"><PageHeader title="تعديل المركبة" showBack /><EmptyState icon={Car} title="تعذر العثور على المركبة" description={vehicleQuery.error ? getApiErrorMessage(vehicleQuery.error).title : "لم يتم العثور على هذه المركبة."} className="py-16" /></div>;
+  if (vehicleQuery.isLoading || !form && !vehicleQuery.isError) return <div className="min-h-full"><PageHeader title="تعديل السيارة" showBack /><div className="px-4 py-6 sm:px-6"><LoadingState rows={4} /></div></div>;
+  if (vehicleQuery.isError || !form) return <div className="min-h-full"><PageHeader title="تعديل السيارة" showBack /><EmptyState icon={Car} title="تعذر العثور على السيارة" description={vehicleQuery.error ? getApiErrorMessage(vehicleQuery.error).title : "لم يتم العثور على هذه السيارة."} className="py-16" /></div>;
 
   const canSave = Boolean(form.make.trim() && form.model.trim() && form.plate_number.trim() && form.color.trim() && form.year.trim() && form.seats.trim() && form.current_mileage.trim());
 
   return (
     <div className="min-h-full pb-6">
-      <PageHeader title="تعديل المركبة" showBack />
+      <PageHeader title="تعديل السيارة" showBack />
       <div className="mx-auto max-w-5xl space-y-4 px-4 pb-6 pt-4 sm:px-6 lg:space-y-5">
-        <div><h2 className="ui-page-title">بيانات المركبة</h2><p className="ui-secondary-text mt-1">حدّث بيانات الهوية والمواصفات والحالة التشغيلية.</p></div>
+        <div><h2 className="ui-page-title">بيانات السيارة</h2><p className="ui-secondary-text mt-1">حدّث بيانات الهوية والمواصفات والحالة التشغيلية.</p></div>
         {formError && <InlineError className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">{formError}</InlineError>}
         <VehicleFormFields form={form} errors={errors} onChange={set} />
         <div className="sticky bottom-0 flex flex-wrap justify-end gap-2 border-t border-border bg-background/95 py-3 backdrop-blur-sm">
