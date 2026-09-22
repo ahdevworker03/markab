@@ -29,6 +29,7 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run db:generate
       - run: pnpm --filter @workspace/api-spec run codegen
       - run: git diff --exit-code
 
@@ -63,7 +64,8 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @workspace/db run db:generate
+      - run: pnpm run db:generate
+      - run: pnpm run typecheck:libs
       - run: pnpm --filter @workspace/db exec prisma migrate deploy
       - run: pnpm --filter @workspace/api-server test
       - run: pnpm --filter @workspace/api-server typecheck
