@@ -1,7 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getAccessToken, setAccessToken } from "@/lib/auth-token";
+import {
+  clearAccessToken,
+  getAccessToken,
+  setAccessToken,
+} from "@/lib/auth-token";
 import { AuthProvider, useAuth } from "./AuthProvider";
 
 const api = vi.hoisted(() => ({
@@ -31,8 +35,15 @@ const tenantB = {
 };
 
 function AuthControls() {
-  const { isAuthenticated, isLoading, login, logout, retry, sessionState, user } =
-    useAuth();
+  const {
+    isAuthenticated,
+    isLoading,
+    login,
+    logout,
+    retry,
+    sessionState,
+    user,
+  } = useAuth();
 
   return (
     <>
@@ -76,6 +87,8 @@ function renderAuth(queryClient: QueryClient) {
 describe("AuthProvider", () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
+    clearAccessToken();
     vi.clearAllMocks();
     api.refreshToken.mockRejectedValue({ status: 401 });
     api.logout.mockResolvedValue(undefined);
@@ -119,7 +132,7 @@ describe("AuthProvider", () => {
     const queryClient = new QueryClient();
     queryClient.setQueryData(["/api/vehicles"], [{ id: "vehicle-a" }]);
     setAccessToken("expired-access-token");
-    api.getCurrentUser.mockRejectedValueOnce(new Error("unauthorized"));
+    api.getCurrentUser.mockRejectedValueOnce({ status: 401 });
     api.refreshToken.mockRejectedValueOnce({ status: 401 });
 
     renderAuth(queryClient);
@@ -164,7 +177,9 @@ describe("AuthProvider", () => {
     const queryClient = new QueryClient();
     api.refreshToken
       .mockRejectedValueOnce(new TypeError("Failed to fetch"))
-      .mockResolvedValueOnce({ data: { accessToken: "restored-access-token" } });
+      .mockResolvedValueOnce({
+        data: { accessToken: "restored-access-token" },
+      });
     api.getCurrentUser.mockResolvedValueOnce({ data: tenantA });
 
     renderAuth(queryClient);
