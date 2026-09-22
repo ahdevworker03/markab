@@ -576,8 +576,8 @@ export default function DashboardPage() {
               />
             ) : <>
               <div className={cn(
-                "grid grid-cols-2 gap-2.5",
-                dashboard.outOfServiceCount > 0 ? "xl:grid-cols-4" : "xl:grid-cols-3",
+                "grid gap-2.5",
+                dashboard.outOfServiceCount > 0 ? "grid-cols-2 xl:grid-cols-4" : "grid-cols-3",
               )}>
                 <FleetStatus
                   label="متاحة"
