@@ -111,6 +111,7 @@ export default function CustomerDetailPage({ params }: DetailPageParams) {
 
         {confirmingDelete && <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-foreground">سيتم أرشفة العميل وإخفاؤه من السجلات النشطة. أكد الحذف للمتابعة.</div>}
         {deleteError && <InlineError>{deleteError}</InlineError>}
+        {currentRental && <DetailSection title="الإيجار الحالي" className="shadow-none"><div className="flex flex-wrap items-center justify-between gap-3"><StatusBadge status={currentRental.status} /><Button type="button" variant="outline" size="sm" onClick={() => setLocation(`/rentals/${currentRental.id}`)}>عرض الإيجار</Button></div></DetailSection>}
         <section aria-label="بيانات العميل" className="space-y-4">
             <DetailSection title="بيانات العميل" description="معلومات التواصل والهوية ورخصة القيادة.">
                <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-3 lg:grid-cols-4">
@@ -123,7 +124,7 @@ export default function CustomerDetailPage({ params }: DetailPageParams) {
               </div>
             </DetailSection>
 
-            <DetailSection title="المستندات" description="المستندات المرتبطة ببيانات العميل.">
+            <DetailSection title="المستندات">
               <DocumentList
                 documents={documents.query.data?.data ?? []}
                 isLoading={documents.query.isLoading}
@@ -140,7 +141,6 @@ export default function CustomerDetailPage({ params }: DetailPageParams) {
               />
             </DetailSection>
 
-          {currentRental && <DetailSection title="الإيجار الحالي"><div className="flex flex-wrap items-center justify-between gap-3"><StatusBadge status={currentRental.status} /><Button type="button" variant="outline" size="sm" onClick={() => setLocation(`/rentals/${currentRental.id}`)}>عرض الإيجار</Button></div></DetailSection>}
           <RentalHistorySection rentals={customerRentals.rentals} isLoading={customerRentals.isLoading} isError={customerRentals.isError} error={customerRentals.error} title="سجل الإيجارات" emptyMessage="لا توجد إيجارات لهذا العميل" />
         </section>
       </div>
