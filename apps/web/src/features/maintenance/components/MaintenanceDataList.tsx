@@ -75,7 +75,7 @@ export function MaintenanceDataList({ items, onOpen }: MaintenanceDataListProps)
             <col style={{ width: "12%" }} />
             <col style={{ width: "10%" }} />
           </colgroup>
-          <TableHeader className="bg-muted/45"><TableRow><TableHead>المركبة</TableHead><TableHead>نوع الصيانة</TableHead><TableHead className="text-center">الحالة</TableHead><TableHead className="text-center">الموعد</TableHead><TableHead className="text-center">التكلفة</TableHead><TableHead>الورشة / المزوّد</TableHead><TableHead className="text-end">الإجراء</TableHead></TableRow></TableHeader>
+          <TableHeader className="bg-muted/45"><TableRow><TableHead>السيارة</TableHead><TableHead>نوع الصيانة</TableHead><TableHead className="text-center">الحالة</TableHead><TableHead className="text-center">الموعد</TableHead><TableHead className="text-center">التكلفة</TableHead><TableHead>الورشة / المزوّد</TableHead><TableHead className="text-end">الإجراء</TableHead></TableRow></TableHeader>
           <TableBody>
             {items.map((item) => (
               <TableRow key={item.record.id}>

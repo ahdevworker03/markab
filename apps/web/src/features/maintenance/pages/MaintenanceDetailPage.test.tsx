@@ -160,7 +160,7 @@ describe("MaintenanceDetailPage", () => {
 
     expect(
       await screen.findByText(
-        "لا يمكن بدء الصيانة لأن المركبة مرتبطة بإيجار قائم أو غير متاحة حالياً.",
+        "لا يمكن بدء الصيانة لأن السيارة مرتبطة بإيجار قائم أو غير متاحة حالياً.",
       ),
     ).toBeInTheDocument();
     expect(

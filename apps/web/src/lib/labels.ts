@@ -7,7 +7,7 @@ export const MAINTENANCE_TYPES: Record<
 > = {
   PREVENTIVE_SERVICE: { label: "صيانة وقائية", icon: Settings2 },
   INSPECTION:         { label: "فحص",          icon: SearchCheck },
-  REPAIR:             { label: "تصليح",        icon: Hammer   },
+  REPAIR:             { label: "إصلاح",        icon: Hammer   },
   OTHER:              { label: "أخرى",         icon: Wrench   },
 };
 

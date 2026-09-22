@@ -88,8 +88,8 @@ export default function MaintenanceDetailPage({ params }: DetailPageParams) {
         </DetailSection>
 
         <section aria-label="بيانات الصيانة" className="space-y-4">
-            <DetailSection title="المركبة" description="المركبة المرتبط بها سجل الصيانة.">
-              <div className="flex items-center gap-3"><span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Car className="size-5" aria-hidden="true" /></span><div className="min-w-0">{vehicle ? <button type="button" onClick={() => setLocation(`/vehicles/${vehicle.id}`)} className="block truncate text-start text-base font-semibold text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40">{vehicle.make} {vehicle.model}</button> : <span className="text-sm text-muted-foreground">جارٍ تحميل المركبة</span>}{vehicle && <div dir="ltr" className="number-ltr mt-1 text-sm text-muted-foreground">{vehicle.plateNumber}</div>}</div></div>
+            <DetailSection title="السيارة" description="السيارة المرتبطة بسجل الصيانة.">
+              <div className="flex items-center gap-3"><span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Car className="size-5" aria-hidden="true" /></span><div className="min-w-0">{vehicle ? <button type="button" dir="ltr" onClick={() => setLocation(`/vehicles/${vehicle.id}`)} className="block w-full truncate text-start text-base font-semibold text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40">{vehicle.make} {vehicle.model}</button> : <span className="text-sm text-muted-foreground">جارٍ تحميل السيارة</span>}{vehicle && <div dir="ltr" className="number-ltr mt-1 text-sm text-muted-foreground">{vehicle.plateNumber}</div>}</div></div>
             </DetailSection>
 
             <DetailSection title="تفاصيل الصيانة" description="النوع والموعد وتفاصيل التنفيذ والتكلفة.">

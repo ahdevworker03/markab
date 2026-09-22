@@ -22,7 +22,7 @@ describe("getApiErrorMessage", () => {
       getApiErrorMessage(apiError("INVALID_RENTAL_STATE", 409)).title,
     ).toBe("لا يمكن إنشاء العقد إلا للإيجار المحجوز أو النشط.");
     expect(getApiErrorMessage(apiError("VEHICLE_UNAVAILABLE", 409)).title).toBe(
-      "لا يمكن بدء الصيانة لأن المركبة مرتبطة بإيجار قائم أو غير متاحة حالياً.",
+      "لا يمكن بدء الصيانة لأن السيارة مرتبطة بإيجار قائم أو غير متاحة حالياً.",
     );
   });
 

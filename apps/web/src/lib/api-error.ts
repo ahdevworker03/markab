@@ -77,7 +77,7 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   VALIDATION_ERROR: "تحقق من البيانات المدخلة ثم حاول مرة أخرى.",
   VEHICLE_NOT_FOUND: "لم يتم العثور على المركبة.",
   VEHICLE_UNAVAILABLE:
-    "لا يمكن بدء الصيانة لأن المركبة مرتبطة بإيجار قائم أو غير متاحة حالياً.",
+    "لا يمكن بدء الصيانة لأن السيارة مرتبطة بإيجار قائم أو غير متاحة حالياً.",
 };
 
 export interface ApiErrorMessage {
