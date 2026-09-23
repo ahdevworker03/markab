@@ -82,10 +82,12 @@ function DashboardAction({
   label,
   icon: Icon,
   onClick,
+  className,
 }: {
   label: string;
   icon: typeof Plus;
   onClick: () => void;
+  className?: string;
 }) {
   return (
     <Button
@@ -93,7 +95,10 @@ function DashboardAction({
       variant="ghost"
       size="sm"
       onClick={onClick}
-      className="shrink-0 rounded-lg px-3 text-muted-foreground hover:bg-background hover:text-foreground focus-visible:ring-ring/40"
+      className={cn(
+        "rounded-lg px-3 text-muted-foreground hover:bg-background hover:text-foreground focus-visible:ring-ring/40 sm:shrink-0",
+        className,
+      )}
     >
       <Icon className="size-4" aria-hidden="true" />
       {label}
@@ -337,7 +342,7 @@ export default function DashboardPage() {
         <div
           role="group"
           aria-label="إجراءات سريعة"
-          className="inline-flex max-w-full flex-wrap items-center justify-start gap-1 rounded-xl border border-border bg-card p-1 shadow-sm"
+          className="grid grid-cols-2 gap-1 rounded-xl border border-border bg-card p-1 shadow-sm sm:inline-flex sm:max-w-full sm:flex-wrap sm:items-center sm:justify-start"
         >
           <DashboardAction
             label="إرجاع سيارة"
@@ -353,6 +358,7 @@ export default function DashboardPage() {
             label="تسجيل صيانة"
             icon={Wrench}
             onClick={() => setLocation("/maintenance/add")}
+            className="col-span-2 sm:col-span-1"
           />
         </div>
 
