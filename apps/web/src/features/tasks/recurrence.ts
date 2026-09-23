@@ -134,9 +134,10 @@ export function formatTaskRecurrence(task: TaskResponse): string {
   if (interval == null || unit == null) return "بدون تكرار";
   if (interval === 1) return { DAY: "يومي", WEEK: "أسبوعي", MONTH: "شهري" }[unit];
 
-  if (unit === "DAY") return interval === 2 ? "كل يومين" : `كل ${interval} يوم`;
-  if (unit === "WEEK") return interval === 2 ? "كل أسبوعين" : `كل ${interval} أسابيع`;
-  return interval === 2 ? "كل شهرين" : `كل ${interval} أشهر`;
+  const isSmallCount = interval >= 3 && interval <= 10;
+  if (unit === "DAY") return interval === 2 ? "كل يومين" : `كل ${interval} ${isSmallCount ? "أيام" : "يوم"}`;
+  if (unit === "WEEK") return interval === 2 ? "كل أسبوعين" : `كل ${interval} ${isSmallCount ? "أسابيع" : "أسبوع"}`;
+  return interval === 2 ? "كل شهرين" : `كل ${interval} ${isSmallCount ? "أشهر" : "شهر"}`;
 }
 
 export function formatTaskDateOnly(value: string): string {
