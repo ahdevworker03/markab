@@ -141,7 +141,7 @@ function vehicleName(vehicle: AnalyticsVehicle) {
 function VehicleIdentity({ vehicle }: { vehicle: AnalyticsVehicle }) {
   return (
     <span className="min-w-0">
-      <span className="block truncate text-sm font-semibold text-foreground">
+      <span dir="ltr" className="block truncate text-start text-sm font-semibold text-foreground">
         {vehicleName(vehicle)}
       </span>
       {vehicle.plateNumber && (
@@ -597,7 +597,7 @@ export default function AnalyticsPage() {
           <div>
             <p className="ui-section-title">نظرة مالية وتشغيلية</p>
             <p className="ui-secondary-text mt-1">
-              راجع الإيرادات والمصروفات وأداء المركبات خلال الفترة المحددة.
+              راجع الإيرادات والمصروفات وأداء السيارات خلال الفترة المحددة.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -617,7 +617,7 @@ export default function AnalyticsPage() {
           />
           </div>
         </div>
-        <InlineFeedback variant="info">يعرض الملخص المالي شهر {ANALYTICS_MONTHS[selectedMonth]} {selectedYear}. تشمل رؤى المركبات بيانات السجلات المتاحة، وقد تختلف عن نطاق الشهر المحدد.</InlineFeedback>
+        <InlineFeedback variant="info">يعرض الملخص المالي شهر {ANALYTICS_MONTHS[selectedMonth]} {selectedYear}. تشمل رؤى السيارات بيانات السجلات المتاحة، وقد تختلف عن نطاق الشهر المحدد.</InlineFeedback>
         {hasFinancialError && (
           <InlineFeedback variant="error">
             تعذر تحديث بعض البيانات المالية: {financialError}
@@ -742,7 +742,7 @@ export default function AnalyticsPage() {
               رؤى السيارات
             </h2>
             <p className="ui-secondary-text mt-1">
-              مقارنة الربحية وتكاليف الصيانة حسب المركبة.
+              مقارنة الربحية وتكاليف الصيانة حسب السيارة.
             </p>
           </div>
           {analyticsLoading ? (
@@ -766,7 +766,8 @@ export default function AnalyticsPage() {
           ) : (
             <div className="grid gap-5 xl:grid-cols-2">
               <SectionCard
-                title="أكثر المركبات ربحاً"
+                className="min-w-0"
+                title="أكثر السيارات ربحاً"
                 description="الربحية وفق البيانات المسجلة مدى الحياة."
               >
                 {analytics.profitability.length === 0 ? (
@@ -836,8 +837,9 @@ export default function AnalyticsPage() {
                 )}
               </SectionCard>
               <SectionCard
+                className="min-w-0"
                 title="تكاليف الصيانة"
-                description={`تكلفة السنة ${selectedYear} ومدى الحياة لكل مركبة.`}
+                description={`تكلفة السنة ${selectedYear} ومدى الحياة لكل سيارة.`}
               >
                 <div className="divide-y divide-border">
                   {[
@@ -887,6 +889,7 @@ export default function AnalyticsPage() {
         </section>
         <div className="grid gap-5 xl:grid-cols-2">
           <SectionCard
+            className="min-w-0"
             title="إيرادات السيارات هذا الشهر"
             action={
               <button
@@ -894,7 +897,7 @@ export default function AnalyticsPage() {
                 onClick={() => navigate("/vehicles")}
                 className="text-sm font-semibold text-primary hover:underline"
               >
-                عرض المركبات
+                عرض السيارات
               </button>
             }
           >
@@ -951,8 +954,9 @@ export default function AnalyticsPage() {
             )}
           </SectionCard>
           <SectionCard
-            title="حالة الأسطول"
-            description="حالة المركبات الحالية والإيجارات المكتملة."
+            className="min-w-0"
+            title="حالة السيارات"
+            description="حالة السيارات الحالية والإيجارات المكتملة."
           >
             <div className="grid grid-cols-3 gap-2">
               {[
@@ -1015,7 +1019,7 @@ export default function AnalyticsPage() {
                       className="flex w-full items-center justify-between gap-3 py-3 text-right"
                     >
                       <StatusBadge status={status} />
-                      <span className="min-w-0 truncate text-sm font-semibold text-foreground">
+                      <span dir="ltr" className="min-w-0 truncate text-sm font-semibold text-foreground">
                         {vehicle.make} {vehicle.model}
                       </span>
                     </button>
@@ -1028,6 +1032,7 @@ export default function AnalyticsPage() {
           analytics.expensePerVehicleList.length > 0) && (
           <section className="grid gap-5 xl:grid-cols-2">
             <SectionCard
+              className="min-w-0"
               title="أعلى تكاليف الصيانة"
               action={
                 <button
@@ -1058,7 +1063,8 @@ export default function AnalyticsPage() {
               </div>
             </SectionCard>
             <SectionCard
-              title="مصروفات مرتبطة بالمركبات"
+              className="min-w-0"
+              title="مصروفات مرتبطة بالسيارات"
               action={
                 <button
                   type="button"
