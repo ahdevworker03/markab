@@ -144,10 +144,17 @@ export function formatTaskDateOnly(value: string): string {
   return formatDate(value);
 }
 
+function formatOccurrenceCount(count: number): string {
+  if (count === 1) return "مرة واحدة";
+  if (count === 2) return "مرتين";
+  const isSmallCount = count >= 3 && count <= 10;
+  return `${count} ${isSmallCount ? "مرات" : "مرة"}`;
+}
+
 export function formatTaskRecurrenceEnd(task: TaskResponse): string {
   if (!isRecurringTask(task)) return "—";
   if (task.recurrenceEndDate) return `حتى ${formatTaskDateOnly(task.recurrenceEndDate)}`;
-  if (task.recurrenceEndCount != null) return `بعد ${task.recurrenceEndCount} مرات`;
+  if (task.recurrenceEndCount != null) return `بعد ${formatOccurrenceCount(task.recurrenceEndCount)}`;
   return "لا ينتهي";
 }
 

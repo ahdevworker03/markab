@@ -340,7 +340,7 @@ export default function DashboardPage() {
           className="inline-flex max-w-full flex-wrap items-center justify-start gap-1 rounded-xl border border-border bg-card p-1 shadow-sm"
         >
           <DashboardAction
-            label="إعادة سيارة"
+            label="إرجاع سيارة"
             icon={RotateCcw}
             onClick={() => setLocation("/rentals")}
           />
@@ -402,7 +402,7 @@ export default function DashboardPage() {
                     key={`overdue-return-${rental.id}`}
                     icon={AlertTriangle}
                     tone="danger"
-                    title="إيجار متأخر عن الإعادة"
+                    title="إيجار متأخر عن الإرجاع"
                     description={`استحق في ${formatDate(rental.expectedReturnDate)}`}
                     onClick={() => setLocation(`/rentals/${rental.id}`)}
                   />
@@ -412,8 +412,8 @@ export default function DashboardPage() {
                     key={`return-today-${rental.id}`}
                     icon={Clock3}
                     tone="warning"
-                    title="إعادة سيارة مستحقة اليوم"
-                    description={`موعد الإعادة ${formatDate(rental.expectedReturnDate)}`}
+                    title="إرجاع سيارة مستحق اليوم"
+                    description={`موعد الإرجاع ${formatDate(rental.expectedReturnDate)}`}
                     onClick={() => setLocation(`/rentals/${rental.id}`)}
                   />
                 ))}
@@ -422,8 +422,8 @@ export default function DashboardPage() {
                     key={`return-soon-${rental.id}`}
                     icon={Clock3}
                     tone="info"
-                    title="إعادة سيارة قريبة"
-                    description={`موعد الإعادة ${formatDate(rental.expectedReturnDate)}`}
+                    title="إرجاع سيارة قريب"
+                    description={`موعد الإرجاع ${formatDate(rental.expectedReturnDate)}`}
                     onClick={() => setLocation(`/rentals/${rental.id}`)}
                   />
                 ))}
@@ -624,7 +624,7 @@ export default function DashboardPage() {
             onClick={() => setLocation("/rentals")}
           />
           <DashboardMetricCard
-            label="الإعادات القريبة"
+            label="الإرجاعات القريبة"
             value={String(dashboard.priorityReturns.length)}
             context={dashboard.returningToday.length > 0 ? `${dashboard.returningToday.length} مستحقة اليوم` : "خلال اليومين المقبلين"}
             icon={Clock3}
