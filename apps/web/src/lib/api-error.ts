@@ -15,7 +15,7 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   CUSTOMER_NOT_FOUND: "لم يتم العثور على العميل.",
   DOCUMENT_NOT_FOUND: "لم يتم العثور على المستند.",
   DUPLICATE_CUSTOMER: "يوجد عميل مسجل بهذه البيانات بالفعل.",
-  DUPLICATE_PLATE: "رقم اللوحة مستخدم لمركبة أخرى.",
+  DUPLICATE_PLATE: "رقم اللوحة مستخدم لسيارة أخرى.",
   EMAIL_ALREADY_EXISTS: "البريد الإلكتروني مستخدم بالفعل.",
   EMPTY_FILE: "لا يمكن رفع ملف فارغ.",
   EXPENSE_NOT_FOUND: "لم يتم العثور على المصروف.",
@@ -75,7 +75,7 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   UPLOAD_ERROR: "تعذر رفع الملف. حاول مرة أخرى.",
   USER_NOT_FOUND: "لم يتم العثور على المستخدم.",
   VALIDATION_ERROR: "تحقق من البيانات المدخلة ثم حاول مرة أخرى.",
-  VEHICLE_NOT_FOUND: "لم يتم العثور على المركبة.",
+  VEHICLE_NOT_FOUND: "لم يتم العثور على السيارة.",
   VEHICLE_UNAVAILABLE:
     "لا يمكن بدء الصيانة لأن السيارة مرتبطة بإيجار قائم أو غير متاحة حالياً.",
 };

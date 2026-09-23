@@ -37,7 +37,7 @@ describe("getApiErrorMessage", () => {
       getApiErrorMessage(apiError("INSUFFICIENT_PERMISSIONS", 403)).title,
     ).toBe("ليس لديك صلاحية لتنفيذ هذا الإجراء.");
     expect(getApiErrorMessage(apiError("VEHICLE_NOT_FOUND", 404)).title).toBe(
-      "لم يتم العثور على المركبة.",
+      "لم يتم العثور على السيارة.",
     );
   });
 

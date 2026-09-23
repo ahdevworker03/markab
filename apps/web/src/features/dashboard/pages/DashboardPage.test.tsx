@@ -145,7 +145,7 @@ describe("DashboardPage operational dashboard", () => {
     expect(screen.getByText("حالة السيارات")).toBeInTheDocument();
     expect(screen.getByText("الملخص المالي")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "إعادة سيارة" }),
+      screen.getByRole("button", { name: "إرجاع سيارة" }),
     ).toBeInTheDocument();
   });
 

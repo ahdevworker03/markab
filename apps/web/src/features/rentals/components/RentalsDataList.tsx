@@ -57,7 +57,7 @@ function RentalStatusCluster({ rental }: { rental: RentalResponse }) {
               ? "متأخر"
               : urgency === "today"
                 ? "مستحق اليوم"
-                : "إعادة قريبة"
+                : "إرجاع قريب"
           }
         />
       )}
@@ -138,7 +138,7 @@ function PrimaryAction({
     rental.status === "RESERVED"
       ? "تسجيل الاستلام"
       : rental.status === "ACTIVE"
-        ? "إعادة السيارة"
+        ? "إرجاع السيارة"
         : "عرض التفاصيل";
 
   return (
