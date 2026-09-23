@@ -34,14 +34,14 @@ export function VehicleAvailabilitySection({ compact = false }: { compact?: bool
   const content = (
     <div className={compact ? "space-y-2.5" : "space-y-4"}>
         {!compact && <p className="text-sm font-medium text-foreground">فحص التوفر ضمن فترة إيجار</p>}
-        <div className="grid gap-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+        <div className="grid gap-2.5 lg:max-w-2xl lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
           <FormField label="تاريخ الاستلام" required htmlFor="availability-pickup">
             <DatePicker id="availability-pickup" value={pickup} onChange={(value) => { setPickup(value); setValidationError(null); }} />
           </FormField>
           <FormField label="تاريخ الإرجاع" required htmlFor="availability-return">
             <DatePicker id="availability-return" min={pickup} value={returnDate} onChange={(value) => { setReturnDate(value); setValidationError(null); }} />
           </FormField>
-          <Button type="button" onClick={handleSubmit} className="sm:mb-px"><CalendarSearch className="size-4" aria-hidden="true" />التحقق من التوفر</Button>
+          <Button type="button" onClick={handleSubmit} className="lg:mb-px"><CalendarSearch className="size-4" aria-hidden="true" />التحقق من التوفر</Button>
         </div>
         {validationError && <InlineError>{validationError}</InlineError>}
 
