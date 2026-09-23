@@ -123,7 +123,7 @@ describe("ReportsPage", () => {
     expect(document.write).toHaveBeenCalledWith(
       expect.stringContaining("1. الملخص العام"),
     );
-    expect(document.write).toHaveBeenCalledWith(expect.stringContaining("حالة الأسطول الحالية"));
+    expect(document.write).toHaveBeenCalledWith(expect.stringContaining("حالة السيارات الحالية"));
     expect(document.write).toHaveBeenCalledWith(expect.stringContaining("تاريخ إنشاء التقرير"));
     expect(document.close).toHaveBeenCalledOnce();
 
