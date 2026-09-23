@@ -60,7 +60,7 @@ export function DashboardMetricCard({
             {errorMessage}
           </p>
         ) : (
-          <p className="ui-kpi-value number-ltr">{value}</p>
+          <p className="ui-kpi-value number-ltr text-end">{value}</p>
         )}
         <p className="ui-secondary-text mt-1.5">
           {state === "error" ? "حاول مرة أخرى لاحقاً" : context}
