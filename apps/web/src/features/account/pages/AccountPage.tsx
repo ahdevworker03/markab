@@ -20,7 +20,7 @@ export function AccountPage() {
   const [name, setName] = useState(""); const [email, setEmail] = useState(""); const [inviteEmail, setInviteEmail] = useState("");
   const [message, setMessage] = useState<string | null>(null); const [error, setError] = useState<string | null>(null);
   async function save() { if (!name.trim()) return; setError(null); try { await update.mutateAsync({ data: { name: name.trim(), email: email.trim() || undefined } }); setEditing(false); setMessage("تم تحديث بيانات المؤسسة."); organizationQuery.refetch(); } catch (cause) { setError(getApiErrorMessage(cause).title); } }
-  async function sendInvite() { if (!inviteEmail.trim()) return; setError(null); try { await invite.mutateAsync({ data: { email: inviteEmail.trim() } }); setInviteEmail(""); setMessage("تم إنشاء دعوة الموظف. شارك رابط الدعوة عبر القناة الآمنة المعتمدة."); } catch (cause) { setError(getApiErrorMessage(cause).title); } }
+  async function sendInvite() { if (!inviteEmail.trim()) return; setError(null); try { await invite.mutateAsync({ data: { email: inviteEmail.trim() } }); setInviteEmail(""); setMessage("تم إنشاء دعوة الموظف. شارك رابط الدعوة مع الموظف عبر وسيلة تواصل موثوقة."); } catch (cause) { setError(getApiErrorMessage(cause).title); } }
 
   return (
     <div className="min-h-full">

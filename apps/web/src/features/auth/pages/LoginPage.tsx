@@ -30,8 +30,8 @@ export default function LoginPage() {
 
   function validate(): boolean {
     const e: Partial<FormState> = {};
-    if (!form.email.trim()) e.email = "هذا الحقل مطلوب";
-    if (!form.password) e.password = "هذا الحقل مطلوب";
+    if (!form.email.trim()) e.email = "أدخل البريد الإلكتروني.";
+    if (!form.password) e.password = "أدخل كلمة المرور.";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
