@@ -16,6 +16,7 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { VEHICLE_STATUS_FILTER_OPTIONS } from "@/lib/vehicle-labels";
 import { useAuth } from "@/providers/AuthProvider";
+import { useOffline } from "@/features/offline/OfflineProvider";
 
 type FilterValue = "all" | VehicleResponseStatus;
 
@@ -24,6 +25,7 @@ export default function VehiclesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState("");
   const { user } = useAuth();
+  const { isOffline } = useOffline();
   const debouncedSearch = useDebouncedValue(search.trim(), 300);
   const isOwner = user?.role === "OWNER";
   const filter = (searchParams.get("filter") as FilterValue) || "all";
@@ -57,9 +59,9 @@ export default function VehiclesPage() {
               }}
               className="-mb-0.5 flex-wrap gap-1.5 overflow-visible sm:flex-nowrap sm:overflow-x-auto [&_button]:px-2.5 [&_button]:py-1 [&_button]:text-xs"
             />
-            <div className="border-t border-border pt-2.5">
+            {!isOffline && <div className="border-t border-border pt-2.5">
               <VehicleAvailabilitySection compact />
-            </div>
+            </div>}
           </div>
         </SectionCard>
 

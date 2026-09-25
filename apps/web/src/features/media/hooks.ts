@@ -20,9 +20,11 @@ import {
   type DocumentResponseCategory,
 } from "@workspace/api-client-react";
 
-export function useVehiclePhotos(vehicleId: string) {
+export function useVehiclePhotos(vehicleId: string, enabled = true) {
   const queryClient = useQueryClient();
-  const query = useListVehiclePhotos(vehicleId);
+  const query = useListVehiclePhotos(vehicleId, {
+    query: { enabled, queryKey: getListVehiclePhotosQueryKey(vehicleId) },
+  });
   const upload = useUploadVehiclePhoto({
     mutation: {
       onSuccess: () => {
@@ -42,9 +44,11 @@ export function useVehiclePhotos(vehicleId: string) {
   return { query, upload, remove, getContent };
 }
 
-export function useVehicleDocuments(vehicleId: string) {
+export function useVehicleDocuments(vehicleId: string, enabled = true) {
   const queryClient = useQueryClient();
-  const query = useListVehicleDocuments(vehicleId);
+  const query = useListVehicleDocuments(vehicleId, {
+    query: { enabled, queryKey: getListVehicleDocumentsQueryKey(vehicleId) },
+  });
   const upload = useUploadVehicleDocument({
     mutation: {
       onSuccess: () => {
@@ -71,9 +75,11 @@ export function useVehicleDocuments(vehicleId: string) {
   return { query, upload, update, remove, download };
 }
 
-export function useCustomerDocuments(customerId: string) {
+export function useCustomerDocuments(customerId: string, enabled = true) {
   const queryClient = useQueryClient();
-  const query = useListCustomerDocuments(customerId);
+  const query = useListCustomerDocuments(customerId, {
+    query: { enabled, queryKey: getListCustomerDocumentsQueryKey(customerId) },
+  });
   const upload = useUploadCustomerDocument({
     mutation: {
       onSuccess: () => {

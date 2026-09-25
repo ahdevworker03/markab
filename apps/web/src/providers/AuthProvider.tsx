@@ -22,6 +22,12 @@ import {
   setAccessToken,
   clearAccessToken,
 } from "@/lib/auth-token";
+import {
+  clearOfflineIdentity,
+  getOfflineIdentity,
+  saveOfflineIdentity,
+  type OfflineSessionIdentity,
+} from "@/features/offline/session";
 
 interface LoginParams {
   email: string;
@@ -32,7 +38,9 @@ interface AuthContextValue {
   user: CurrentUserResponse | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  sessionState: "unauthenticated" | "indeterminate" | "authenticated";
+  sessionState:
+    "unauthenticated" | "indeterminate" | "offline" | "authenticated";
+  offlineIdentity: OfflineSessionIdentity | null;
   login: (params: LoginParams) => Promise<CurrentUserResponse>;
   logout: () => Promise<void>;
   retry: () => Promise<void>;
@@ -51,22 +59,64 @@ function isAuthenticationFailure(error: unknown): boolean {
   );
 }
 
+function isNetworkFailure(error: unknown): boolean {
+  return (
+    error instanceof TypeError &&
+    [
+      "Failed to fetch",
+      "Load failed",
+      "NetworkError when attempting to fetch resource.",
+    ].includes(error.message)
+  );
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [user, setUser] = useState<CurrentUserResponse | null>(null);
+  const [offlineIdentity, setOfflineIdentity] =
+    useState<OfflineSessionIdentity | null>(getOfflineIdentity);
   const [isLoading, setIsLoading] = useState(true);
-  const [sessionState, setSessionState] = useState<
-    AuthContextValue["sessionState"]
-  >("unauthenticated");
+  const [sessionState, setSessionState] =
+    useState<AuthContextValue["sessionState"]>("unauthenticated");
   const refreshWasAttempted = useRef(false);
   const lastRefreshResult = useRef<RefreshResult | null>(null);
 
   const clearSession = useCallback(() => {
     queryClient.clear();
     clearAccessToken();
+    clearOfflineIdentity();
     setUser(null);
+    setOfflineIdentity(null);
     setSessionState("unauthenticated");
   }, [queryClient]);
+
+  const restoreOfflineSession = useCallback(() => {
+    const identity = getOfflineIdentity();
+    if (
+      identity &&
+      (identity.organizationStatus === "ACTIVE" ||
+        identity.organizationStatus === "TRIAL")
+    ) {
+      setUser(null);
+      setOfflineIdentity(identity);
+      setSessionState("offline");
+      return;
+    }
+    setUser(null);
+    setSessionState("indeterminate");
+  }, []);
+
+  const handleRestorationFailure = useCallback(
+    (error: unknown) => {
+      if (isNetworkFailure(error)) {
+        restoreOfflineSession();
+        return;
+      }
+      setUser(null);
+      setSessionState("indeterminate");
+    },
+    [restoreOfflineSession],
+  );
 
   const refreshSession = useCallback(async (): Promise<RefreshResult> => {
     try {
@@ -81,12 +131,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return "unauthenticated";
       }
 
-      setUser(null);
-      setSessionState("indeterminate");
+      handleRestorationFailure(error);
       lastRefreshResult.current = "indeterminate";
       return "indeterminate";
     }
-  }, [clearSession]);
+  }, [clearSession, handleRestorationFailure]);
 
   useEffect(() => {
     setAuthRefreshHandler(async () => {
@@ -110,6 +159,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      queryClient.clear();
+      setOfflineIdentity(saveOfflineIdentity(result.data));
       setUser(result.data);
       setSessionState("authenticated");
     };
@@ -121,7 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await loadCurrentUser();
       } catch (error) {
         if (!isAuthenticationFailure(error)) {
-          setSessionState("indeterminate");
+          handleRestorationFailure(error);
         } else if (
           !refreshWasAttempted.current ||
           lastRefreshResult.current === "restored"
@@ -140,7 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await loadCurrentUser();
     } catch (error) {
       if (!isAuthenticationFailure(error)) {
-        setSessionState("indeterminate");
+        handleRestorationFailure(error);
         return;
       }
 
@@ -153,7 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [clearSession, refreshSession]);
+  }, [clearSession, handleRestorationFailure, queryClient, refreshSession]);
 
   useEffect(() => {
     void restoreSession();
@@ -170,6 +221,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const me = await getCurrentUser();
         if (!me?.data) throw new Error("Invalid current user response.");
 
+        setOfflineIdentity(saveOfflineIdentity(me.data));
         setUser(me.data);
         setSessionState("authenticated");
         return me.data;
@@ -201,11 +253,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: user !== null,
       isLoading,
       sessionState,
+      offlineIdentity,
       login,
       logout,
       retry,
     }),
-    [user, isLoading, sessionState, login, logout, retry],
+    [user, isLoading, sessionState, offlineIdentity, login, logout, retry],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

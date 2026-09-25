@@ -15,6 +15,7 @@ import { useRentalsForCustomer } from "@/features/rentals/api-hooks";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDate } from "@/lib/format";
 import { useAuth } from "@/providers/AuthProvider";
+import { useOffline } from "@/features/offline/OfflineProvider";
 
 interface DetailPageParams {
   params: { id: string };
@@ -33,12 +34,13 @@ export default function CustomerDetailPage({ params }: DetailPageParams) {
   const { id } = params;
   const [, setLocation] = useLocation();
   const { user } = useAuth();
+  const { isOffline } = useOffline();
   const isOwner = user?.role === "OWNER";
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const customerQuery = useCustomerRecord(id);
-  const documents = useCustomerDocuments(id);
-  const customerRentals = useRentalsForCustomer(id);
+  const documents = useCustomerDocuments(id, !isOffline);
+  const customerRentals = useRentalsForCustomer(id, !isOffline);
   const { remove: deleteMutation } = useCustomerMutations();
 
   async function handleUploadDocument(file: File, category: string) {
@@ -111,7 +113,7 @@ export default function CustomerDetailPage({ params }: DetailPageParams) {
 
         {confirmingDelete && <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-foreground">سيتم أرشفة العميل وإخفاؤه من السجلات النشطة. أكد الحذف للمتابعة.</div>}
         {deleteError && <InlineError>{deleteError}</InlineError>}
-        {currentRental && <DetailSection title="الإيجار الحالي" className="shadow-none"><div className="flex flex-wrap items-center justify-between gap-3"><StatusBadge status={currentRental.status} /><Button type="button" variant="outline" size="sm" onClick={() => setLocation(`/rentals/${currentRental.id}`)}>عرض الإيجار</Button></div></DetailSection>}
+        {!isOffline && currentRental && <DetailSection title="الإيجار الحالي" className="shadow-none"><div className="flex flex-wrap items-center justify-between gap-3"><StatusBadge status={currentRental.status} /><Button type="button" variant="outline" size="sm" onClick={() => setLocation(`/rentals/${currentRental.id}`)}>عرض الإيجار</Button></div></DetailSection>}
         <section aria-label="بيانات العميل" className="space-y-4">
             <DetailSection title="بيانات العميل" description="معلومات التواصل والهوية ورخصة القيادة.">
                <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-3 lg:grid-cols-4">
@@ -124,7 +126,7 @@ export default function CustomerDetailPage({ params }: DetailPageParams) {
               </div>
             </DetailSection>
 
-            <DetailSection title="المستندات">
+             {!isOffline && <DetailSection title="المستندات">
               <DocumentList
                 documents={documents.query.data?.data ?? []}
                 isLoading={documents.query.isLoading}
@@ -139,9 +141,9 @@ export default function CustomerDetailPage({ params }: DetailPageParams) {
                 onDownload={handleDownloadDocument}
                 onUpdateExpiry={handleUpdateDocumentExpiry}
               />
-            </DetailSection>
+             </DetailSection>}
 
-          <RentalHistorySection rentals={customerRentals.rentals} isLoading={customerRentals.isLoading} isError={customerRentals.isError} error={customerRentals.error} title="سجل الإيجارات" emptyMessage="لا توجد إيجارات لهذا العميل" />
+          {!isOffline && <RentalHistorySection rentals={customerRentals.rentals} isLoading={customerRentals.isLoading} isError={customerRentals.isError} error={customerRentals.error} title="سجل الإيجارات" emptyMessage="لا توجد إيجارات لهذا العميل" />}
         </section>
       </div>
     </div>

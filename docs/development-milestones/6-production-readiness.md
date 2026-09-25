@@ -469,7 +469,7 @@ Make the built web application available after a successful online login, store 
 ### Current State
 
 - React Query manages live server state but is not persisted as a trustworthy domain database; `apps/web/src/data` is transitional mock/local state and must not become the offline store.
-- Session restoration calls `/auth/me`; an offline failure can trigger refresh and clear the local session. No service worker/application-shell cache, IndexedDB schema, queue, connectivity state, or synchronization UI exists.
+- A native, versioned service worker caches the same-origin application shell and static assets after an online load, but excludes API, authentication, cross-origin, and non-GET requests. Session restoration, IndexedDB schema, queue, connectivity state, and synchronization UI are provided separately by Step 63 tasks.
 
 ### Scope
 

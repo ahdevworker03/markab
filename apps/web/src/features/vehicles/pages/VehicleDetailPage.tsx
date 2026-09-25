@@ -16,6 +16,7 @@ import { getApiErrorMessage } from "@/lib/api-error";
 import { formatNumber } from "@/lib/format";
 import { FUEL_TYPE_LABELS, TRANSMISSION_LABELS } from "@/lib/vehicle-labels";
 import { useAuth } from "@/providers/AuthProvider";
+import { useOffline } from "@/features/offline/OfflineProvider";
 
 interface DetailPageParams {
   params: { id: string };
@@ -25,13 +26,14 @@ export default function VehicleDetailPage({ params }: DetailPageParams) {
   const { id } = params;
   const [, setLocation] = useLocation();
   const { user } = useAuth();
+  const { isOffline } = useOffline();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const isOwner = user?.role === "OWNER";
   const vehicleQuery = useVehicleRecord(id);
-  const photos = useVehiclePhotos(id);
-  const documents = useVehicleDocuments(id);
-  const vehicleRentals = useRentalsForVehicle(id);
+  const photos = useVehiclePhotos(id, !isOffline);
+  const documents = useVehicleDocuments(id, !isOffline);
+  const vehicleRentals = useRentalsForVehicle(id, !isOffline);
   const { remove: deleteMutation } = useVehicleMutations();
 
   async function handleUploadPhoto(file: File) {
@@ -127,13 +129,13 @@ export default function VehicleDetailPage({ params }: DetailPageParams) {
               </div>
             </DetailSection>
 
-            <DetailSection>
+             {!isOffline && <><DetailSection>
               <MediaGallery photos={photos.query.data?.data ?? []} isLoading={photos.query.isLoading} isError={photos.query.isError} error={photos.query.error} isOwner={isOwner} uploading={photos.upload.isPending} deleting={photos.remove.isPending} onUpload={handleUploadPhoto} onDelete={handleDeletePhoto} onLoadContent={handleLoadPhotoContent} />
             </DetailSection>
 
             <DetailSection><DocumentList documents={documents.query.data?.data ?? []} isLoading={documents.query.isLoading} isError={documents.query.isError} error={documents.query.error} isOwner={isOwner} uploading={documents.upload.isPending} updating={documents.update.isPending} deleting={documents.remove.isPending} onUpload={handleUploadDocument} onDelete={handleDeleteDocument} onDownload={handleDownloadDocument} onUpdateExpiry={handleUpdateDocumentExpiry} /></DetailSection>
             <RentalHistorySection rentals={vehicleRentals.rentals} isLoading={vehicleRentals.isLoading} isError={vehicleRentals.isError} error={vehicleRentals.error} title="سجل الإيجارات" emptyMessage="لا توجد إيجارات لهذه السيارة" />
-            <MaintenanceHistorySection vehicleId={vehicle.id} />
+             <MaintenanceHistorySection vehicleId={vehicle.id} /></>}
         </section>
       </div>
     </div>
