@@ -2,11 +2,13 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { OrganizationStatusGate } from "./OrganizationStatusGate";
 
-const { useGetMyOrganization } = vi.hoisted(() => ({
+const { useAuth, useGetMyOrganization } = vi.hoisted(() => ({
+  useAuth: vi.fn(),
   useGetMyOrganization: vi.fn(),
 }));
 
 vi.mock("@workspace/api-client-react", () => ({ useGetMyOrganization }));
+vi.mock("@/providers/AuthProvider", () => ({ useAuth }));
 vi.mock("./LogoutButton", () => ({
   LogoutButton: () => <button type="button">تسجيل الخروج</button>,
 }));
@@ -14,6 +16,7 @@ vi.mock("./LogoutButton", () => ({
 describe("OrganizationStatusGate", () => {
   beforeEach(() => {
     useGetMyOrganization.mockReset();
+    useAuth.mockReturnValue({ sessionState: "authenticated" });
   });
 
   it("keeps active organizations in the application", () => {
@@ -92,5 +95,18 @@ describe("OrganizationStatusGate", () => {
     );
 
     expect(screen.queryByText("محتوى التطبيق")).not.toBeInTheDocument();
+  });
+
+  it("keeps local tenant operations available during an offline restoration", () => {
+    useGetMyOrganization.mockReturnValue({ isPending: true });
+    useAuth.mockReturnValue({ sessionState: "offline" });
+
+    render(
+      <OrganizationStatusGate>
+        <p>محتوى التطبيق</p>
+      </OrganizationStatusGate>,
+    );
+
+    expect(screen.getByText("محتوى التطبيق")).toBeInTheDocument();
   });
 });

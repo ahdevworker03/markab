@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { InlineError } from "@/components/ui/FeedbackState";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { createOfflineCommands } from "@/features/offline/commands";
+import { useOffline } from "@/features/offline/OfflineProvider";
 
 const INITIAL: CustomerFormState = {
   first_name: "",
@@ -38,9 +40,11 @@ export default function AddCustomerPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [documents, setDocuments] = useState<PendingDocument[]>([]);
   const [createdCustomerId, setCreatedCustomerId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { create: createMutation } = useCustomerMutations();
   const uploadMutation = useUploadCustomerDocument();
+  const { isOffline, refreshProjections, store, workspace } = useOffline();
 
   function set<K extends keyof CustomerFormState>(field: K, value: CustomerFormState[K]) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -61,15 +65,28 @@ export default function AddCustomerPage() {
   }
 
   async function handleSubmit() {
-    if (createMutation.isPending || uploadMutation.isPending || (!createdCustomerId && !validate())) return;
+    if (isSubmitting || createMutation.isPending || uploadMutation.isPending || (!createdCustomerId && !validate())) return;
+    if (isOffline && documents.length > 0) {
+      setFormError("لا يمكن حفظ مستندات العميل دون اتصال. أعد المحاولة بعد استعادة الاتصال.");
+      return;
+    }
     setFormError(null);
+    setIsSubmitting(true);
     let customerId = createdCustomerId;
     try {
+      const data = {
+        first_name: form.first_name.trim(), last_name: form.last_name.trim(), phone: form.phone.trim(), address: form.address.trim(),
+        national_id: form.national_id.trim(), license_number: form.license_number.trim(), license_expiry_date: new Date(form.license_expiry_date).toISOString(),
+      };
+      if (isOffline) {
+        if (!workspace) throw new Error("لا تتوفر مساحة عمل دون اتصال.");
+        await createOfflineCommands({ workspace, store }).queueCustomerCreate(data);
+        refreshProjections();
+        setLocation("/customers");
+        return;
+      }
       customerId = customerId ?? (await createMutation.mutateAsync({
-        data: {
-          first_name: form.first_name.trim(), last_name: form.last_name.trim(), phone: form.phone.trim(), address: form.address.trim(),
-          national_id: form.national_id.trim(), license_number: form.license_number.trim(), license_expiry_date: new Date(form.license_expiry_date).toISOString(),
-        },
+        data,
       })).data.id;
       setCreatedCustomerId(customerId);
 
@@ -81,6 +98,8 @@ export default function AddCustomerPage() {
       setLocation(`/customers/${customerId}`);
     } catch (error) {
       setFormError(customerId ? "تم إنشاء العميل، لكن تعذر رفع بعض المستندات. أعد المحاولة أو أضفها من صفحة العميل." : getApiErrorMessage(error).title);
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -93,20 +112,20 @@ export default function AddCustomerPage() {
         <div><h2 className="ui-page-title">بيانات العميل</h2><p className="ui-secondary-text mt-1">أدخل معلومات العميل وبيانات هويته ورخصة القيادة.</p></div>
         {formError && <InlineError className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">{formError}</InlineError>}
         <CustomerFormFields form={form} errors={errors} onChange={set} />
-        <SectionCard title="مستندات العميل" description="اختيارية. تُرفع المستندات بعد حفظ بيانات العميل بنجاح.">
+        <SectionCard title="مستندات العميل" description={isOffline ? "لا يمكن رفع المستندات دون اتصال. أضفها بعد استعادة الاتصال." : "اختيارية. تُرفع المستندات بعد حفظ بيانات العميل بنجاح."}>
           <input ref={fileInputRef} type="file" accept="application/pdf,image/jpeg,image/png" multiple className="hidden" onChange={(event) => {
             const files = Array.from(event.target.files ?? []);
             setDocuments((current) => [...current, ...files.map((file) => ({ id: `${file.name}-${file.lastModified}-${crypto.randomUUID()}`, file, category: "OTHER" as const }))]);
             event.target.value = "";
           }} />
           <div className="space-y-3">
-            <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={createMutation.isPending || uploadMutation.isPending}><Plus className="size-4" aria-hidden="true" />إضافة مستند</Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isOffline || isSubmitting || createMutation.isPending || uploadMutation.isPending}><Plus className="size-4" aria-hidden="true" />إضافة مستند</Button>
             {documents.length > 0 ? <div className="divide-y divide-border rounded-lg border border-border">{documents.map((document) => <div key={document.id} className="flex flex-wrap items-center gap-3 px-3 py-2.5"><FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" /><span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground" dir="auto">{document.file.name}</span><select aria-label={`نوع المستند ${document.file.name}`} value={document.category} onChange={(event) => setDocuments((current) => current.map((item) => item.id === document.id ? { ...item, category: event.target.value as DocumentResponseCategory } : item))} className="h-9 rounded-lg border border-input bg-background px-2 text-sm"><option value="REGISTRATION">تسجيل</option><option value="INSURANCE">تأمين</option><option value="OTHER">أخرى</option></select><Button type="button" variant="ghost" size="icon" className="text-destructive hover:bg-destructive/5" onClick={() => setDocuments((current) => current.filter((item) => item.id !== document.id))} aria-label={`إزالة المستند ${document.file.name}`}><Trash2 className="size-4" aria-hidden="true" /></Button></div>)}</div> : <p className="ui-secondary-text">يمكن إضافة ملفات PDF أو صور JPG وPNG الآن أو لاحقاً من صفحة العميل.</p>}
           </div>
         </SectionCard>
         <div className="sticky bottom-0 flex flex-wrap justify-end gap-2 border-t border-border bg-background/95 py-3 backdrop-blur-sm">
           <Button type="button" variant="outline" onClick={() => setLocation("/customers")}>إلغاء</Button>
-          <Button type="button" onClick={handleSubmit} disabled={(!createdCustomerId && !canSave) || createMutation.isPending || uploadMutation.isPending}>{createMutation.isPending || uploadMutation.isPending ? <><Loader2 className="size-4 animate-spin" aria-hidden="true" />جارٍ الحفظ</> : createdCustomerId ? "إعادة رفع المستندات" : "حفظ العميل"}</Button>
+          <Button type="button" onClick={handleSubmit} disabled={(!createdCustomerId && !canSave) || isSubmitting || createMutation.isPending || uploadMutation.isPending}>{isSubmitting || createMutation.isPending || uploadMutation.isPending ? <><Loader2 className="size-4 animate-spin" aria-hidden="true" />جارٍ الحفظ</> : createdCustomerId ? "إعادة رفع المستندات" : "حفظ العميل"}</Button>
         </div>
       </div>
     </div>

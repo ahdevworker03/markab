@@ -11,7 +11,7 @@ configureApiClient();
 initializeTheme();
 
 if (import.meta.env.PROD) {
-  registerApplicationShell(`${import.meta.env.BASE_URL}service-worker.js`);
+  registerApplicationShell(`${import.meta.env.BASE_URL}sw.js`);
 }
 
 createRoot(document.getElementById("root")!).render(<App />);

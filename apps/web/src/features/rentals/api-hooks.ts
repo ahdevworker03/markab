@@ -2,13 +2,16 @@ import { useMemo } from "react";
 import {
   useListRentals,
   useListAvailableVehicles,
+  getListRentalsQueryKey,
   getListAvailableVehiclesQueryKey,
 } from "@workspace/api-client-react";
 import type { ListAvailableVehiclesParams } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
-export function useRentalsForCustomer(customerId: string) {
-  const { data, isLoading, isError, error } = useListRentals();
+export function useRentalsForCustomer(customerId: string, enabled = true) {
+  const { data, isLoading, isError, error } = useListRentals(undefined, {
+    query: { enabled, queryKey: getListRentalsQueryKey() },
+  });
 
   const rentals = useMemo(
     () => (data?.data ?? []).filter((r) => r.customerId === customerId),
@@ -18,8 +21,10 @@ export function useRentalsForCustomer(customerId: string) {
   return { rentals, isLoading, isError, error };
 }
 
-export function useRentalsForVehicle(vehicleId: string) {
-  const { data, isLoading, isError, error } = useListRentals();
+export function useRentalsForVehicle(vehicleId: string, enabled = true) {
+  const { data, isLoading, isError, error } = useListRentals(undefined, {
+    query: { enabled, queryKey: getListRentalsQueryKey() },
+  });
 
   const rentals = useMemo(
     () => (data?.data ?? []).filter((r) => r.vehicleId === vehicleId),
