@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { CircleAlert } from "lucide-react";
 import { useGetMyOrganization } from "@workspace/api-client-react";
+import { useAuth } from "@/providers/AuthProvider";
 import { Spinner } from "@/components/ui/spinner";
 import { LogoutButton } from "./LogoutButton";
 
@@ -25,6 +26,7 @@ const organizationStatusContent = {
 export function OrganizationStatusGate({
   children,
 }: OrganizationStatusGateProps) {
+  const { sessionState } = useAuth();
   const organizationQuery = useGetMyOrganization();
   const organization = organizationQuery.data?.data;
   const content = organization
@@ -32,6 +34,8 @@ export function OrganizationStatusGate({
         organization.status as keyof typeof organizationStatusContent
       ]
     : undefined;
+
+  if (sessionState === "offline") return <>{children}</>;
 
   if (organizationQuery.isPending) {
     return (

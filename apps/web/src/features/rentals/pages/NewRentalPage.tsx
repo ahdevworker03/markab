@@ -5,15 +5,7 @@ import type {
   CustomerResponse,
   VehicleResponse,
 } from "@workspace/api-client-react";
-import {
-  getCheckRentalAvailabilityQueryKey,
-  getListRentalsQueryKey,
-  getListVehiclesQueryKey,
-  useCheckRentalAvailability,
-  useCreateRental,
-  useListCustomers,
-  useListVehicles,
-} from "@workspace/api-client-react";
+import { getCheckRentalAvailabilityQueryKey, getListRentalsQueryKey, getListVehiclesQueryKey, useCheckRentalAvailability, useCreateRental } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -30,6 +22,10 @@ import { useTimeout } from "@/hooks/useTimeout";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useCustomersList } from "@/features/customers/api-hooks";
+import { useVehiclesList } from "@/features/vehicles/api-hooks";
+import { createOfflineCommands } from "@/features/offline/commands";
+import { useOffline } from "@/features/offline/OfflineProvider";
 
 function toDateInput(date: Date): string {
   const pad = (value: number) => String(value).padStart(2, "0");
@@ -71,11 +67,14 @@ export default function NewRentalPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [queuedOffline, setQueuedOffline] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { isOffline, refreshProjections, store, workspace } = useOffline();
 
   useTimeout(() => setLocation("/rentals"), saved ? 1200 : null);
 
-  const vehiclesQuery = useListVehicles();
-  const customersQuery = useListCustomers();
+  const vehiclesQuery = useVehiclesList();
+  const customersQuery = useCustomersList();
   const createMutation = useCreateRental({
     mutation: {
       onSuccess: () => {
@@ -90,12 +89,12 @@ export default function NewRentalPage() {
   });
 
   const vehicles = useMemo(
-    () => vehiclesQuery.data?.data ?? [],
-    [vehiclesQuery.data],
+    () => vehiclesQuery.vehicles,
+    [vehiclesQuery.vehicles],
   );
   const customers = useMemo(
-    () => customersQuery.data?.data ?? [],
-    [customersQuery.data],
+    () => customersQuery.customers,
+    [customersQuery.customers],
   );
   const selectedVehicle = vehicles.find(
     (vehicle) => vehicle.id === selectedVehicleId,
@@ -130,7 +129,7 @@ export default function NewRentalPage() {
     },
     {
       query: {
-        enabled: Boolean(availabilityParams),
+        enabled: !isOffline && Boolean(availabilityParams),
         queryKey: availabilityParams
           ? getCheckRentalAvailabilityQueryKey(availabilityParams)
           : [],
@@ -172,7 +171,7 @@ export default function NewRentalPage() {
   const rate = Number.parseFloat(dailyRate.replace(/,/g, "")) || 0;
   const deposit = Number.parseFloat(depositAmount.replace(/,/g, "")) || 0;
   const total = days * rate;
-  const availabilityAvailable = availabilityQuery.data?.data?.available ?? true;
+  const availabilityAvailable = isOffline || availabilityQuery.data?.data?.available === true;
   const canSave = Boolean(
     selectedVehicleId &&
     selectedCustomerId &&
@@ -221,24 +220,35 @@ export default function NewRentalPage() {
   }
 
   async function handleSave() {
-    if (createMutation.isPending || !validate()) return;
+    if (isSubmitting || createMutation.isPending || !validate()) return;
     setFormError(null);
+    setIsSubmitting(true);
 
     try {
-      await createMutation.mutateAsync({
-        data: {
-          customer_id: selectedCustomerId,
-          vehicle_id: selectedVehicleId,
-          pickup_date: pickupDateTime!.toISOString(),
-          expected_return_date: returnDateTime!.toISOString(),
-          daily_rate: rate,
-          total_amount: total,
-          deposit_amount: deposit,
-        },
-      });
+      const draft = {
+        vehicle_id: selectedVehicleId,
+        pickup_date: pickupDateTime!.toISOString(),
+        expected_return_date: returnDateTime!.toISOString(),
+        daily_rate: rate,
+        total_amount: total,
+        deposit_amount: deposit,
+      };
+      if (isOffline) {
+        if (!workspace) throw new Error("لا تتوفر مساحة عمل دون اتصال.");
+        const customerReference = selectedCustomerId.startsWith("local:")
+          ? { customer_create_operation_id: selectedCustomerId.slice("local:".length) }
+          : { customer_id: selectedCustomerId };
+        await createOfflineCommands({ workspace, store }).queueRentalCreate(draft, customerReference);
+        refreshProjections();
+        setQueuedOffline(true);
+      } else {
+        await createMutation.mutateAsync({ data: { ...draft, customer_id: selectedCustomerId } });
+      }
       setSaved(true);
     } catch (error) {
       setFormError(getApiErrorMessage(error).title);
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -248,14 +258,18 @@ export default function NewRentalPage() {
         <div className="flex size-16 items-center justify-center rounded-xl bg-status-positive-bg text-status-positive">
           <Check className="size-8" aria-hidden="true" />
         </div>
-        <h2 className="ui-page-title">تم إنشاء عقد الإيجار</h2>
+        <h2 className="ui-page-title">
+          {queuedOffline ? "تمت إضافة الإيجار إلى قائمة الانتظار" : "تم إنشاء عقد الإيجار"}
+        </h2>
         <p className="ui-secondary-text">
           {selectedCustomer && selectedVehicle
             ? `${selectedCustomer.firstName} ${selectedCustomer.lastName} · ${selectedVehicle.make} ${selectedVehicle.model}`
             : ""}
         </p>
         <p className="text-xs text-muted-foreground">
-          جاري العودة إلى قائمة الإيجارات...
+          {queuedOffline
+            ? "سيُرسل إلى الخادم للتحقق عند استعادة الاتصال."
+            : "جاري العودة إلى قائمة الإيجارات..."}
         </p>
       </div>
     );
@@ -567,9 +581,9 @@ export default function NewRentalPage() {
           <Button
             type="button"
             onClick={handleSave}
-            disabled={!canSave || createMutation.isPending}
+            disabled={!canSave || isSubmitting || createMutation.isPending}
           >
-            {createMutation.isPending ? "جارٍ الحفظ" : "حفظ الإيجار"}
+            {isSubmitting || createMutation.isPending ? "جارٍ الحفظ" : "حفظ الإيجار"}
           </Button>
         </div>
       </div>
