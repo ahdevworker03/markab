@@ -14,3 +14,4 @@ export * from './generated/expenses/expenses';
 export * from './generated/payments/payments';
 export * from './generated/tasks/tasks';
 export * from './generated/platform/platform';
+export * from './generated/sync/sync';

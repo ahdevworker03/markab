@@ -16,6 +16,7 @@
     "db:status": "pnpm --filter @workspace/db exec prisma migrate status",
     "db:studio": "pnpm --filter @workspace/db run db:studio",
     "test": "pnpm -r --if-present run test",
+    "test:offline-shell": "pnpm --filter @workspace/web run build && node apps/web/scripts/test-offline-shell.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -24,6 +25,7 @@
   "private": true,
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "1.63.0",
     "eslint": "^10.8.0",
     "prettier": "^3.9.5",
     "react-doctor": "^0.9.11",

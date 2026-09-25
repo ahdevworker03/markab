@@ -9,6 +9,7 @@ import { PlatformRoute } from '@/components/layout/PlatformRoute';
 import { PlatformShell } from '@/components/layout/PlatformShell';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { AuthProvider } from '@/providers/AuthProvider';
+import { OfflineProvider } from '@/features/offline/OfflineProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 
 import { AcceptInvitationPage, LoginPage, PasswordResetPage } from '@/features/auth';
@@ -56,11 +57,13 @@ function Router() {
 function ProtectedShell() {
   return (
     <ProtectedRoute>
-      <OrganizationStatusGate>
-        <AppShell>
-          <Router />
-        </AppShell>
-      </OrganizationStatusGate>
+      <OfflineProvider>
+        <OrganizationStatusGate>
+          <AppShell>
+            <Router />
+          </AppShell>
+        </OrganizationStatusGate>
+      </OfflineProvider>
     </ProtectedRoute>
   );
 }
@@ -88,38 +91,46 @@ function App() {
               {/* Full-screen flows render outside AppShell (no bottom navigation) */}
               <Route path="/rentals/new">
                 <ProtectedRoute>
-                  <OrganizationStatusGate>
-                    <FocusedFlow maxWidth="wide">
-                      <NewRentalPage />
-                    </FocusedFlow>
-                  </OrganizationStatusGate>
+                  <OfflineProvider>
+                    <OrganizationStatusGate>
+                      <FocusedFlow maxWidth="wide">
+                        <NewRentalPage />
+                      </FocusedFlow>
+                    </OrganizationStatusGate>
+                  </OfflineProvider>
                 </ProtectedRoute>
               </Route>
               <Route path="/maintenance/add">
                 <ProtectedRoute>
-                  <OrganizationStatusGate>
-                    <FocusedFlow>
-                      <AddMaintenancePage />
-                    </FocusedFlow>
-                  </OrganizationStatusGate>
+                  <OfflineProvider>
+                    <OrganizationStatusGate>
+                      <FocusedFlow>
+                        <AddMaintenancePage />
+                      </FocusedFlow>
+                    </OrganizationStatusGate>
+                  </OfflineProvider>
                 </ProtectedRoute>
               </Route>
               <Route path="/expenses/add">
                 <ProtectedRoute>
-                  <OrganizationStatusGate>
-                    <FocusedFlow>
-                      <AddExpensePage />
-                    </FocusedFlow>
-                  </OrganizationStatusGate>
+                  <OfflineProvider>
+                    <OrganizationStatusGate>
+                      <FocusedFlow>
+                        <AddExpensePage />
+                      </FocusedFlow>
+                    </OrganizationStatusGate>
+                  </OfflineProvider>
                 </ProtectedRoute>
               </Route>
               <Route path="/tasks/add">
                 <ProtectedRoute>
-                  <OrganizationStatusGate>
-                    <FocusedFlow>
-                      <AddTaskPage />
-                    </FocusedFlow>
-                  </OrganizationStatusGate>
+                  <OfflineProvider>
+                    <OrganizationStatusGate>
+                      <FocusedFlow>
+                        <AddTaskPage />
+                      </FocusedFlow>
+                    </OrganizationStatusGate>
+                  </OfflineProvider>
                 </ProtectedRoute>
               </Route>
 

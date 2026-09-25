@@ -3,10 +3,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import NewRentalPage from "./NewRentalPage";
 
 const setLocation = vi.fn();
+const useOffline = vi.hoisted(() => vi.fn());
 const create = {
   isPending: false,
   mutateAsync: vi.fn().mockResolvedValue(undefined),
 };
+const queueRentalCreate = vi.fn().mockResolvedValue("rental-create");
+const refreshProjections = vi.fn();
 
 const customer = {
   id: "customer-1",
@@ -44,6 +47,22 @@ vi.mock("@/hooks/useTimeout", () => ({
   useTimeout: vi.fn(),
 }));
 
+vi.mock("@/features/offline/OfflineProvider", () => ({
+  useOffline,
+}));
+
+vi.mock("@/features/offline/commands", () => ({
+  createOfflineCommands: () => ({ queueRentalCreate }),
+}));
+
+vi.mock("@/features/customers/api-hooks", () => ({
+  useCustomersList: () => ({ customers: [customer], isLoading: false }),
+}));
+
+vi.mock("@/features/vehicles/api-hooks", () => ({
+  useVehiclesList: () => ({ vehicles: [vehicle], isLoading: false }),
+}));
+
 function selectCustomerAndVehicle() {
   fireEvent.click(screen.getByText("Toyota Camry"));
   fireEvent.click(screen.getByText("أحمد حسن"));
@@ -69,6 +88,13 @@ describe("NewRentalPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     create.mutateAsync.mockResolvedValue(undefined);
+    useOffline.mockReturnValue({
+      isOffline: false,
+      workspace: { organizationId: "organization-1", userId: "user-1" },
+      store: {},
+      refreshProjections,
+    });
+    customer.id = "customer-1";
   });
 
   it("selects customer and vehicle with their aligned secondary identifiers", () => {
@@ -132,6 +158,39 @@ describe("NewRentalPage", () => {
         },
       });
     });
+  });
+
+  it("queues an offline rental using a provisional customer dependency", async () => {
+    useOffline.mockReturnValue({
+      isOffline: true,
+      workspace: { organizationId: "organization-1", userId: "user-1" },
+      store: {},
+      refreshProjections,
+    });
+    customer.id = "local:customer-create";
+    render(<NewRentalPage />);
+    selectCustomerAndVehicle();
+    setValidPeriod();
+    fireEvent.change(screen.getByLabelText(/الأجرة اليومية/), {
+      target: { value: "100" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "حفظ الإيجار" }));
+
+    await waitFor(() => {
+      expect(queueRentalCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ vehicle_id: "vehicle-1", total_amount: 300 }),
+        { customer_create_operation_id: "customer-create" },
+      );
+    });
+    expect(
+      screen.getByRole("heading", { name: "تمت إضافة الإيجار إلى قائمة الانتظار" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("سيُرسل إلى الخادم للتحقق عند استعادة الاتصال."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("تم إنشاء عقد الإيجار")).not.toBeInTheDocument();
+    expect(refreshProjections).toHaveBeenCalledOnce();
+    expect(create.mutateAsync).not.toHaveBeenCalled();
   });
 
   it("rejects an expected return datetime before the pickup datetime", () => {

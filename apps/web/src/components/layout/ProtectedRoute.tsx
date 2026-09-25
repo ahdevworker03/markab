@@ -9,20 +9,29 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, isAuthenticated, isLoading, retry, sessionState } = useAuth();
+  const {
+    user,
+    offlineIdentity,
+    isAuthenticated,
+    isLoading,
+    retry,
+    sessionState,
+  } = useAuth();
   const [, setLocation] = useLocation();
+  const identity = user ?? offlineIdentity;
   const hasTenantAccess =
-    isAuthenticated &&
-    user !== null &&
-    (user.role === "OWNER" || user.role === "EMPLOYEE");
+    (isAuthenticated || sessionState === "offline") &&
+    identity != null &&
+    (identity.role === "OWNER" || identity.role === "EMPLOYEE");
 
   useEffect(() => {
     if (!isLoading && sessionState !== "indeterminate" && !hasTenantAccess) {
-      setLocation(user?.role === "PLATFORM_OWNER" ? "/platform" : "/login", {
-        replace: true,
-      });
+      setLocation(
+        identity?.role === "PLATFORM_OWNER" ? "/platform" : "/login",
+        { replace: true },
+      );
     }
-  }, [hasTenantAccess, isLoading, sessionState, setLocation, user?.role]);
+  }, [hasTenantAccess, identity?.role, isLoading, sessionState, setLocation]);
 
   if (isLoading) {
     return (

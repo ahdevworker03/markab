@@ -4,6 +4,7 @@ import { BottomNavigation } from "./BottomNavigation";
 import { AppSidebar } from "./AppSidebar";
 import { TabletNavigationRail } from "./TabletNavigationRail";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { SyncStatus } from "@/features/offline/components/SyncStatus";
 
 interface AppShellProps {
   children: ReactNode;
@@ -26,6 +27,9 @@ export function AppShell({ children }: AppShellProps) {
             <PageContainer className="py-3 sm:py-4 lg:py-6">
               {children}
             </PageContainer>
+          </div>
+          <div className="pointer-events-none fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] end-4 z-30 md:bottom-4">
+            <SyncStatus />
           </div>
           <BottomNavigation />
         </div>

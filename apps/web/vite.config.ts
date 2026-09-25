@@ -1,4 +1,5 @@
 import path from 'path';
+import { readFileSync } from 'node:fs';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
@@ -11,11 +12,28 @@ if (Number.isNaN(port) || port <= 0) {
 
 const basePath = process.env.BASE_PATH || '/';
 
+function buildServiceWorker() {
+  return {
+    name: 'build-service-worker',
+    generateBundle(_: unknown, bundle: Record<string, { fileName: string; type: string }>) {
+      const precacheUrls = Object.values(bundle)
+        .filter((output) => output.type === 'chunk' || output.fileName.endsWith('.css'))
+        .map((output) => output.fileName)
+        .sort();
+      const source = readFileSync(path.resolve(import.meta.dirname, 'public', 'sw.js'), 'utf8')
+        .replace('__PRECACHE_MANIFEST__', JSON.stringify(precacheUrls));
+
+      bundle['sw.js'] = { type: 'asset', fileName: 'sw.js', source };
+    },
+  };
+}
+
 export default defineConfig({
   base: basePath,
   plugins: [
     react(),
     tailwindcss(),
+    buildServiceWorker(),
   ],
   resolve: {
     alias: {
