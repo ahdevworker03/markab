@@ -312,9 +312,39 @@ development credentials or a public database.
 
 ### Pending External Evidence
 
-- Capture the approved staging bundle, request-count, API-timing, search, and
-  synchronization measurements against the representative pilot dataset.
+- Capture staging API P50/P95, error rate, request count/payload, Core Web
+  Vitals, native IndexedDB search, initial/reconnect synchronization, and
+  database query-plan measurements against the representative pilot dataset.
 - Walk through Cloudflare, Hetzner, R2, Resend, DNS, TLS, backup, restore, and
   secret-management permissions with the project owner/operator.
 - Confirm the documented offline matrix with a representative pilot rental
   business user before implementing synchronization.
+
+### Step 64 Local Measurement Baseline
+
+Recorded on 2026-09-26 from this workspace. This was a measurement-only pass;
+it made no application, schema, API, index, or infrastructure changes.
+
+| Area                                | Evidence                                                                                                                                                       | Result                                                                                                                                                                                                                                                                                                                                                |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Approved pilot profile              | Two organizations; each with 50 vehicles, 1,000 customers, and 500 rentals; up to 10 concurrent users; mid-range mobile device and simulated 4G                | Recovered from this record; required for target-bearing measurements                                                                                                                                                                                                                                                                                  |
+| Web production build                | `pnpm --filter @workspace/web run build`                                                                                                                       | Passed in 4.95 s locally; emitted one 1,374.03 kB minified JavaScript chunk (370.52 kB gzip), 127.12 kB CSS (20.58 kB gzip), and Vite's over-500 kB chunk warning. Step 57 defines no bundle-size gate, so this requires investigation rather than a gate failure.                                                                                    |
+| Offline unit coverage               | `pnpm --filter @workspace/web exec vitest run src/features/offline/storage.test.ts src/features/offline/sync.test.ts src/features/offline/read-hooks.test.tsx` | Passed: 35 tests in 1.95 s. These tests use a hand-written IndexedDB fake and are not a native-browser/device search benchmark.                                                                                                                                                                                                                       |
+| Dashboard/analytics request fan-out | Static inspection of `apps/web/src/features/payments/hooks.ts`                                                                                                 | Failed the milestone requirement that pilot pages do not have unbounded request fan-out: `useOrgOutstandingBalances` creates one rental-payment request per rental. At the approved 500 rentals, dashboard and analytics each add 500 per-rental requests before accounting for their other data requests. Latency/payload impact remains unmeasured. |
+| Local database suitability          | Read-only tenant record counts in `vehicle_rental`                                                                                                             | Not representative: no tenant approaches the approved 50 vehicles, 1,000 customers, and 500 rentals. It must not be used to classify API, sync, search, or query-plan performance.                                                                                                                                                                    |
+
+The repository has Vite production builds, Vitest, a narrow Playwright
+service-worker configuration, and a local PostgreSQL 16.14 container. It has
+no representative-data seed, API benchmark command, Lighthouse/equivalent
+runner, route-level bundle analyzer, authenticated browser benchmark
+environment, or production-like staging environment. Existing Playwright runs
+only the static web server and cannot supply authenticated API data.
+
+The following target-bearing measurements remain unavailable rather than
+estimated: API read/search/mutation P95 and error rate; initial usable load and
+post-load navigation on the approved mobile/4G profile; initial/reconnect sync;
+native IndexedDB customer/vehicle search; high-value-page request counts and
+payloads; database `EXPLAIN (ANALYZE, BUFFERS)` on representative paths; and
+CPU/memory/connection saturation under ten concurrent users. Establish a
+deterministic two-tenant seed and isolated authenticated API/browser staging
+environment before collecting them.
