@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { Check, ClipboardList } from "lucide-react";
 import type { CreateTaskRequest } from "@workspace/api-client-react";
@@ -34,6 +34,18 @@ export default function AddTaskPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const redirectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isMounted = useRef(false);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+      if (redirectTimeout.current !== null) {
+        clearTimeout(redirectTimeout.current);
+      }
+    };
+  }, []);
 
   function clearError(key: string) {
     if (!errors[key]) return;
@@ -65,8 +77,15 @@ export default function AddTaskPage() {
         ...(notes.trim() ? { notes: notes.trim() } : {}),
       };
       await mutations.create.mutateAsync({ data });
+      if (!isMounted.current) return;
       setSaved(true);
-      setTimeout(() => setLocation("/tasks"), 1200);
+      if (redirectTimeout.current !== null) {
+        clearTimeout(redirectTimeout.current);
+      }
+      redirectTimeout.current = setTimeout(() => {
+        redirectTimeout.current = null;
+        setLocation("/tasks");
+      }, 1200);
     } catch (error) {
       setFormError(getApiErrorMessage(error).title);
     }
