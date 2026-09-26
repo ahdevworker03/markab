@@ -1,8 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ApiError } from "@workspace/api-client-react";
 
 import AddTaskPage from "./AddTaskPage";
+
+const { setLocation } = vi.hoisted(() => ({ setLocation: vi.fn() }));
 
 function makeApiError(message: string): ApiError {
   const response = new Response(null, {
@@ -18,6 +20,10 @@ function makeApiError(message: string): ApiError {
 
 vi.mock("@/features/tasks/hooks", () => ({
   useTaskMutations: vi.fn(),
+}));
+
+vi.mock("wouter", () => ({
+  useLocation: () => ["/tasks/new", setLocation],
 }));
 
 import { useTaskMutations } from "@/features/tasks/hooks";
@@ -66,6 +72,11 @@ function submit() {
 beforeEach(() => {
   vi.clearAllMocks();
   mockCreate();
+});
+
+afterEach(() => {
+  vi.clearAllTimers();
+  vi.useRealTimers();
 });
 
 describe("AddTaskPage", () => {
@@ -392,6 +403,55 @@ describe("AddTaskPage", () => {
     enterDueDate();
     submit();
     expect(await screen.findByText("تم إنشاء المهمة.")).toBeInTheDocument();
+  });
+
+  it("redirects to tasks after the success delay", async () => {
+    vi.useFakeTimers();
+    render(<AddTaskPage />);
+    enterDueDate();
+    submit();
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(screen.getByText("تم إنشاء المهمة.")).toBeInTheDocument();
+
+    act(() => vi.advanceTimersByTime(1199));
+    expect(setLocation).not.toHaveBeenCalled();
+
+    act(() => vi.advanceTimersByTime(1));
+    expect(setLocation).toHaveBeenCalledOnce();
+    expect(setLocation).toHaveBeenCalledWith("/tasks");
+  });
+
+  it("cancels a pending redirect when unmounted", async () => {
+    vi.useFakeTimers();
+    const view = render(<AddTaskPage />);
+    enterDueDate();
+    submit();
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    view.unmount();
+    act(() => vi.advanceTimersByTime(1200));
+
+    expect(setLocation).not.toHaveBeenCalled();
+  });
+
+  it("keeps one pending redirect when submissions race", async () => {
+    vi.useFakeTimers();
+    render(<AddTaskPage />);
+    enterDueDate();
+    submit();
+    submit();
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    act(() => vi.advanceTimersByTime(1200));
+
+    expect(setLocation).toHaveBeenCalledOnce();
   });
 
   it("displays a mutation error without false success", async () => {
