@@ -92,7 +92,9 @@ describe("sync pull routes", () => {
     const response = await pull().expect(200);
 
     expect(response.body).toEqual({
-      data: { changes: [], next_cursor: null, completion_cursor: null },
+      changes: [],
+      next_cursor: null,
+      completion_cursor: null,
     });
   });
 
@@ -105,48 +107,62 @@ describe("sync pull routes", () => {
     });
 
     const response = await pull(undefined, 100).expect(200);
-    const changes = response.body.data.changes;
+    const changes = response.body.changes;
     const expected = [customer.id, vehicle.id, rental.id];
 
-    expect(changes.map((change: { resource_id: string }) => change.resource_id)).toEqual(expected);
-    expect(changes.find((change: { resource_id: string }) => change.resource_id === customer.id)).toMatchObject({
+    expect(
+      changes.map((change: { resource_id: string }) => change.resource_id),
+    ).toEqual(expected);
+    expect(
+      changes.find(
+        (change: { resource_id: string }) => change.resource_id === customer.id,
+      ),
+    ).toMatchObject({
       resource_type: "CUSTOMER",
       deleted: false,
       customer: { id: customer.id },
       vehicle: null,
       rental: null,
     });
-    expect(changes.find((change: { resource_id: string }) => change.resource_id === vehicle.id)).toMatchObject({
+    expect(
+      changes.find(
+        (change: { resource_id: string }) => change.resource_id === vehicle.id,
+      ),
+    ).toMatchObject({
       resource_type: "VEHICLE",
       deleted: true,
       customer: null,
       vehicle: null,
       rental: null,
     });
-    expect(changes.find((change: { resource_id: string }) => change.resource_id === rental.id)).toMatchObject({
+    expect(
+      changes.find(
+        (change: { resource_id: string }) => change.resource_id === rental.id,
+      ),
+    ).toMatchObject({
       resource_type: "RENTAL",
       deleted: false,
       customer: null,
       vehicle: null,
       rental: { id: rental.id },
     });
-    expect(response.body.data).toMatchObject({ next_cursor: null });
-    expect(response.body.data.completion_cursor).toEqual(expect.any(String));
+    expect(response.body).toMatchObject({ next_cursor: null });
+    expect(response.body.completion_cursor).toEqual(expect.any(String));
   });
 
   it("paginates and resumes unchanged data with an opaque cursor", async () => {
     await createResources(new Date("2030-01-01T00:00:00.000Z"));
 
     const first = await pull(undefined, 1).expect(200);
-    const retry = await pull(first.body.data.next_cursor, 1).expect(200);
-    const retryAgain = await pull(first.body.data.next_cursor, 1).expect(200);
-    const final = await pull(retry.body.data.next_cursor, 1).expect(200);
+    const retry = await pull(first.body.next_cursor, 1).expect(200);
+    const retryAgain = await pull(first.body.next_cursor, 1).expect(200);
+    const final = await pull(retry.body.next_cursor, 1).expect(200);
 
-    expect(first.body.data.changes).toHaveLength(1);
-    expect(first.body.data.next_cursor).toEqual(expect.any(String));
-    expect(retry.body.data).toEqual(retryAgain.body.data);
-    expect(final.body.data).toMatchObject({ next_cursor: null });
-    expect(final.body.data.completion_cursor).toEqual(expect.any(String));
+    expect(first.body.changes).toHaveLength(1);
+    expect(first.body.next_cursor).toEqual(expect.any(String));
+    expect(retry.body).toEqual(retryAgain.body);
+    expect(final.body).toMatchObject({ next_cursor: null });
+    expect(final.body.completion_cursor).toEqual(expect.any(String));
   });
 
   it("keeps equal timestamps and IDs from different resources across pages", async () => {
@@ -185,17 +201,17 @@ describe("sync pull routes", () => {
     });
 
     const first = await pull(undefined, 1).expect(200);
-    const second = await pull(first.body.data.next_cursor, 1).expect(200);
+    const second = await pull(first.body.next_cursor, 1).expect(200);
 
-    expect(first.body.data.changes[0]).toMatchObject({
+    expect(first.body.changes[0]).toMatchObject({
       resource_type: "CUSTOMER",
       resource_id: id,
     });
-    expect(second.body.data.changes[0]).toMatchObject({
+    expect(second.body.changes[0]).toMatchObject({
       resource_type: "VEHICLE",
       resource_id: id,
     });
-    expect(second.body.data.next_cursor).toBeNull();
+    expect(second.body.next_cursor).toBeNull();
   });
 
   it("delivers a change made after the upper watermark in the next cycle", async () => {
@@ -242,7 +258,7 @@ describe("sync pull routes", () => {
     });
 
     const first = await pull(undefined, 1).expect(200);
-    expect(first.body.data.changes[0]).toMatchObject({ resource_type: "RENTAL" });
+    expect(first.body.changes[0]).toMatchObject({ resource_type: "RENTAL" });
     await prisma.customer.update({
       where: { id: customer.id },
       data: { phone: "70999999", updated_at: laterTime },
@@ -252,12 +268,12 @@ describe("sync pull routes", () => {
       data: { deleted_at: laterTime, updated_at: laterTime },
     });
 
-    const currentTraversalIds = [first.body.data.changes[0].resource_id];
+    const currentTraversalIds = [first.body.changes[0].resource_id];
     let page = first;
-    while (page.body.data.next_cursor) {
-      page = await pull(page.body.data.next_cursor, 1).expect(200);
+    while (page.body.next_cursor) {
+      page = await pull(page.body.next_cursor, 1).expect(200);
       currentTraversalIds.push(
-        ...page.body.data.changes.map(
+        ...page.body.changes.map(
           (change: { resource_id: string }) => change.resource_id,
         ),
       );
@@ -266,8 +282,8 @@ describe("sync pull routes", () => {
     expect(currentTraversalIds).not.toContain(customer.id);
     expect(currentTraversalIds).not.toContain(vehicle.id);
 
-    const nextCycle = await pull(page.body.data.completion_cursor, 100).expect(200);
-    expect(nextCycle.body.data.changes).toEqual(
+    const nextCycle = await pull(page.body.completion_cursor, 100).expect(200);
+    expect(nextCycle.body.changes).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           resource_id: customer.id,
@@ -282,7 +298,7 @@ describe("sync pull routes", () => {
   it("rejects tampered and cross-tenant cursors", async () => {
     await createResources(new Date("2030-01-01T00:00:00.000Z"));
     const first = await pull(undefined, 1).expect(200);
-    const tampered = `${first.body.data.next_cursor}x`;
+    const tampered = `${first.body.next_cursor}x`;
 
     await pull(tampered).expect(422);
 
@@ -303,7 +319,7 @@ describe("sync pull routes", () => {
       role: "OWNER",
     });
 
-    await pull(first.body.data.next_cursor, undefined, otherToken).expect(422);
+    await pull(first.body.next_cursor, undefined, otherToken).expect(422);
   });
 
   it("validates limits and enforces the tenant operational boundary", async () => {

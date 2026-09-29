@@ -118,14 +118,14 @@ describe("sync push routes", () => {
       },
     });
 
-    expect(first.body.data.results[0]).toMatchObject({
+    expect(first.body.results[0]).toMatchObject({
       operation_id: operation.operation_id,
       status: "APPLIED",
       code: "SYNC_APPLIED",
       resource_type: "CUSTOMER",
       customer: { firstName: "Amina" },
     });
-    expect(replay.body.data.results[0]).toMatchObject({
+    expect(replay.body.results[0]).toMatchObject({
       operation_id: operation.operation_id,
       status: "DUPLICATE",
       code: "SYNC_DUPLICATE",
@@ -146,7 +146,7 @@ describe("sync push routes", () => {
       200,
     );
 
-    expect(response.body.data.results[0]).toMatchObject({
+    expect(response.body.results[0]).toMatchObject({
       operation_id: operationId,
       status: "REJECTED",
       code: "SYNC_OPERATION_PAYLOAD_MISMATCH",
@@ -186,7 +186,7 @@ describe("sync push routes", () => {
       },
     ]).expect(200);
 
-    expect(response.body.data.results[0]).toMatchObject({
+    expect(response.body.results[0]).toMatchObject({
       status: "CONFLICT",
       code: "SYNC_CUSTOMER_STALE",
       resource_type: "CUSTOMER",
@@ -249,7 +249,7 @@ describe("sync push routes", () => {
       },
     });
 
-    expect(first.body.data.results[0]).toMatchObject({
+    expect(first.body.results[0]).toMatchObject({
       status: "CONFLICT",
       code: "SYNC_CUSTOMER_STALE",
       current_customer: expected,
@@ -260,7 +260,7 @@ describe("sync push routes", () => {
       resource_id: customer.id,
       stale_customer_snapshot: expected,
     });
-    expect(replay.body.data.results[0]).toMatchObject({
+    expect(replay.body.results[0]).toMatchObject({
       status: "CONFLICT",
       code: "SYNC_CUSTOMER_STALE",
       current_customer: expected,
@@ -268,10 +268,13 @@ describe("sync push routes", () => {
 
     await prisma.customer.update({
       where: { id: customer.id },
-      data: { first_name: "Changed", updated_at: new Date("2030-01-02T00:00:00.000Z") },
+      data: {
+        first_name: "Changed",
+        updated_at: new Date("2030-01-02T00:00:00.000Z"),
+      },
     });
     const afterUpdate = await push([operation]).expect(200);
-    expect(afterUpdate.body.data.results[0]).toMatchObject({
+    expect(afterUpdate.body.results[0]).toMatchObject({
       status: "CONFLICT",
       code: "SYNC_CUSTOMER_STALE",
       current_customer: expected,
@@ -282,7 +285,7 @@ describe("sync push routes", () => {
       data: { deleted_at: new Date("2030-01-03T00:00:00.000Z") },
     });
     const afterDeletion = await push([operation]).expect(200);
-    expect(afterDeletion.body.data.results[0]).toMatchObject({
+    expect(afterDeletion.body.results[0]).toMatchObject({
       status: "CONFLICT",
       code: "SYNC_CUSTOMER_STALE",
       current_customer: expected,
@@ -320,13 +323,18 @@ describe("sync push routes", () => {
 
     await push([operation]).expect(200);
     await push([
-      { ...operation, customer_update: { ...operation.customer_update, phone: "70999999" } },
-    ]).expect(200).expect(({ body }) => {
-      expect(body.data.results[0]).toMatchObject({
-        status: "REJECTED",
-        code: "SYNC_OPERATION_PAYLOAD_MISMATCH",
+      {
+        ...operation,
+        customer_update: { ...operation.customer_update, phone: "70999999" },
+      },
+    ])
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.results[0]).toMatchObject({
+          status: "REJECTED",
+          code: "SYNC_OPERATION_PAYLOAD_MISMATCH",
+        });
       });
-    });
     await prisma.syncOperationReceipt.update({
       where: {
         organization_id_operation_id: {
@@ -336,12 +344,14 @@ describe("sync push routes", () => {
       },
       data: { expires_at: new Date("2000-01-01T00:00:00.000Z") },
     });
-    await push([operation]).expect(200).expect(({ body }) => {
-      expect(body.data.results[0]).toMatchObject({
-        status: "EXPIRED",
-        code: "SYNC_OPERATION_EXPIRED",
+    await push([operation])
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.results[0]).toMatchObject({
+          status: "EXPIRED",
+          code: "SYNC_OPERATION_EXPIRED",
+        });
       });
-    });
   });
 
   it("rejects a corrupt stale-conflict snapshot without reading the mutable customer", async () => {
@@ -384,9 +394,11 @@ describe("sync push routes", () => {
       data: { stale_customer_snapshot: { id: "invalid" } },
     });
 
-    await push([operation]).expect(500).expect(({ body }) => {
-      expect(body.error.code).toBe("SYNC_CONFLICT_SNAPSHOT_INVALID");
-    });
+    await push([operation])
+      .expect(500)
+      .expect(({ body }) => {
+        expect(body.error.code).toBe("SYNC_CONFLICT_SNAPSHOT_INVALID");
+      });
   });
 
   it("creates a rental that references an earlier customer create", async () => {
@@ -427,7 +439,7 @@ describe("sync push routes", () => {
       },
     ]).expect(200);
 
-    expect(response.body.data.results[1]).toMatchObject({
+    expect(response.body.results[1]).toMatchObject({
       status: "APPLIED",
       code: "SYNC_APPLIED",
       resource_type: "RENTAL",

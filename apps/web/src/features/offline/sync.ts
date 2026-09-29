@@ -58,6 +58,22 @@ function hasPendingOperations(operations: readonly QueuedOperation[]): boolean {
   return operations.some((operation) => operation.state === "PENDING");
 }
 
+function isSyncPullResponse(value: unknown): value is SyncPullResponse {
+  if (!value || typeof value !== "object") return false;
+  const page = value as Record<string, unknown>;
+  return (
+    Array.isArray(page.changes) &&
+    (page.next_cursor === null || typeof page.next_cursor === "string") &&
+    (page.completion_cursor === null ||
+      typeof page.completion_cursor === "string") &&
+    (page.next_cursor !== null
+      ? page.next_cursor.length > 0 && page.completion_cursor === null
+      : page.changes.length === 0 ||
+        (typeof page.completion_cursor === "string" &&
+          page.completion_cursor.length > 0))
+  );
+}
+
 function hasUnresolvedCustomerCreate(
   operation: QueuedOperation,
   outbox: readonly QueuedOperation[],
@@ -82,7 +98,8 @@ export function createSyncCoordinator({
     const outbox = await store.listOutbox(workspace, 2 ** 32 - 1);
     onStatus({
       status,
-      pendingCount: outbox.filter((operation) => operation.state === "PENDING").length,
+      pendingCount: outbox.filter((operation) => operation.state === "PENDING")
+        .length,
       conflicts: outbox.filter((operation) => operation.state === "CONFLICT"),
       error,
     });
@@ -132,7 +149,9 @@ export function createSyncCoordinator({
       );
       return;
     }
-    throw new Error(`Missing authoritative resource for ${operation.operation_id}`);
+    throw new Error(
+      `Missing authoritative resource for ${operation.operation_id}`,
+    );
   };
 
   const processResult = async (
@@ -206,7 +225,8 @@ export function createSyncCoordinator({
         await processResult(operation, result);
       }
 
-      if (response.results.some((result) => result.status === "CONFLICT")) return;
+      if (response.results.some((result) => result.status === "CONFLICT"))
+        return;
     }
   };
 
@@ -214,6 +234,9 @@ export function createSyncCoordinator({
     let cursor = await store.getCompletionCursor(workspace);
     while (true) {
       const page = await pull(cursor ? { cursor } : undefined);
+      if (!isSyncPullResponse(page)) {
+        throw new Error("Invalid sync pull response");
+      }
       await store.applyPull(
         workspace,
         page.changes,
