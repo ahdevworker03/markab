@@ -52,7 +52,7 @@ onlyBuiltDependencies:
   - unrs-resolver
 
 overrides:
-  fast-uri: 3.1.6
+  fast-uri: 3.1.7
   mysql2: 3.23.1
   qs: 6.16.0
   # Production runtime is linux-x64; exclude all other platform binaries
