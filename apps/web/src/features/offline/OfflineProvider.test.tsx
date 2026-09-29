@@ -46,11 +46,12 @@ function createStore(): OfflineStore {
 }
 
 function OfflineProbe() {
-  const { conflicts, isOnline, pendingCount, status } = useOffline();
+  const { conflicts, isOnline, pendingCount, status, syncReady } = useOffline();
   return (
     <>
       <p>{`${status}:${isOnline}`}</p>
       <p>{`${pendingCount}:${conflicts.length}`}</p>
+      <p>{String(syncReady)}</p>
     </>
   );
 }
@@ -89,6 +90,73 @@ describe("OfflineProvider", () => {
       organizationId: "organization-a",
       userId: "user-a",
     });
+    expect(screen.getByText("true")).toBeInTheDocument();
+  });
+
+  it("only marks sync ready after opening a tenant workspace", async () => {
+    let resolveOpen!: () => void;
+    const store = createStore();
+    const auth: {
+      user: (typeof tenant & { email: string; createdAt: string }) | null;
+      offlineIdentity: null;
+      sessionState: "authenticated" | "unauthenticated";
+    } = {
+      user: {
+        ...tenant,
+        email: "owner@example.com",
+        createdAt: "2026-01-01",
+      },
+      offlineIdentity: null,
+      sessionState: "authenticated",
+    };
+    store.open = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveOpen = resolve;
+        }),
+    );
+    useAuth.mockImplementation(() => auth);
+
+    const view = render(
+      <OfflineProvider store={store}>
+        <OfflineProbe />
+      </OfflineProvider>,
+    );
+
+    expect(screen.getByText("false")).toBeInTheDocument();
+    resolveOpen();
+
+    await screen.findByText("true");
+    auth.user = null;
+    auth.sessionState = "unauthenticated";
+    view.rerender(
+      <OfflineProvider store={store}>
+        <OfflineProbe />
+      </OfflineProvider>,
+    );
+
+    expect(screen.getByText("false")).toBeInTheDocument();
+    expect(store.close).toHaveBeenCalledTimes(1);
+  });
+
+  it("synchronizes when the browser comes online after initialization", async () => {
+    const store = createStore();
+    syncPush.mockResolvedValue({ results: [] });
+    syncPull.mockResolvedValue({
+      changes: [],
+      next_cursor: null,
+      completion_cursor: "complete",
+    });
+    render(
+      <OfflineProvider store={store}>
+        <OfflineProbe />
+      </OfflineProvider>,
+    );
+
+    await screen.findByText("true");
+    fireEvent.online(window);
+
+    await waitFor(() => expect(syncPull).toHaveBeenCalledTimes(1));
   });
 
   it("keeps a validated tenant workspace available after an unreachable refresh", async () => {
@@ -327,6 +395,10 @@ describe("OfflineProvider", () => {
     fireEvent.online(window);
     expect(syncPull).toHaveBeenCalledTimes(1);
 
-    resolvePull({ changes: [], next_cursor: null, completion_cursor: "complete" });
+    resolvePull({
+      changes: [],
+      next_cursor: null,
+      completion_cursor: "complete",
+    });
   });
 });

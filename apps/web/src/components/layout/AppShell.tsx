@@ -5,12 +5,15 @@ import { AppSidebar } from "./AppSidebar";
 import { TabletNavigationRail } from "./TabletNavigationRail";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { SyncStatus } from "@/features/offline/components/SyncStatus";
+import { useOffline } from "@/features/offline/OfflineProvider";
 
 interface AppShellProps {
   children: ReactNode;
 }
 
 export function AppShell({ children }: AppShellProps) {
+  const { syncReady } = useOffline();
+
   return (
     <SidebarProvider>
       <a
@@ -22,7 +25,10 @@ export function AppShell({ children }: AppShellProps) {
       <AppSidebar />
       <TabletNavigationRail />
       <SidebarInset id="main-content" tabIndex={-1}>
-        <div className="flex h-[100dvh] min-w-0 flex-col overflow-hidden bg-background">
+        <div
+          className="flex h-[100dvh] min-w-0 flex-col overflow-hidden bg-background"
+          data-offline-sync-ready={syncReady}
+        >
           <div className="min-w-0 flex-1 overflow-x-clip overflow-y-auto pb-[calc(3.5rem+env(safe-area-inset-bottom))] scrollbar-hide md:pb-0">
             <PageContainer className="py-3 sm:py-4 lg:py-6">
               {children}
