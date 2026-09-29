@@ -5,6 +5,7 @@ import {
   login,
   requestJson,
   resetBenchmark,
+  setMobileNetworkOffline,
   syncChangeCount,
 } from "./benchmark-fixtures";
 import {
@@ -70,6 +71,7 @@ async function loginMobilePage(
 async function syncAndWaitForFinalPull(
   page: Page,
   expectedCounts: ProjectionCounts,
+  expectedSyncRequests?: { push: number; pull: number },
 ): Promise<void> {
   await expect
     .poll(() =>
@@ -82,9 +84,21 @@ async function syncAndWaitForFinalPull(
     .toBe(true);
   await page.locator('[data-offline-sync-ready="true"]').waitFor();
   const observed: string[] = [];
+  const syncRequests = { push: 0, pull: 0 };
   const observe = (response: { url(): string; status(): number }) => {
-    if (new URL(response.url()).pathname === "/api/sync/pull") {
+    const path = new URL(response.url()).pathname;
+    if (path === "/api/sync/pull") {
       observed.push(String(response.status()));
+      if (response.status() >= 200 && response.status() < 300) {
+        syncRequests.pull += 1;
+      }
+    }
+    if (
+      path === "/api/sync/push" &&
+      response.status() >= 200 &&
+      response.status() < 300
+    ) {
+      syncRequests.push += 1;
     }
   };
   page.on("response", observe);
@@ -113,6 +127,9 @@ async function syncAndWaitForFinalPull(
     );
   } finally {
     page.off("response", observe);
+  }
+  if (expectedSyncRequests) {
+    expect(syncRequests).toEqual(expectedSyncRequests);
   }
   await expect
     .poll(
@@ -356,6 +373,35 @@ test.describe("benchmark API", () => {
 });
 
 test.describe("benchmark mobile IndexedDB and sync", () => {
+  test("uses CDP network emulation to block and restore browser requests", async ({
+    browser,
+  }) => {
+    const profileContext = await createMobileProfile(browser);
+    try {
+      await profileContext.page.goto("/login");
+      await setMobileNetworkOffline(profileContext.session, true);
+      await expect(
+        profileContext.page.evaluate(() =>
+          fetch("http://127.0.0.1:3001/api/healthz").then(
+            () => false,
+            () => true,
+          ),
+        ),
+      ).resolves.toBe(true);
+
+      await setMobileNetworkOffline(profileContext.session, false);
+      await expect(
+        profileContext.page.evaluate(() =>
+          fetch("http://127.0.0.1:3001/api/healthz").then(
+            (response) => response.ok,
+          ),
+        ),
+      ).resolves.toBe(true);
+    } finally {
+      await profileContext.context.close();
+    }
+  });
+
   test("measures real login and navigation", async ({ browser }) => {
     const { context, page, profile } = await createMobileProfile(browser);
     try {
@@ -497,11 +543,12 @@ test.describe("benchmark mobile IndexedDB and sync", () => {
   }) => {
     await resetBenchmark();
     const profileContext = await createMobileProfile(browser);
-    const { context, page, profile } = profileContext;
+    const { context, page, profile, session } = profileContext;
     try {
       await loginMobilePage(page, await login(request));
       await syncAndWaitForFinalPull(page, fullPilotProjectionCounts);
       let queuedCount = 0;
+      const localCustomerIds: string[] = [];
       const outboxCount = () =>
         page.evaluate(async () => {
           const db = await new Promise<IDBDatabase>((resolve, reject) => {
@@ -521,19 +568,55 @@ test.describe("benchmark mobile IndexedDB and sync", () => {
       const reconnectSync = await runSamples(
         "mobile-reconnect-sync-queued-customer",
         async () => {
-          await context.setOffline(false);
-          await syncAndWaitForFinalPull(page, {
-            ...fullPilotProjectionCounts,
-            customers: fullPilotProjectionCounts.customers + queuedCount,
-          });
+          await setMobileNetworkOffline(session, false);
+          await syncAndWaitForFinalPull(
+            page,
+            {
+              ...fullPilotProjectionCounts,
+              customers: fullPilotProjectionCounts.customers + queuedCount,
+            },
+            { push: 1, pull: 1 },
+          );
           await expect.poll(outboxCount).toBe(0);
+          const localCustomerId = localCustomerIds.at(-1);
+          if (!localCustomerId) {
+            throw new Error(
+              "Queued benchmark customer is missing its local ID",
+            );
+          }
+          await expect
+            .poll(() =>
+              page.evaluate((localCustomerId) => {
+                return new Promise<boolean>((resolve, reject) => {
+                  const open = indexedDB.open("markab-offline-v1");
+                  open.onerror = () => reject(open.error);
+                  open.onsuccess = () => {
+                    const db = open.result;
+                    const transaction = db.transaction("customers", "readonly");
+                    const customer = transaction
+                      .objectStore("customers")
+                      .getAll();
+                    customer.onerror = () => reject(customer.error);
+                    customer.onsuccess = () => {
+                      db.close();
+                      resolve(
+                        !(customer.result as Array<{ id: string }>).some(
+                          (record) => record.id === localCustomerId,
+                        ),
+                      );
+                    };
+                  };
+                });
+              }, localCustomerId),
+            )
+            .toBe(true);
         },
         {
           ...sampling,
           beforeSample: async (sample) => {
-            await context.setOffline(true);
-            await page.evaluate((number) => {
-              return new Promise<void>((resolve, reject) => {
+            await setMobileNetworkOffline(session, true);
+            const localCustomerId = await page.evaluate((number) => {
+              return new Promise<string>((resolve, reject) => {
                 const open = indexedDB.open("markab-offline-v1");
                 open.onerror = () => reject(open.error);
                 open.onsuccess = () => {
@@ -587,7 +670,7 @@ test.describe("benchmark mobile IndexedDB and sync", () => {
                     });
                     transaction.oncomplete = () => {
                       db.close();
-                      resolve();
+                      resolve(localId);
                     };
                     transaction.onerror = () => reject(transaction.error);
                     transaction.onabort = () => reject(transaction.error);
@@ -595,6 +678,7 @@ test.describe("benchmark mobile IndexedDB and sync", () => {
                 };
               });
             }, sample);
+            localCustomerIds.push(localCustomerId);
             await expect.poll(outboxCount).toBe(1);
             queuedCount += 1;
           },
@@ -603,6 +687,161 @@ test.describe("benchmark mobile IndexedDB and sync", () => {
       recordMeasurements([reconnectSync], {
         ...profile,
         scenario: "full-pilot-one-queued-customer-per-reconnect",
+      });
+    } finally {
+      await context.close();
+      await resetBenchmark();
+    }
+  });
+
+  test("measures online application sync with one queued customer per sample", async ({
+    browser,
+    request,
+  }) => {
+    await resetBenchmark();
+    const profileContext = await createMobileProfile(browser);
+    const { context, page, profile } = profileContext;
+    try {
+      await loginMobilePage(page, await login(request));
+      await syncAndWaitForFinalPull(page, fullPilotProjectionCounts);
+      let queuedCount = 0;
+      const localCustomerIds: string[] = [];
+      const outboxCount = () =>
+        page.evaluate(async () => {
+          const db = await new Promise<IDBDatabase>((resolve, reject) => {
+            const request = indexedDB.open("markab-offline-v1");
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+          });
+          const transaction = db.transaction("outbox", "readonly");
+          const count = await new Promise<number>((resolve, reject) => {
+            const request = transaction.objectStore("outbox").count();
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+          });
+          db.close();
+          return count;
+        });
+      const applicationSync = await runSamples(
+        "mobile-online-application-sync-queued-customer",
+        async () => {
+          await syncAndWaitForFinalPull(
+            page,
+            {
+              ...fullPilotProjectionCounts,
+              customers: fullPilotProjectionCounts.customers + queuedCount,
+            },
+            { push: 1, pull: 1 },
+          );
+          await expect.poll(outboxCount).toBe(0);
+          const localCustomerId = localCustomerIds.at(-1);
+          if (!localCustomerId) {
+            throw new Error(
+              "Queued benchmark customer is missing its local ID",
+            );
+          }
+          await expect
+            .poll(() =>
+              page.evaluate((localCustomerId) => {
+                return new Promise<boolean>((resolve, reject) => {
+                  const open = indexedDB.open("markab-offline-v1");
+                  open.onerror = () => reject(open.error);
+                  open.onsuccess = () => {
+                    const db = open.result;
+                    const transaction = db.transaction("customers", "readonly");
+                    const customer = transaction
+                      .objectStore("customers")
+                      .getAll();
+                    customer.onerror = () => reject(customer.error);
+                    customer.onsuccess = () => {
+                      db.close();
+                      resolve(
+                        !(customer.result as Array<{ id: string }>).some(
+                          (record) => record.id === localCustomerId,
+                        ),
+                      );
+                    };
+                  };
+                });
+              }, localCustomerId),
+            )
+            .toBe(true);
+        },
+        {
+          ...sampling,
+          beforeSample: async (sample) => {
+            const localCustomerId = await page.evaluate((number) => {
+              return new Promise<string>((resolve, reject) => {
+                const open = indexedDB.open("markab-offline-v1");
+                open.onerror = () => reject(open.error);
+                open.onsuccess = () => {
+                  const db = open.result;
+                  const keys = db
+                    .transaction("customers", "readonly")
+                    .objectStore("customers")
+                    .getAllKeys();
+                  keys.onerror = () => reject(keys.error);
+                  keys.onsuccess = () => {
+                    const tenantKey = (
+                      keys.result[0] as string[] | undefined
+                    )?.[0];
+                    if (!tenantKey) {
+                      reject(new Error("Benchmark tenant projection is empty"));
+                      db.close();
+                      return;
+                    }
+                    const operationId = crypto.randomUUID();
+                    const draft = {
+                      first_name: "Reconnect",
+                      last_name: `Pilot${number}`,
+                      phone: `7012${String(number + 10).padStart(4, "0")}`,
+                      address: "Beirut",
+                      national_id: `RECONNECT-NID-${number}`,
+                      license_number: `RECONNECT-LIC-${number}`,
+                      license_expiry_date: "2030-01-01T00:00:00.000Z",
+                    };
+                    const localId = `local:${operationId}`;
+                    const localProjection = {
+                      customer: { localId, operationId, customer: draft },
+                    };
+                    const transaction = db.transaction(
+                      ["customers", "outbox"],
+                      "readwrite",
+                    );
+                    transaction.objectStore("customers").put({
+                      ...localProjection.customer,
+                      id: localId,
+                      tenantKey,
+                    });
+                    transaction.objectStore("outbox").put({
+                      operation_id: operationId,
+                      type: "CUSTOMER_CREATE",
+                      customer_create: draft,
+                      localProjection,
+                      createdAt: new Date().toISOString(),
+                      attempts: 0,
+                      state: "PENDING",
+                      tenantKey,
+                    });
+                    transaction.oncomplete = () => {
+                      db.close();
+                      resolve(localId);
+                    };
+                    transaction.onerror = () => reject(transaction.error);
+                    transaction.onabort = () => reject(transaction.error);
+                  };
+                };
+              });
+            }, sample);
+            localCustomerIds.push(localCustomerId);
+            await expect.poll(outboxCount).toBe(1);
+            queuedCount += 1;
+          },
+        },
+      );
+      recordMeasurements([applicationSync], {
+        ...profile,
+        scenario: "full-pilot-online-application-sync-control",
       });
     } finally {
       await context.close();

@@ -412,3 +412,84 @@ The full-pilot artifact contains complete 30/30 initial-sync and reconnect group
 The earlier no-pending-mutation reconnect measured P50/P95/max **15,676.7 / 15,836.2 / 15,972.2 ms**, but it does not satisfy the approved queued-mutation scenario. The corrected reconnect fixture staged one normal `CUSTOMER_CREATE` record and optimistic Customer projection in the native IndexedDB outbox before each timed reconnect, matching the approved offline queue shape; it verified the outbox was drained and the expected Customer count was applied after the final pull. This tests sync replay, not the UI form used to create an offline customer. A timed-out fixture attempt produced an empty artifact (`2026-09-29T06-07-24.996Z.json`) and is not a measurement.
 
 The correctness blocker is closed and all requested blocked slices now have evidence. The reconnect and Vehicle-search target failures, the prior login-route load failure, and the 501-request payment fan-out are candidate Step 64 performance work; they were not optimized here.
+
+### Step 64 Slice 1 — CDP reconnect fixture correction (2026-09-29)
+
+The original reconnect result of P50/P95/max **15,846.5 / 16,114.2 /
+16,129.1 ms** remains preserved above as invalidated measurement evidence. Its
+fixture used `context.setOffline(true/false)`, which confounded the reconnect
+timing with Chromium's offline-emulation transition: a focused profile showed
+the queued push held for **14,592.20 ms** before network transmission, while
+server-side push processing was **12.46 ms** and pull processing was **6.41
+ms**. It was therefore not valid evidence for a production sync optimization.
+
+The reconnect fixture now holds the existing Chromium CDP session and uses
+`Network.emulateNetworkConditions` for both offline and restored states,
+reapplying the same 4G latency and throughput profile. It retains the explicit
+browser `online` event because CDP restoration alone does not emit it. The
+focused browser check proves that CDP offline blocks a real browser request and
+that restoration permits it. Each reconnect sample verifies exactly one
+successful `/api/sync/push`, exactly one successful final `/api/sync/pull`,
+outbox drain, removal of the provisional local Customer, and the authoritative
+Customer count in IndexedDB.
+
+Reviewed corrected evidence (ignored by Git):
+
+- One-sample CDP profile:
+  `apps/web/test-results/benchmark/2026-09-29T08-57-20.584Z.json`
+- Five-warmup, 30-sample CDP reconnect run:
+  `apps/web/test-results/benchmark/2026-09-29T09-08-43.465Z.json`
+
+The one-sample CDP profile still reported **14,565.61 ms** before the push
+began transmission. The corrected fixture therefore removes the
+`context.setOffline()` dependency but demonstrates that the local
+Chromium-emulation transition itself retains the artificial pre-request delay.
+No production `OfflineProvider`, sync coordinator, API, retry, idempotency, or
+conflict behavior was changed.
+
+| Corrected area / local gate                         |           P50 / P95 / max (ms) | Errors |                    Request count | Classification                                                   |
+| --------------------------------------------------- | -----------------------------: | -----: | -------------------------------: | ---------------------------------------------------------------- |
+| Reconnect, one queued Customer create / <=10,000 ms | 15,889.6 / 16,563.1 / 16,942.7 |   0/30 | 1 push + 1 final pull per sample | FAIL under Chromium emulation; not attributed to production sync |
+
+The corrected P95 remains over 10 seconds, and the required profile confirms
+the same browser-emulation delay. Stop before proposing application
+optimization; Vehicle search, payment fan-out, and initial-load work remain
+out of this slice.
+
+### Step 64 Slice 1 — online application-sync control (2026-09-29)
+
+This control measures application synchronization latency only, not a real
+offline-to-online reconnect. It starts from an authenticated online session,
+stages the same normal `CUSTOMER_CREATE` outbox record and optimistic Customer
+projection in IndexedDB, and starts timing immediately before the explicit
+browser `online` event. No Playwright or CDP network state is changed.
+
+The control preserves the normal coordinator path and verifies exactly one
+successful push, one final pull, outbox drain, provisional Customer removal,
+the authoritative Customer count in IndexedDB, and synchronized completion.
+It must not be used as a reconnect gate result.
+
+Reviewed control evidence (ignored by Git):
+
+- One-sample phase profile:
+  `apps/web/test-results/benchmark/2026-09-29T09-31-26.822Z.json`
+- Five-warmup, 30-sample control:
+  `apps/web/test-results/benchmark/2026-09-29T09-34-40.356Z.json`
+
+| Application-sync control   |  P50 / P95 / max (ms) | Errors | Classification                          |
+| -------------------------- | --------------------: | -----: | --------------------------------------- |
+| One queued Customer create | 531.4 / 563.5 / 597.9 |   0/30 | PASS for local application-sync latency |
+
+The one-sample control measured **545.59 ms** total coordinator-to-completion:
+the coordinator took 87.85 ms before push dispatch; push request/response was
+177.06 ms with 9.70 ms server processing; push reconciliation before pull was
+14.96 ms; pull request/response was 157.43 ms with 4.40 ms server processing;
+and final IndexedDB application, cursor/status completion was 108.17 ms.
+
+The application-sync path is locally below the ten-second target. The real
+browser connectivity-restoration gate is **UNRESOLVED / LOCAL-BENCHMARK-
+BLOCKED**: both `context.setOffline()` and CDP offline restoration retain the
+same artificial roughly 14.5-second Chromium pre-transmission stall. A genuine
+offline-to-online measurement remains required against production-like staging
+in Step 65 or 66 before the reconnect gate can be marked PASS. No production
+sync optimization is justified by these local measurements.

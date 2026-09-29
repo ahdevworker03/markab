@@ -7,6 +7,7 @@ import type {
   BrowserContext,
   APIRequestContext,
   Page,
+  CDPSession,
 } from "@playwright/test";
 
 const execFileAsync = promisify(execFile);
@@ -31,6 +32,19 @@ export const mobileProfile = {
   latency: 150,
   connectionType: "cellular4g" as const,
 };
+
+export async function setMobileNetworkOffline(
+  session: CDPSession,
+  offline: boolean,
+): Promise<void> {
+  await session.send("Network.emulateNetworkConditions", {
+    offline,
+    latency: mobileProfile.latency,
+    downloadThroughput: mobileProfile.downloadThroughput,
+    uploadThroughput: mobileProfile.uploadThroughput,
+    connectionType: mobileProfile.connectionType,
+  });
+}
 
 function benchmarkPassword(): string {
   const password = process.env.BENCHMARK_PASSWORD;
@@ -116,6 +130,7 @@ export async function syncChangeCount(
 export async function createMobileProfile(browser: Browser): Promise<{
   context: BrowserContext;
   page: Page;
+  session: CDPSession;
   profile: Record<string, string | number | boolean>;
 }> {
   const context = await browser.newContext({
@@ -128,13 +143,7 @@ export async function createMobileProfile(browser: Browser): Promise<{
   const page = await context.newPage();
   const session = await context.newCDPSession(page);
   await session.send("Network.enable");
-  await session.send("Network.emulateNetworkConditions", {
-    offline: false,
-    latency: mobileProfile.latency,
-    downloadThroughput: mobileProfile.downloadThroughput,
-    uploadThroughput: mobileProfile.uploadThroughput,
-    connectionType: mobileProfile.connectionType,
-  });
+  await setMobileNetworkOffline(session, false);
   await session.send("Emulation.setCPUThrottlingRate", {
     rate: mobileProfile.cpuThrottlingRate,
   });
@@ -142,6 +151,7 @@ export async function createMobileProfile(browser: Browser): Promise<{
   return {
     context,
     page,
+    session,
     profile: { ...mobileProfile, browserVersion: browser.version() },
   };
 }
