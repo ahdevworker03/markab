@@ -2,27 +2,27 @@
 
 ## Table of Contents
 
-| # | Section |
-| - | ------- |
-| 1 | [1. Purpose](#1-purpose) |
-| 2 | [2. Testing Levels](#2-testing-levels) |
-| 3 | [Unit Tests](#unit-tests) |
-| 4 | [Backend Integration and API Tests](#backend-integration-and-api-tests) |
-| 5 | [Frontend Unit and Component Tests](#frontend-unit-and-component-tests) |
-| 6 | [End-to-End Tests](#end-to-end-tests) |
-| 7 | [3. Current Automated Coverage](#3-current-automated-coverage) |
-| 8 | [4. High-Risk Regression Areas](#4-high-risk-regression-areas) |
-| 9 | [5. When Tests Are Implemented](#5-when-tests-are-implemented) |
-| 10 | [During Normal Feature Development](#during-normal-feature-development) |
-| 11 | [During Milestone 6: Production Readiness](#during-milestone-6-production-readiness) |
-| 12 | [Later or Only When Justified](#later-or-only-when-justified) |
-| 13 | [6. Test Ownership During Development](#6-test-ownership-during-development) |
-| 14 | [7. Test Environment and Data](#7-test-environment-and-data) |
-| 15 | [Backend](#backend) |
-| 16 | [Frontend](#frontend) |
-| 17 | [8. Verification Commands](#8-verification-commands) |
-| 18 | [9. Release Verification](#9-release-verification) |
-| 19 | [10. Boundaries](#10-boundaries) |
+| #   | Section                                                                              |
+| --- | ------------------------------------------------------------------------------------ |
+| 1   | [1. Purpose](#1-purpose)                                                             |
+| 2   | [2. Testing Levels](#2-testing-levels)                                               |
+| 3   | [Unit Tests](#unit-tests)                                                            |
+| 4   | [Backend Integration and API Tests](#backend-integration-and-api-tests)              |
+| 5   | [Frontend Unit and Component Tests](#frontend-unit-and-component-tests)              |
+| 6   | [End-to-End Tests](#end-to-end-tests)                                                |
+| 7   | [3. Current Automated Coverage](#3-current-automated-coverage)                       |
+| 8   | [4. High-Risk Regression Areas](#4-high-risk-regression-areas)                       |
+| 9   | [5. When Tests Are Implemented](#5-when-tests-are-implemented)                       |
+| 10  | [During Normal Feature Development](#during-normal-feature-development)              |
+| 11  | [During Milestone 6: Production Readiness](#during-milestone-6-production-readiness) |
+| 12  | [Later or Only When Justified](#later-or-only-when-justified)                        |
+| 13  | [6. Test Ownership During Development](#6-test-ownership-during-development)         |
+| 14  | [7. Test Environment and Data](#7-test-environment-and-data)                         |
+| 15  | [Backend](#backend)                                                                  |
+| 16  | [Frontend](#frontend)                                                                |
+| 17  | [8. Verification Commands](#8-verification-commands)                                 |
+| 18  | [9. Release Verification](#9-release-verification)                                   |
+| 19  | [10. Boundaries](#10-boundaries)                                                     |
 
 ## 1. Purpose
 
@@ -94,7 +94,7 @@ These tests do not replace backend tests. Mocked frontend API boundaries verify 
 
 E2E tests verify a small number of critical workflows in a real browser across the web application, API, and database. They are mainly a Milestone 6 production-readiness responsibility and will be specified separately in [`e2e-test-plan.md`](./e2e-test-plan.md).
 
-There is currently no Playwright configuration or executable E2E suite in the repository. E2E tests should remain focused on high-value workflows rather than duplicate every backend and component edge case.
+The repository has a focused service-worker Playwright test and an isolated local Step 64A benchmark configuration. The benchmark runs the real API, built web app, and guarded local benchmark database; it is not a replacement for release E2E coverage.
 
 ## 3. Current Automated Coverage
 
@@ -103,7 +103,7 @@ Automated testing already exists and should be extended rather than replaced:
 - The backend has Vitest unit, service, and Supertest route tests for authentication, password reset, invitations, users, organizations, customers, rentals, contracts, media, maintenance and schedules, expenses, payments, tasks, storage failures, and serializable transaction retries.
 - Existing backend tests cover examples of validation, role enforcement, tenant isolation, soft deletion, database constraints, lifecycle transitions, recurrence, financial balances, storage reliability, and concurrent/transactional behavior.
 - The frontend has Vitest and Testing Library tests for selectors, formatting and dates, shared UI behavior, forms, permissions, loading/error/empty states, payment behavior, and API-backed dashboard, analytics, reports, task, vehicle, expense, and maintenance interfaces.
-- No automated browser-level E2E capability is currently configured.
+- A narrow service-worker browser test and a separate authenticated benchmark suite are configured; broader release E2E coverage remains planned.
 
 Existing coverage is meaningful but does not imply that every endpoint, page, state, or cross-module workflow is complete. New work must close relevant gaps as behavior changes.
 
@@ -185,7 +185,7 @@ Because cleanup removes all rows from the configured database, backend tests mus
 
 ### Frontend
 
-- `apps/web/vitest.config.ts` runs colocated `src/**/*.test.{ts,tsx}` files in jsdom.
+- `apps/web/vitest.config.ts` runs colocated `src/**/*.test.{ts,tsx}` and benchmark utility `e2e/**/*.test.ts` files in jsdom.
 - `apps/web/src/test/setup.ts` installs the Testing Library DOM matchers.
 - Component and page tests render controlled UI states and commonly mock feature hooks or generated-client boundaries; they do not require a live API or database.
 
@@ -216,6 +216,17 @@ pnpm build
 ```
 
 Focused Vitest files or name filters may be used during development, but the affected package suite and broader checks should run before release according to the change's risk.
+
+### Step 64A local benchmark
+
+Use only an explicitly created local `markab_benchmark` database. Export `NODE_ENV=benchmark`, identical local `DATABASE_URL` and `BENCHMARK_DATABASE_URL`, `BENCHMARK_PASSWORD`, local `JWT_SECRET` and `REFRESH_TOKEN_SECRET`, and `STORAGE_PROVIDER=local`. If the required Playwright Chromium revision is unavailable, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to a locally installed Chromium executable. Never use the development, test, staging, or production database; the seed command deletes and recreates benchmark rows.
+
+```sh
+pnpm --filter @workspace/db run db:seed:benchmark
+pnpm --filter @workspace/web run benchmark
+```
+
+The web command builds against `http://127.0.0.1:3001` before previewing, starts the real API, and resets the guarded benchmark data. `BENCHMARK_PROFILE` accepts only `full-pilot` (default) or `target-1000`. Review ignored JSON under `apps/web/test-results/benchmark/` before recording results in `docs/operations/production-baseline.md`. A failed group is a measurement blocker, not an inferred latency result.
 
 ## 9. Release Verification
 

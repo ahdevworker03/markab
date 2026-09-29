@@ -54,3 +54,7 @@ attached_assets/
 
 # Local file storage (dev/test uploads)
 apps/api/storage/
+apps/api/.benchmark-storage/
+apps/web/test-results/benchmark/
+apps/web/test-results/playwright-benchmark/
+apps/web/test-results/benchmark-benchmark-mobile-*/

@@ -1,4 +1,9 @@
-const VALID_NODE_ENVS = ["development", "production", "test"] as const;
+const VALID_NODE_ENVS = [
+  "development",
+  "production",
+  "test",
+  "benchmark",
+] as const;
 
 const VALID_LOG_LEVELS = [
   "fatal",

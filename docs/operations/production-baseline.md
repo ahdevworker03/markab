@@ -333,18 +333,82 @@ it made no application, schema, API, index, or infrastructure changes.
 | Dashboard/analytics request fan-out | Static inspection of `apps/web/src/features/payments/hooks.ts`                                                                                                 | Failed the milestone requirement that pilot pages do not have unbounded request fan-out: `useOrgOutstandingBalances` creates one rental-payment request per rental. At the approved 500 rentals, dashboard and analytics each add 500 per-rental requests before accounting for their other data requests. Latency/payload impact remains unmeasured. |
 | Local database suitability          | Read-only tenant record counts in `vehicle_rental`                                                                                                             | Not representative: no tenant approaches the approved 50 vehicles, 1,000 customers, and 500 rentals. It must not be used to classify API, sync, search, or query-plan performance.                                                                                                                                                                    |
 
-The repository has Vite production builds, Vitest, a narrow Playwright
-service-worker configuration, and a local PostgreSQL 16.14 container. It has
-no representative-data seed, API benchmark command, Lighthouse/equivalent
-runner, route-level bundle analyzer, authenticated browser benchmark
-environment, or production-like staging environment. Existing Playwright runs
-only the static web server and cannot supply authenticated API data.
+At the time of this 2026-09-26 entry, the repository had Vite production
+builds, Vitest, a narrow static-only Playwright service-worker configuration,
+and a local PostgreSQL 16.14 container, but no representative-data seed or
+authenticated benchmark environment. Step 64A added a local-only runner;
+there is still no production-like staging environment.
 
-The following target-bearing measurements remain unavailable rather than
-estimated: API read/search/mutation P95 and error rate; initial usable load and
+At the time of that entry, the following target-bearing measurements were
+unavailable rather than estimated: API read/search/mutation P95 and error rate; initial usable load and
 post-load navigation on the approved mobile/4G profile; initial/reconnect sync;
 native IndexedDB customer/vehicle search; high-value-page request counts and
 payloads; database `EXPLAIN (ANALYZE, BUFFERS)` on representative paths; and
 CPU/memory/connection saturation under ten concurrent users. Establish a
-deterministic two-tenant seed and isolated authenticated API/browser staging
-environment before collecting them.
+deterministic two-tenant seed and isolated authenticated API/browser environment
+before collecting them. The partial local follow-up is recorded below.
+
+### Step 64A — original guarded local before-state attempt (2026-09-28)
+
+**Status: BLOCKED.** The dedicated local `markab_benchmark` database was explicitly approved for resets. No development, staging, production, or real customer database was used. The working tree was uncommitted; `git rev-parse HEAD` was `7c79dd3cbafb4662314debccbde42f04653b238a`, which alone does not identify the uncommitted benchmark implementation. This is local evidence, not production capacity proof.
+
+The exact benchmark scripts were `pnpm --filter @workspace/db run db:seed:benchmark` followed by `pnpm --filter @workspace/web run benchmark`. After the first full attempt, focused reruns used `pnpm --filter @workspace/web run benchmark --grep 'benchmark API'`, `--grep 'measures real login, navigation'`, `--grep 'measures target-1000 initial sync'`, and `--grep 'measures full-pilot sync'`. Each run supplied `NODE_ENV=benchmark`, matching `DATABASE_URL` and `BENCHMARK_DATABASE_URL` pointing to local `markab_benchmark`, local-only benchmark owner password and JWT/refresh secrets, `STORAGE_PROVIDER=local`, and a locally installed Chromium executable. The runner built Vite with `VITE_API_URL=http://127.0.0.1:3001`, started the real Express API on port 3001, served the built web app on 4174, and used `/api/auth/login`. Secrets were generated for the local process and were not written to the artifacts.
+
+Full-pilot seed: two active tenants, each 1,000 Customers, 50 Vehicles, 500 Rentals; 666 payments overall. The guarded target profile produced 700 Customers, 50 Vehicles, and 250 Rentals for the measured tenant. The authenticated sync-count checks accepted exactly **1,000** target resources and **1,550** full-pilot resources; the guarded database integration test also reseeded full-pilot after target and verified the approved full row totals.
+
+Reviewed machine-readable evidence (ignored by Git):
+
+- API, 2026-09-28T13:50:02Z: `apps/web/test-results/benchmark/2026-09-28T13-50-02.252Z.json`
+- Browser partial, 2026-09-28T13:46:45Z: `apps/web/test-results/benchmark/2026-09-28T13-46-45.968Z.json`
+- Original browser/sync failure snapshot: `apps/web/test-results/benchmark-benchmark-mobile-4fa98-ect-sync-and-local-searches/error-context.md`. The original JSON artifacts above and the blocker description below preserve the before-fix evidence; focused Playwright failure snapshots in the runner's output directory were replaced by later runs.
+
+Each completed group used five unrecorded warm-ups and 30 recorded samples, `performance.now()`, nearest-rank P50/P95 of successful samples, maximum successful duration, and failed/30 error rate. API groups used real authenticated requests; mutation groups reset the dedicated data before and after. The browser profile was Chrome 153.0.8010.52, 393×852, DPR 2, 4× CPU, 1.6 Mbps down, 750 Kbps up, 150 ms latency, simulated cellular 4G. Browser initial-load samples used fresh storage contexts and waited for visible login content; post-load navigation clicked the real in-app links and waited for visible headings.
+
+| Area / local gate                                                         |        P50 / P95 / max (ms) | Errors | Classification                                                                          |
+| ------------------------------------------------------------------------- | --------------------------: | -----: | --------------------------------------------------------------------------------------- |
+| Customer list / <=500 ms P95                                              |          12.9 / 16.7 / 18.0 |   0/30 | PASS                                                                                    |
+| Vehicle list / <=500 ms P95                                               |            5.5 / 7.8 / 11.5 |   0/30 | PASS                                                                                    |
+| Customer detail / <=500 ms P95                                            |             4.0 / 7.6 / 9.1 |   0/30 | PASS                                                                                    |
+| Vehicle detail / <=500 ms P95                                             |           4.6 / 10.6 / 15.1 |   0/30 | PASS                                                                                    |
+| Customer API search / <=500 ms P95                                        |           8.7 / 13.6 / 14.8 |   0/30 | PASS                                                                                    |
+| Vehicle API search / <=500 ms P95                                         |             5.1 / 7.5 / 8.7 |   0/30 | PASS                                                                                    |
+| Customer create / <=800 ms P95                                            |             4.2 / 5.5 / 6.0 |   0/30 | PASS                                                                                    |
+| Ten authenticated users, mixed reads/search/create / <1% error rate       |          46.9 / 61.2 / 62.7 |   0/30 | PASS                                                                                    |
+| Rental-payment fan-out group / no standalone latency gate                 | 1,942.5 / 2,162.9 / 2,237.5 |   0/30 | INVESTIGATE                                                                             |
+| Fresh browser login route usable / <=3,000 ms initial load                | 3,253.6 / 3,275.3 / 3,287.1 |   0/30 | FAIL for the measured login route; authenticated dashboard load not separately measured |
+| In-app Customer/Vehicle heading visibility / <=1,000 ms usable navigation |       123.2 / 148.8 / 154.1 |   0/30 | INVESTIGATE: heading visible; list content readiness not measured                       |
+| Initial sync, target-1000 / <=30,000 ms                                   |        No completed samples |      — | FAIL: terminal pull never observed; 1,000 rows verified, latency gate not measurable    |
+| Initial sync, full-pilot (1,550; no 1,000-row gate)                       |        No completed samples |      — | INVESTIGATE: representative/stress run blocked; no target comparison                    |
+| Reconnect sync with small normal queue / <=10,000 ms                      |                  No samples |      — | INVESTIGATE: initial sync blocker prevents queue/reconnect coverage                     |
+| Native IndexedDB Customer/Vehicle search / <=300 ms                       |                  No samples |      — | INVESTIGATE: initial sync blocker prevents a populated local projection                 |
+
+The authenticated payment fan-out group completed **501 HTTP requests per sample**: one rental-list request and 500 successful per-rental payment requests. This is observed from the real API group, not a measured dashboard-render request trace. The dashboard hook is statically known to make the same per-rental calls; its actual UI request count and payload bytes remain blocked by browser/sync coverage. The navigation result measures visible headings, not usable list content. The reconnect harness does not yet create a small queued offline mutation, and a future successful sync run must also prove client application to IndexedDB after the final HTTP response before the sync gate can be classified. No bundle-size pass/fail gate was invented.
+
+**Blocker:** the real `/api/sync/pull` responded 200 with 100 changes and a further cursor, but no next pull followed; both target-1000 and full-pilot isolated runs failed waiting for the final pull. Code-path inspection shows the API wraps the response in `{ data: ... }` (`apps/api/src/shared/response.ts`), while the generated `syncPull` returns that body and `apps/web/src/features/offline/sync.ts` reads `page.changes` and `page.next_cursor` directly. This is a candidate product contract mismatch, not a benchmark latency result. Application sync behavior was not changed in this measurement task. The first full attempt also lacked the Playwright-required Chromium revision; the follow-up used local Chrome, whose version is recorded above. Resolve the sync contract and rerun the complete browser/offline suite before closing Step 64A or selecting a Step 64 optimization slice.
+
+### Step 64A — corrected synchronization rerun (2026-09-29)
+
+**Final status: COMPLETE for the requested before-state measurements; the failing performance gates remain open.** The OpenAPI contract defines bare `SyncPullResponse` and `SyncPushResponse` bodies. The backend sync controller had applied the generic `{ data: ... }` success envelope even though the generated client performs no unwrapping. The controller now emits the documented bare bodies, and the client coordinator rejects malformed pull pages before applying changes or reporting success. The original failed artifacts above remain the historical before-fix evidence.
+
+The focused corrected commands were `pnpm --filter @workspace/web run benchmark --grep 'target-1000 initial sync'`, `--grep 'full-pilot sync'`, `--grep 'native IndexedDB searches'`, and `--grep 'one queued customer per sample'`, with the same guarded local environment and browser profile. The runner obtained bounded real access tokens outside measured samples to avoid measuring the 30-request login limiter repeatedly; it fulfilled each fresh browser context's login response with that token, after which the app authenticated `/me` and used the generated sync client against the real API. These reruns do not measure real login latency. Sync completion required the expected Customer, Vehicle, and Rental counts to be present in IndexedDB after the final pull response.
+
+Reviewed corrected evidence (ignored by Git):
+
+- Target-1000 initial sync: `apps/web/test-results/benchmark/2026-09-29T04-59-16.078Z.json`
+- Full-pilot initial sync and earlier empty-outbox reconnect: `apps/web/test-results/benchmark/2026-09-29T05-28-20.131Z.json`
+- Native IndexedDB searches: `apps/web/test-results/benchmark/2026-09-29T05-31-28.306Z.json`
+- Reconnect with one queued customer per sample: `apps/web/test-results/benchmark/2026-09-29T06-19-56.276Z.json`
+
+The full-pilot artifact contains complete 30/30 initial-sync and reconnect groups. Its enclosing Playwright test later failed during the first Customer-search warm-up because a strict text selector matched three responsive DOM representations; the completed groups remain valid. The selector was narrowed, and only the search slice was rerun into the separate search artifact. No application performance optimization was made.
+
+| Corrected area / local gate                         |           P50 / P95 / max (ms) | Errors | Classification                                                                                           |
+| --------------------------------------------------- | -----------------------------: | -----: | -------------------------------------------------------------------------------------------------------- |
+| Initial sync, target-1000 / <=30,000 ms             | 20,275.1 / 20,314.9 / 20,335.5 |   0/30 | PASS; exactly 700 Customers, 50 Vehicles, and 250 Rentals applied to IndexedDB                           |
+| Initial sync, full-pilot (1,550; no 1,000-row gate) | 31,917.3 / 32,019.5 / 32,023.2 |   0/30 | RECORDED separately; exactly 1,000 Customers, 50 Vehicles, and 500 Rentals applied; no target comparison |
+| Reconnect, one queued Customer create / <=10,000 ms | 15,846.5 / 16,114.2 / 16,129.1 |   0/30 | FAIL; outbox drained and local Customer count advanced after each reconnect                              |
+| Native IndexedDB Customer search / <=300 ms         |             30.5 / 36.0 / 37.4 |   0/30 | PASS; no API requests occurred                                                                           |
+| Native IndexedDB Vehicle search / <=300 ms          |          215.6 / 417.1 / 430.5 |   0/30 | FAIL; no API requests occurred                                                                           |
+
+The earlier no-pending-mutation reconnect measured P50/P95/max **15,676.7 / 15,836.2 / 15,972.2 ms**, but it does not satisfy the approved queued-mutation scenario. The corrected reconnect fixture staged one normal `CUSTOMER_CREATE` record and optimistic Customer projection in the native IndexedDB outbox before each timed reconnect, matching the approved offline queue shape; it verified the outbox was drained and the expected Customer count was applied after the final pull. This tests sync replay, not the UI form used to create an offline customer. A timed-out fixture attempt produced an empty artifact (`2026-09-29T06-07-24.996Z.json`) and is not a measurement.
+
+The correctness blocker is closed and all requested blocked slices now have evidence. The reconnect and Vehicle-search target failures, the prior login-route load failure, and the 501-request payment fan-out are candidate Step 64 performance work; they were not optimized here.

@@ -30,6 +30,7 @@ type OfflineContextValue = {
   syncNow: () => void;
   conflicts: unknown[];
   isOffline: boolean;
+  syncReady: boolean;
   workspace: OfflineWorkspace | null;
   store: OfflineStore;
   projectionVersion: number;
@@ -82,6 +83,7 @@ export function OfflineProvider({
   const [conflicts, setConflicts] = useState<unknown[]>([]);
   const pendingCountRef = useRef(0);
   const [status, setStatus] = useState<OfflineStatus>("authenticationRequired");
+  const [syncReady, setSyncReady] = useState(false);
   const [projectionVersion, setProjectionVersion] = useState(0);
   const syncRef = useRef<{ syncNow(): Promise<void> } | undefined>(undefined);
   const sessionStateRef = useRef(sessionState);
@@ -106,6 +108,7 @@ export function OfflineProvider({
     pendingCountRef.current = 0;
     setPendingCount(0);
     setConflicts([]);
+    setSyncReady(false);
 
     if (!workspace) {
       setStatus("authenticationRequired");
@@ -117,13 +120,16 @@ export function OfflineProvider({
     }
 
     let active = true;
+    let onlineListenerRegistered = false;
     const updateStatus = (count: number, online: boolean) => {
       if (!active) return;
       pendingCountRef.current = count;
       setPendingCount(count);
       setIsOnline(online);
       setStatus(
-        sessionStateRef.current === "offline" || !online ? "offline" : "pending",
+        sessionStateRef.current === "offline" || !online
+          ? "offline"
+          : "pending",
       );
     };
     const openWorkspace = async () => {
@@ -132,7 +138,9 @@ export function OfflineProvider({
         if (!active) return;
         const outbox = await store.listOutbox(workspace, 2 ** 32 - 1);
         updateStatus(outbox.length, connectivityHint());
-        setConflicts(outbox.filter((operation) => operation.state === "CONFLICT"));
+        setConflicts(
+          outbox.filter((operation) => operation.state === "CONFLICT"),
+        );
         if ("syncPush" in api && "syncPull" in api) {
           syncRef.current = createSyncCoordinator({
             workspace,
@@ -141,9 +149,9 @@ export function OfflineProvider({
             pull: api.syncPull,
             onStatus: (next: SyncStatusUpdate) => {
               if (!active) return;
-            pendingCountRef.current = next.pendingCount;
-            setPendingCount(next.pendingCount);
-            setConflicts(next.conflicts);
+              pendingCountRef.current = next.pendingCount;
+              setPendingCount(next.pendingCount);
+              setConflicts(next.conflicts);
               setStatus(
                 sessionStateRef.current === "offline" || !connectivityHint()
                   ? "offline"
@@ -152,6 +160,7 @@ export function OfflineProvider({
               refreshProjections();
             },
           });
+          if (onlineListenerRegistered) setSyncReady(true);
         }
       } catch {
         if (active) setStatus("failed");
@@ -168,11 +177,13 @@ export function OfflineProvider({
       updateConnectivity();
       syncNow();
     };
-    void openWorkspace();
     window.addEventListener("online", syncOnOnline);
     window.addEventListener("offline", updateConnectivity);
+    onlineListenerRegistered = true;
+    void openWorkspace();
     return () => {
       active = false;
+      setSyncReady(false);
       if (syncRef.current) syncRef.current = undefined;
       window.removeEventListener("online", syncOnOnline);
       window.removeEventListener("offline", updateConnectivity);
@@ -193,12 +204,13 @@ export function OfflineProvider({
         isOnline: sessionState === "offline" ? false : isOnline,
         pendingCount,
         syncNow,
-          conflicts,
-          isOffline: sessionState === "offline" || status === "offline",
-          workspace: workspace && available ? workspace : null,
-          store,
-          projectionVersion,
-          refreshProjections,
+        conflicts,
+        isOffline: sessionState === "offline" || status === "offline",
+        syncReady,
+        workspace: workspace && available ? workspace : null,
+        store,
+        projectionVersion,
+        refreshProjections,
       }}
     >
       {children}
