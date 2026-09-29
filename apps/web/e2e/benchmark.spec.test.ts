@@ -107,6 +107,23 @@ describe("runSamples", () => {
     ]);
   });
 
+  it("uses browser-local invocation durations instead of action wall time", async () => {
+    const result = await runSamples("local-search", async () => undefined, {
+      warmups: 1,
+      samples: 2,
+      durationMs: async (sample) => (sample === 1 ? 7 : 11),
+    });
+
+    expect(result).toMatchObject({
+      warmupCount: 1,
+      sampleCount: 2,
+      p50Ms: 7,
+      p95Ms: 11,
+      maxMs: 11,
+      errorCount: 0,
+    });
+  });
+
   it("rejects a target-1000 initial sync slower than 30 seconds", () => {
     expect(() =>
       assertTargetSyncWithinBudget({

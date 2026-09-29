@@ -406,8 +406,8 @@ The full-pilot artifact contains complete 30/30 initial-sync and reconnect group
 | Initial sync, target-1000 / <=30,000 ms             | 20,275.1 / 20,314.9 / 20,335.5 |   0/30 | PASS; exactly 700 Customers, 50 Vehicles, and 250 Rentals applied to IndexedDB                           |
 | Initial sync, full-pilot (1,550; no 1,000-row gate) | 31,917.3 / 32,019.5 / 32,023.2 |   0/30 | RECORDED separately; exactly 1,000 Customers, 50 Vehicles, and 500 Rentals applied; no target comparison |
 | Reconnect, one queued Customer create / <=10,000 ms | 15,846.5 / 16,114.2 / 16,129.1 |   0/30 | FAIL; outbox drained and local Customer count advanced after each reconnect                              |
-| Native IndexedDB Customer search / <=300 ms         |             30.5 / 36.0 / 37.4 |   0/30 | PASS; no API requests occurred                                                                           |
-| Native IndexedDB Vehicle search / <=300 ms          |          215.6 / 417.1 / 430.5 |   0/30 | FAIL; no API requests occurred                                                                           |
+| Original Customer search (invalidated boundary)     |             30.5 / 36.0 / 37.4 |   0/30 | INVALIDATED; visible row could predate the query                                                         |
+| Original Vehicle search (invalidated boundary)      |          215.6 / 417.1 / 430.5 |   0/30 | INVALIDATED; visible row could predate the query                                                         |
 
 The earlier no-pending-mutation reconnect measured P50/P95/max **15,676.7 / 15,836.2 / 15,972.2 ms**, but it does not satisfy the approved queued-mutation scenario. The corrected reconnect fixture staged one normal `CUSTOMER_CREATE` record and optimistic Customer projection in the native IndexedDB outbox before each timed reconnect, matching the approved offline queue shape; it verified the outbox was drained and the expected Customer count was applied after the final pull. This tests sync replay, not the UI form used to create an offline customer. A timed-out fixture attempt produced an empty artifact (`2026-09-29T06-07-24.996Z.json`) and is not a measurement.
 
@@ -493,3 +493,93 @@ same artificial roughly 14.5-second Chromium pre-transmission stall. A genuine
 offline-to-online measurement remains required against production-like staging
 in Step 65 or 66 before the reconnect gate can be marked PASS. No production
 sync optimization is justified by these local measurements.
+
+### Step 64 Slice 2 — local-search gate and interaction evidence (2026-09-29)
+
+**A. Authoritative IndexedDB/local-search gate (<=300 ms).** The browser uses
+the built web app, full-pilot tenant projection (1,000 Customers and 50
+Vehicles), native IndexedDB, and the mid-range mobile/4G/4x CPU profile. Each
+sample starts immediately before the real offline hook calls its store method
+and ends after the same hook maps, filters, and sorts its result, before React
+state is updated. The benchmark-only probe associates that interval with the
+next rendered search generation. Each sample verifies one readonly transaction,
+one tenant-index `getAll`, the expected row count, and zero API requests. Five
+warmups precede 30 recorded samples per entity. This excludes input, debounce,
+React rendering, and Playwright observation.
+
+Reviewed gate artifact (ignored by Git):
+`apps/web/test-results/benchmark/2026-09-29T14-49-38.282Z.json`.
+
+| Local search / <=300 ms P95 | P50 / P95 / max (ms) | Errors | Rows per read | Transactions / `getAll` per sample | Classification |
+| --------------------------- | -------------------: | -----: | ------------: | ---------------------------------: | -------------- |
+| Customer                    | 36.2 / 329.8 / 350.4 |   0/30 |         1,000 |                              1 / 1 | FAIL           |
+| Vehicle                     |   14.8 / 35.1 / 37.8 |   0/30 |            50 |                              1 / 1 | PASS           |
+
+At this before-state, Customer failed the local-search gate; Vehicle passed.
+
+**B. End-to-end search interaction / UX observations (no 300 ms gate).** A
+separate corrected input-to-render benchmark waits for the exact normalized
+debounced term at a higher completion-marker generation, after the new result
+renders. These measurements include the intentional 300 ms debounce, list
+rendering, and browser observation. Reviewed artifact (ignored by Git):
+`apps/web/test-results/benchmark/2026-09-29T12-04-56.557Z.json`.
+
+| Interaction observation |        P50 / P95 / max (ms) | Errors |
+| ----------------------- | --------------------------: | -----: |
+| Customer                | 3,336.1 / 3,990.5 / 4,191.5 |   0/30 |
+| Vehicle                 |       791.0 / 975.6 / 976.1 |   0/30 |
+
+These UX observations may motivate separate responsive-render investigation;
+they are not evidence that the IndexedDB gate failed. No separate approved
+input-to-render target is defined here.
+The retained benchmark marker exposes only a generation number; each current
+sample also verifies its expected fixture result count and corresponding hook
+invocation. The earlier artifact used the normalized term in the benchmark-only
+marker; its measurements remain historical observations.
+
+**C. Invalidated historical search measurements.** The original Customer
+**30.5 / 36.0 / 37.4 ms** and Vehicle **215.6 / 417.1 / 430.5 ms**
+(P50/P95/max) remain in the earlier table. Their generic visible-row selector
+could succeed before a new search finished, so neither classifies the local
+gate. No production search, storage, schema, API, or backend behavior changed
+during the boundary-correction pass.
+
+**D. Customer local-search loading-state correction.** Two additional guarded
+five-warmup/30-sample Customer runs reproduced the before-state P95 failure:
+**35.2 / 390.5 / 396.8 ms** and **31.6 / 359.7 / 385.3 ms** (P50/P95/max;
+0/30 errors in each). Their narrow-result reads repeatedly waited about
+300–380 ms for the same 1,000-row IndexedDB `getAll` that completed in about
+15–29 ms following a small result. A Chromium trace showed that the hook's
+`isLoading(true)` transition replaced the previous 1,000-result Customer list
+(2,000 card articles plus table rows) with its skeleton while `getAll` was
+pending. Main-thread JavaScript occupied most of the slow callback window;
+waiting for browser idle before the next search did not prevent the transition.
+GC, layout, and paint were not the dominant cost.
+
+The offline Customer and Vehicle list hooks now retain already-loaded results
+for an in-place search within the same workspace instead of entering the
+blocking loading state. Initial reads and workspace changes still show loading,
+and workspace-key gating prevents the prior tenant's data from being exposed.
+The latest active read still replaces the old result; errors continue to be
+reported. No schema, index, sync, API, debounce, or search predicate changed.
+
+Reviewed after-state artifacts (ignored by Git): the first post-change run
+`apps/web/test-results/benchmark/2026-09-29T15-47-15.508Z.json` and the final
+checkpoint run with a generation-only benchmark marker
+`apps/web/test-results/benchmark/2026-09-29T15-59-22.585Z.json`. The first
+post-change run measured Customer **21.4 / 93.2 / 98.4 ms** and Vehicle
+**4.3 / 9.7 / 10.1 ms** (P50/P95/max), with 0/30 errors each. The final
+checkpoint results are:
+
+| Local search / <=300 ms P95 | Before P50 / P95 / max (ms) | After P50 / P95 / max (ms) | After errors | After rows / transactions / `getAll` | Final classification |
+| --------------------------- | --------------------------: | -------------------------: | -----------: | -----------------------------------: | -------------------- |
+| Customer                    |        36.2 / 329.8 / 350.4 |         29.2 / 86.2 / 91.7 |         0/30 |                        1,000 / 1 / 1 | PASS                 |
+| Vehicle                     |          14.8 / 35.1 / 37.8 |          4.3 / 13.1 / 14.6 |         0/30 |                           50 / 1 / 1 | PASS                 |
+
+Exact unrounded final artifact values (P50/P95/max, ms): Customer
+`29.19999998807907 / 86.19999998807907 / 91.70000000298023`; Vehicle
+`4.299999997019768 / 13.099999994039536 / 14.599999994039536`.
+
+No final-run Customer sample reached 100 ms; the alternating slow-result
+pattern was not observed in the 30 recorded samples. The interaction/UX figures
+in section B remain before-state observations, not a new <=300 ms UX gate.

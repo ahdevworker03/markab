@@ -31,6 +31,15 @@ type ProjectionCounts = {
   vehicles: number;
   rentals: number;
 };
+type SearchMarker = { generation: number };
+type LocalSearchTiming = {
+  generation: number;
+  entity: "customers" | "vehicles";
+  startMs: number;
+  endMs: number;
+  records: number;
+};
+const searchMarkerSelector = "[data-benchmark-search-completion]";
 const fullPilotProjectionCounts: ProjectionCounts = {
   customers: 1_000,
   vehicles: 50,
@@ -185,30 +194,165 @@ async function assertOfflineLocal(page: Page): Promise<void> {
     .toBe(true);
 }
 
+async function readSearchMarker(page: Page): Promise<SearchMarker> {
+  return page.evaluate((selector) => {
+    const marker = document.querySelector<HTMLElement>(selector);
+    if (!marker)
+      throw new Error("Benchmark search completion marker is missing");
+    return {
+      generation: Number(marker.dataset.searchGeneration),
+    };
+  }, searchMarkerSelector);
+}
+
+async function waitForSearchMarker(
+  page: Page,
+  generation: number,
+): Promise<void> {
+  await page.waitForFunction(
+    ({ selector, generation }) => {
+      const marker = document.querySelector<HTMLElement>(selector);
+      return Number(marker?.dataset.searchGeneration) > generation;
+    },
+    { selector: searchMarkerSelector, generation },
+  );
+}
+
+async function resetSearchReadCount(
+  page: Page,
+  entity: LocalSearchTiming["entity"],
+  generation: number,
+): Promise<void> {
+  await page.evaluate(
+    ({ entity, generation }) => {
+      const target = window as Window & {
+        __benchmarkSearchGetAll?: number;
+        __benchmarkSearchOriginalGetAll?: IDBIndex["getAll"];
+        __benchmarkSearchTransactions?: number;
+        __benchmarkSearchOriginalTransaction?: IDBDatabase["transaction"];
+        __benchmarkSearchStore?: string;
+        __benchmarkLocalSearch?: {
+          requestedGeneration: number;
+          entries: LocalSearchTiming[];
+        };
+      };
+      if (!target.__benchmarkSearchOriginalTransaction) {
+        target.__benchmarkSearchOriginalTransaction =
+          IDBDatabase.prototype.transaction;
+        IDBDatabase.prototype.transaction = function (...args) {
+          if (
+            args[0] === target.__benchmarkSearchStore &&
+            args[1] === "readonly"
+          ) {
+            target.__benchmarkSearchTransactions =
+              (target.__benchmarkSearchTransactions ?? 0) + 1;
+          }
+          return target.__benchmarkSearchOriginalTransaction!.apply(this, args);
+        };
+      }
+      if (!target.__benchmarkSearchOriginalGetAll) {
+        target.__benchmarkSearchOriginalGetAll = IDBIndex.prototype.getAll;
+        IDBIndex.prototype.getAll = function (...args) {
+          target.__benchmarkSearchGetAll =
+            (target.__benchmarkSearchGetAll ?? 0) + 1;
+          return target.__benchmarkSearchOriginalGetAll!.apply(this, args);
+        };
+      }
+      target.__benchmarkSearchStore = entity;
+      target.__benchmarkSearchGetAll = 0;
+      target.__benchmarkSearchTransactions = 0;
+      target.__benchmarkLocalSearch = {
+        requestedGeneration: generation,
+        entries: [],
+      };
+    },
+    { entity, generation },
+  );
+}
+
+async function searchReadEvidence(page: Page) {
+  return page.evaluate(() => {
+    const target = window as Window & {
+      __benchmarkSearchGetAll?: number;
+      __benchmarkSearchTransactions?: number;
+      __benchmarkLocalSearch?: { entries: LocalSearchTiming[] };
+    };
+    return {
+      requests: target.__benchmarkSearchGetAll ?? 0,
+      transactions: target.__benchmarkSearchTransactions ?? 0,
+      entries: target.__benchmarkLocalSearch?.entries ?? [],
+    };
+  });
+}
+
+function alternatingSearchTerm(
+  sample: number,
+  first: string,
+  second: string,
+): string {
+  const sequence =
+    sample < 0 ? sample + sampling.warmups : sample + sampling.warmups + 1;
+  return sequence % 2 ? second : first;
+}
+
 async function runOfflineSearchSamples(
   name: string,
   page: Page,
+  entity: LocalSearchTiming["entity"],
+  expectedRecords: number,
+  term: (sample: number) => string,
   action: (sample: number) => Promise<void>,
 ): Promise<Measurement> {
   let apiRequests: string[] = [];
+  let marker: SearchMarker;
+  let localDurationMs = 0;
   const observeRequest = (request: { method(): string; url(): string }) => {
     const url = new URL(request.url());
     if (url.pathname.startsWith("/api/")) {
       apiRequests.push(`${request.method()} ${url.pathname}`);
     }
   };
-  const measurement = await runSamples(name, action, {
-    ...sampling,
-    beforeSample: async () => {
-      await assertOfflineLocal(page);
-      apiRequests = [];
-      page.on("request", observeRequest);
-    },
-    afterSample: async () => {
-      page.off("request", observeRequest);
+  const measurement = await runSamples(
+    name,
+    async (sample) => {
+      await action(sample);
+      await waitForSearchMarker(page, marker.generation);
+      expect(
+        await page.evaluate(() => document.querySelectorAll("tbody tr").length),
+      ).toBe(
+        term(sample) === (entity === "customers" ? "Customer1" : "Pilot")
+          ? expectedRecords
+          : 1,
+      );
+      const evidence = await searchReadEvidence(page);
+      expect(evidence.entries).toHaveLength(1);
+      const entry = evidence.entries[0]!;
+      expect(entry).toMatchObject({
+        entity,
+        generation: marker.generation + 1,
+        records: expectedRecords,
+      });
+      expect(entry.endMs).toBeGreaterThanOrEqual(entry.startMs);
+      expect(evidence.transactions).toBe(1);
+      expect(evidence.requests).toBe(1);
       expect(apiRequests).toEqual([]);
+      localDurationMs = entry.endMs - entry.startMs;
     },
-  });
+    {
+      ...sampling,
+      durationMs: async () => localDurationMs,
+      beforeSample: async () => {
+        await assertOfflineLocal(page);
+        marker = await readSearchMarker(page);
+        await resetSearchReadCount(page, entity, marker.generation + 1);
+        apiRequests = [];
+        page.on("request", observeRequest);
+      },
+      afterSample: async () => {
+        page.off("request", observeRequest);
+      },
+    },
+  );
   expect(measurement.errorCount).toBe(0);
   return measurement;
 }
@@ -866,38 +1010,36 @@ test.describe("benchmark mobile IndexedDB and sync", () => {
       await profileContext.page
         .locator('nav.fixed[aria-label="التنقل الرئيسي"] a[href="/customers"]')
         .click();
+      await waitForSearchMarker(profileContext.page, 0);
       const customerSearch = await runOfflineSearchSamples(
         "indexeddb-customer-search",
         profileContext.page,
+        "customers",
+        fullPilotProjectionCounts.customers,
+        (sample) => alternatingSearchTerm(sample, "Customer1", "BENCH-1-0001"),
         async (sample) => {
           await profileContext.page
             .getByPlaceholder(
               "ابحث بالاسم أو الهوية أو رقم الرخصة أو الهاتف...",
             )
-            .fill(sample % 2 ? "Customer1" : "BENCH-1-0001");
-          await expect(
-            profileContext.page
-              .locator("span:visible", { hasText: /^Customer1 0001$/ })
-              .first(),
-          ).toBeVisible();
+            .fill(alternatingSearchTerm(sample, "Customer1", "BENCH-1-0001"));
         },
       );
       recordMeasurements([customerSearch], profileContext.profile);
       await profileContext.page
         .locator('nav.fixed[aria-label="التنقل الرئيسي"] a[href="/vehicles"]')
         .click();
+      await waitForSearchMarker(profileContext.page, 0);
       const vehicleSearch = await runOfflineSearchSamples(
         "indexeddb-vehicle-search",
         profileContext.page,
+        "vehicles",
+        fullPilotProjectionCounts.vehicles,
+        (sample) => alternatingSearchTerm(sample, "Pilot", "BM-1-001"),
         async (sample) => {
           await profileContext.page
             .getByPlaceholder("ابحث بالاسم أو رقم اللوحة أو سنة الصنع...")
-            .fill(sample % 2 ? "Pilot" : "BM-1-001");
-          await expect(
-            profileContext.page
-              .locator("span:visible", { hasText: /^Toyota Pilot 1$/ })
-              .first(),
-          ).toBeVisible();
+            .fill(alternatingSearchTerm(sample, "Pilot", "BM-1-001"));
         },
       );
       recordMeasurements([vehicleSearch], profileContext.profile);
