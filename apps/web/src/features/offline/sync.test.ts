@@ -1,16 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
-import { ApiError, type
-  CustomerResponse,
+import {
+  ApiError,
+  syncPull,
+  type CustomerResponse,
   SyncOperationResult,
   SyncPullResponse,
   SyncPushResponse,
 } from "@workspace/api-client-react";
 import { createSyncCoordinator } from "./sync";
-import type {
-  OfflineStore,
-  OfflineWorkspace,
-  QueuedOperation,
-} from "./types";
+import type { OfflineStore, OfflineWorkspace, QueuedOperation } from "./types";
 
 const workspace: OfflineWorkspace = {
   organizationId: "organization-a",
@@ -94,7 +92,9 @@ function createStore(initial: QueuedOperation[] = []): OfflineStore {
     listOutbox: vi.fn(async (_workspace, limit) =>
       [...outbox.values()].slice(0, limit),
     ),
-    getOutboxItem: vi.fn(async (_workspace, operationId) => outbox.get(operationId)),
+    getOutboxItem: vi.fn(async (_workspace, operationId) =>
+      outbox.get(operationId),
+    ),
     updateOutbox: vi.fn(async (_workspace, item) => {
       outbox.set(item.operation_id, item);
     }),
@@ -117,15 +117,29 @@ describe("createSyncCoordinator", () => {
     const store = createStore(operations);
     const push = vi
       .fn()
-      .mockResolvedValueOnce({ results: operations.slice(0, 25).map(({ operation_id }) => applied(operation_id)) })
+      .mockResolvedValueOnce({
+        results: operations
+          .slice(0, 25)
+          .map(({ operation_id }) => applied(operation_id)),
+      })
       .mockResolvedValueOnce({ results: [applied("26")] });
     const pull = vi.fn().mockResolvedValue(pullPage());
-    const coordinator = createSyncCoordinator({ workspace, store, push, pull, onStatus: vi.fn() });
+    const coordinator = createSyncCoordinator({
+      workspace,
+      store,
+      push,
+      pull,
+      onStatus: vi.fn(),
+    });
 
     await coordinator.syncNow();
 
-    expect(push).toHaveBeenNthCalledWith(1, { operations: operations.slice(0, 25) });
-    expect(push).toHaveBeenNthCalledWith(2, { operations: operations.slice(25) });
+    expect(push).toHaveBeenNthCalledWith(1, {
+      operations: operations.slice(0, 25),
+    });
+    expect(push).toHaveBeenNthCalledWith(2, {
+      operations: operations.slice(25),
+    });
   });
 
   it("waits for a customer create to complete before sending a dependent rental", async () => {
@@ -151,7 +165,9 @@ describe("createSyncCoordinator", () => {
     const store = createStore([customerCreate, rentalCreate]);
     const push = vi
       .fn()
-      .mockResolvedValueOnce({ results: [applied(customerCreate.operation_id)] })
+      .mockResolvedValueOnce({
+        results: [applied(customerCreate.operation_id)],
+      })
       .mockResolvedValueOnce({
         results: [
           {
@@ -197,9 +213,19 @@ describe("createSyncCoordinator", () => {
 
     await coordinator.syncNow();
 
-    expect(store.reconcileCustomerCreate).toHaveBeenNthCalledWith(1, workspace, "1", customer("1"));
+    expect(store.reconcileCustomerCreate).toHaveBeenNthCalledWith(
+      1,
+      workspace,
+      "1",
+      customer("1"),
+    );
     expect(store.removeOutbox).toHaveBeenNthCalledWith(1, workspace, "1");
-    expect(store.reconcileCustomerCreate).toHaveBeenNthCalledWith(2, workspace, "2", customer("2"));
+    expect(store.reconcileCustomerCreate).toHaveBeenNthCalledWith(
+      2,
+      workspace,
+      "2",
+      customer("2"),
+    );
     expect(store.removeOutbox).toHaveBeenNthCalledWith(2, workspace, "2");
     expect(
       store.reconcileCustomerCreate.mock.invocationCallOrder[0],
@@ -210,7 +236,9 @@ describe("createSyncCoordinator", () => {
     const queued = operation("1");
     const store = createStore([queued]);
     const reconciliationError = new Error("IndexedDB unavailable");
-    store.reconcileCustomerCreate = vi.fn().mockRejectedValue(reconciliationError);
+    store.reconcileCustomerCreate = vi
+      .fn()
+      .mockRejectedValue(reconciliationError);
     const coordinator = createSyncCoordinator({
       workspace,
       store,
@@ -261,7 +289,9 @@ describe("createSyncCoordinator", () => {
     );
     expect(store.removeOutbox).not.toHaveBeenCalled();
     expect(pull).not.toHaveBeenCalled();
-    expect(onStatus).toHaveBeenLastCalledWith(expect.objectContaining({ status: "conflict" }));
+    expect(onStatus).toHaveBeenLastCalledWith(
+      expect.objectContaining({ status: "conflict" }),
+    );
   });
 
   it("retains rejected and expired operations outside automatic retries", async () => {
@@ -392,7 +422,74 @@ describe("createSyncCoordinator", () => {
     expect(pull).toHaveBeenNthCalledWith(1, { cursor: "saved" });
     expect(pull).toHaveBeenNthCalledWith(2, { cursor: "next" });
     expect(store.applyPull).toHaveBeenNthCalledWith(1, workspace, [], null);
-    expect(store.applyPull).toHaveBeenNthCalledWith(2, workspace, [], "completed");
+    expect(store.applyPull).toHaveBeenNthCalledWith(
+      2,
+      workspace,
+      [],
+      "completed",
+    );
+  });
+
+  it("passes generated-client pages to the coordinator until the completion checkpoint", async () => {
+    const firstChange: SyncPullResponse["changes"][number] = {
+      resource_type: "CUSTOMER",
+      resource_id: "customer-1",
+      updated_at: "2026-09-23T12:00:00.000Z",
+      deleted: false,
+      customer: customer("1"),
+    };
+    const secondChange: SyncPullResponse["changes"][number] = {
+      resource_type: "CUSTOMER",
+      resource_id: "customer-2",
+      updated_at: "2026-09-23T12:01:00.000Z",
+      deleted: false,
+      customer: customer("2"),
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(pullPage([firstChange], "next", null)), {
+          headers: { "content-type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify(pullPage([secondChange], null, "completed")),
+          { headers: { "content-type": "application/json" } },
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    const store = createStore();
+    const coordinator = createSyncCoordinator({
+      workspace,
+      store,
+      push: vi.fn(),
+      pull: syncPull,
+      onStatus: vi.fn(),
+    });
+
+    try {
+      await coordinator.syncNow();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+
+    expect(fetchMock.mock.calls.map(([input]) => String(input))).toEqual([
+      "/api/sync/pull",
+      "/api/sync/pull?cursor=next",
+    ]);
+    expect(store.applyPull).toHaveBeenNthCalledWith(
+      1,
+      workspace,
+      [firstChange],
+      null,
+    );
+    expect(store.applyPull).toHaveBeenNthCalledWith(
+      2,
+      workspace,
+      [secondChange],
+      "completed",
+    );
   });
 
   it("keeps the saved completion cursor when a later pull page fails", async () => {
@@ -415,6 +512,61 @@ describe("createSyncCoordinator", () => {
 
     expect(store.applyPull).toHaveBeenCalledTimes(1);
     expect(store.applyPull).toHaveBeenCalledWith(workspace, [], null);
+  });
+
+  it("does not mark sync successful for an unexpected pull response", async () => {
+    const store = createStore();
+    const onStatus = vi.fn();
+    const coordinator = createSyncCoordinator({
+      workspace,
+      store,
+      push: vi.fn(),
+      pull: vi.fn().mockResolvedValue({ data: pullPage() }),
+      onStatus,
+    });
+
+    await expect(coordinator.syncNow()).rejects.toThrow(
+      "Invalid sync pull response",
+    );
+
+    expect(store.applyPull).not.toHaveBeenCalled();
+    expect(onStatus).not.toHaveBeenCalledWith(
+      expect.objectContaining({ status: "upToDate" }),
+    );
+  });
+
+  it("rejects a non-empty final page without a completion checkpoint", async () => {
+    const store = createStore();
+    const onStatus = vi.fn();
+    const coordinator = createSyncCoordinator({
+      workspace,
+      store,
+      push: vi.fn(),
+      pull: vi.fn().mockResolvedValue(
+        pullPage(
+          [
+            {
+              resource_type: "CUSTOMER",
+              resource_id: "customer-1",
+              updated_at: "2026-09-23T12:00:00.000Z",
+              deleted: false,
+              customer: customer("1"),
+            },
+          ],
+          null,
+          null,
+        ),
+      ),
+      onStatus,
+    });
+
+    await expect(coordinator.syncNow()).rejects.toThrow(
+      "Invalid sync pull response",
+    );
+    expect(store.applyPull).not.toHaveBeenCalled();
+    expect(onStatus).not.toHaveBeenCalledWith(
+      expect.objectContaining({ status: "upToDate" }),
+    );
   });
 
   it("applies customer tombstones from pull pages", async () => {

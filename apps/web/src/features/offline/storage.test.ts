@@ -199,6 +199,17 @@ describe("OfflineStore", () => {
     await expect(store.getCompletionCursor(tenantA)).resolves.toBe("cursor-a");
   });
 
+  it("applies page changes before storing the completion cursor on the final page", async () => {
+    await store.applyPull(tenantA, [customerChange("customer-a")], null);
+
+    await expect(store.getCustomers(tenantA)).resolves.toHaveLength(1);
+    await expect(store.getCompletionCursor(tenantA)).resolves.toBeUndefined();
+
+    await store.applyPull(tenantA, [], "cursor-a");
+
+    await expect(store.getCompletionCursor(tenantA)).resolves.toBe("cursor-a");
+  });
+
   it("persists FIFO outbox operations across a reopened database", async () => {
     await store.enqueue(tenantA, queuedCustomerCreate("first"));
     await store.enqueue(tenantA, queuedCustomerCreate("second"));
