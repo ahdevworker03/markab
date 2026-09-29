@@ -54,6 +54,7 @@ type SampleOptions = {
   samples: number;
   beforeSample?: (sample: number) => Promise<void>;
   afterSample?: (sample: number) => Promise<void>;
+  durationMs?: (sample: number) => Promise<number>;
 };
 
 export async function runSamples(
@@ -75,15 +76,22 @@ export async function runSamples(
   for (let sample = 1; sample <= options.samples; sample += 1) {
     await options.beforeSample?.(sample);
     const startedAt = performance.now();
+    let localDuration: number | undefined;
     let succeeded = false;
     try {
       await action(sample);
+      localDuration = await options.durationMs?.(sample);
+      if (
+        localDuration !== undefined &&
+        (!Number.isFinite(localDuration) || localDuration < 0)
+      )
+        throw new Error("Invalid benchmark duration");
       succeeded = true;
     } catch {
       errorCount += 1;
     } finally {
-      const duration = performance.now() - startedAt;
-      if (succeeded) durations.push(duration);
+      const wallDuration = performance.now() - startedAt;
+      if (succeeded) durations.push(localDuration ?? wallDuration);
       await options.afterSample?.(sample);
     }
   }

@@ -8,6 +8,7 @@ const benchmarkEnvironment = {
   CORS_ORIGINS: "http://127.0.0.1:4174",
   STORAGE_PROVIDER: "local",
   STORAGE_DIR: "./.benchmark-storage",
+  VITE_BENCHMARK: "true",
 };
 
 validateBenchmarkTarget(benchmarkEnvironment);
