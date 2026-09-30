@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import AnalyticsPage from "./AnalyticsPage";
+import { useOrgOutstandingBalances } from "@/features/payments/hooks";
+import { useListCustomers } from "@workspace/api-client-react";
+import { formatCurrency } from "@/lib/format";
 
 vi.mock("@/features/vehicles/hooks", () => ({
   useVehicles: vi.fn(() => []),
@@ -44,6 +47,8 @@ vi.mock("@/features/payments/hooks", () => ({
   useOrgOutstandingBalances: vi.fn(() => ({
     balances: [],
     rentals: [],
+    totalOutstanding: 0,
+    customerOutstanding: [],
     isLoading: false,
     isError: false,
     error: null,
@@ -55,6 +60,11 @@ vi.mock("@workspace/api-client-react", async (importOriginal) => {
     await importOriginal<typeof import("@workspace/api-client-react")>();
   return {
     ...actual,
+    useListRentals: vi.fn(() => ({
+      data: { data: [] },
+      isLoading: false,
+      error: null,
+    })),
     useListVehicles: vi.fn(() => ({
       data: { data: [] },
       isLoading: false,
@@ -77,7 +87,12 @@ function openSelect(label: string) {
     setPointerCapture: () => undefined,
     releasePointerCapture: () => undefined,
   });
-  fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false, isPrimary: true, pointerType: "mouse" });
+  fireEvent.pointerDown(trigger, {
+    button: 0,
+    ctrlKey: false,
+    isPrimary: true,
+    pointerType: "mouse",
+  });
   return trigger;
 }
 
@@ -98,6 +113,31 @@ describe("AnalyticsPage insights", () => {
     expect(
       screen.getByText("لا توجد بيانات كافية لرؤى السيارات"),
     ).toBeInTheDocument();
+  });
+
+  it("renders the backend summary total and customer outstanding rather than summing rental balances", () => {
+    vi.mocked(useOrgOutstandingBalances).mockReturnValue({
+      balances: [],
+      rentals: [],
+      totalOutstanding: 80,
+      customerOutstanding: [{ customerId: "c1", outstandingBalance: 80 }],
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof useOrgOutstandingBalances>);
+    vi.mocked(useListCustomers).mockReturnValue({
+      data: {
+        data: [
+          { id: "c1", firstName: "ليلى", lastName: "خليل", address: "بيروت" },
+        ],
+      },
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useListCustomers>);
+
+    render(<AnalyticsPage />);
+    expect(screen.getByText("ليلى خليل")).toBeInTheDocument();
+    expect(screen.getAllByText(formatCurrency(80)).length).toBeGreaterThan(0);
   });
 
   it("updates the trend period when the selected year changes", () => {
@@ -124,7 +164,9 @@ describe("AnalyticsPage insights", () => {
     render(<AnalyticsPage />);
 
     const monthTrigger = openSelect("شهر الملخص");
-    expect(screen.getByRole("option", { name: "تشرين الثاني" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "تشرين الثاني" }),
+    ).toBeInTheDocument();
 
     fireEvent.keyDown(monthTrigger, { key: "Escape" });
     const chevron = monthTrigger.lastElementChild!;
@@ -133,9 +175,16 @@ describe("AnalyticsPage insights", () => {
       setPointerCapture: () => undefined,
       releasePointerCapture: () => undefined,
     });
-    fireEvent.pointerDown(chevron, { button: 0, ctrlKey: false, isPrimary: true, pointerType: "mouse" });
+    fireEvent.pointerDown(chevron, {
+      button: 0,
+      ctrlKey: false,
+      isPrimary: true,
+      pointerType: "mouse",
+    });
 
-    expect(screen.getByRole("option", { name: "تشرين الأول" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "تشرين الأول" }),
+    ).toBeInTheDocument();
   });
 
   it("makes the financial summary month explicit and lets it change", () => {
@@ -160,7 +209,9 @@ describe("AnalyticsPage insights", () => {
     render(<AnalyticsPage />);
 
     expect(
-      screen.getByText(/تعذر تحديث بعض البيانات المالية/).closest('[role="alert"]'),
+      screen
+        .getByText(/تعذر تحديث بعض البيانات المالية/)
+        .closest('[role="alert"]'),
     ).toHaveClass("bg-status-danger-bg");
   });
 

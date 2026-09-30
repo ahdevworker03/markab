@@ -583,3 +583,121 @@ Exact unrounded final artifact values (P50/P95/max, ms): Customer
 No final-run Customer sample reached 100 ms; the alternating slow-result
 pattern was not observed in the 30 recorded samples. The interaction/UX figures
 in section B remain before-state observations, not a new <=300 ms UX gate.
+
+### Step 64 Slice 3 — payment fan-out before-state diagnostic (2026-09-30)
+
+The guarded local `markab_benchmark` target was validated before reset; both
+database URLs pointed to that local database. Node 22.16.0 and pnpm 11.15.0
+(the CI pnpm version) ran the benchmark with a built web app, real API and
+hooks, two seeded tenants (each 1,000 customers, 50 vehicles, 500 rentals;
+666 payments overall), the mobile/4G/4× CPU profile, and a fully synchronized
+1,550-record projection. Login, initial sync and their API traffic were
+excluded from the navigation window. All credentials were ephemeral process
+values. The earlier Rentals-only diagnostic was run unchanged apart from an
+assertion that all 500 payment requests returned HTTP 200; its result was
+503 requests, 500 successful payment requests, 35,483 ms to cleared payment
+placeholders, 975,405 response bytes (392,131 payment bytes), 501 peak
+initiated/pending requests, and payment-response P50/P95 10,209/21,352 ms.
+
+The same single-run diagnostic then exercised Rentals, Dashboard and Analytics
+through real navigation. Each page initiated 500 rental-payment requests,
+waited for its actual payment placeholders or outstanding-balance value,
+verified all 500 completed with HTTP 200, and reported:
+
+| Page      | API requests | Payment completed / successful / failed | Financial content usable (ms) | Approx. total / payment response bytes | Peak initiated/pending | Payment response P50 / P95 (ms) | Browser request-start delay P95 (ms) |
+| --------- | -----------: | --------------------------------------: | ----------------------------: | -------------------------------------: | ---------------------: | ------------------------------: | -----------------------------------: |
+| Rentals   |          503 |                           500 / 500 / 0 |                        30,540 |                      975,405 / 392,131 |                    501 |                 13,936 / 15,271 |                               11,818 |
+| Dashboard |          507 |                           500 / 500 / 0 |                        17,183 |                    1,059,181 / 392,131 |                    500 |                  6,622 / 12,513 |                               11,872 |
+| Analytics |          506 |                           500 / 500 / 0 |                        18,111 |                    1,058,599 / 392,131 |                    500 |                  6,534 / 12,512 |                               11,865 |
+
+The response-byte values are Playwright's response body plus headers, not
+wire-level transfer accounting. The request-start delay comes from browser
+timing, **not** measured server queue time. Payment P50/P95 describe the 500
+requests within each single page visit, **not** repeated page-load samples or
+a page P95. This is diagnostic evidence of unbounded request fan-out and slow
+financial readiness at the pilot volume, not a performance-gate classification
+or production-like staging measurement. The existing
+`useOrgOutstandingBalances` starts one authoritative rental-payment request
+per rental on all three pages; no application optimization was made in this
+slice. A tenant-scoped bounded Payment-domain summary remains a design
+candidate, subject to contract and financial-parity tests.
+
+### Step 64 Slice 3 — bounded payment summary implementation (2026-09-30)
+
+**Status: COMPLETE for the measured payment fan-out optimization. Step 64 as a
+whole remains open.** The additive authenticated
+`GET /api/payments/outstanding-balances` contract returns per-rental IDs,
+customer IDs, total/paid/outstanding amounts, the signed organization total,
+and positive per-customer outstanding totals. It does not return payment
+history or accept a tenant identifier. Existing payment-read authorization
+and operational-organization checks apply, including denial of platform owners.
+
+The Payment repository performs two bulk data reads in a repeatable-read
+transaction: non-deleted tenant rentals and tenant payments grouped by rental,
+excluding deleted payments and deleted/foreign rentals. The Payment service
+calculates all balances and totals with Decimal arithmetic. Zero-payment,
+RETURNED and CANCELLED rentals remain included; legacy overpayments remain
+negative. Organization totals include those signed balances, while customer
+totals sum only positive per-rental balances, matching the prior selectors.
+There is no query per rental, schema change, index, cache, or new infrastructure.
+
+Dashboard, Analytics and Rentals use one generated summary query. Analytics
+retains the existing rental-list read for revenue-by-vehicle joins but no longer
+calculates outstanding totals in frontend JavaScript. Rental Detail retains
+its single-rental payment-history query. Payment creation and rental creation/
+lifecycle success invalidate the summary alongside existing invalidations.
+No payment update/delete frontend mutation paths currently exist.
+
+The after-state command was
+`pnpm --filter @workspace/web run benchmark --grep 'diagnoses real finance page request fan-out|measures bounded outstanding summary'`.
+It used the same guarded local database, full-pilot dataset, Node 22.16.0,
+pnpm 11.15.0, Chrome 153.0.8010.52 and mobile/4G/4× CPU profile as the
+before-state diagnostic. Login and initial synchronization stayed outside
+the navigation window. A setup request finishing after observation started
+exposed a diagnostic counter defect in the first after-state attempt; only
+tracked requests now decrement the counter. The corrected complete run passed.
+
+| Page      | Before → after API requests | After summary HTTP 200 / failures | Before → after financial readiness (ms) | After summary response (ms) | Before → after approx. total response bytes |
+| --------- | --------------------------: | --------------------------------: | --------------------------------------: | --------------------------: | ------------------------------------------: |
+| Rentals   |                     503 → 4 |                             1 / 0 |                         30,540 → 10,843 |                       1,876 |                           975,405 → 692,136 |
+| Dashboard |                     507 → 8 |                             1 / 0 |                          17,183 → 2,519 |                       2,172 |                         1,059,181 → 775,912 |
+| Analytics |                     506 → 7 |                             1 / 0 |                          18,111 → 3,703 |                       2,241 |                         1,058,599 → 775,330 |
+
+All 4/8/7 observed API requests respectively returned HTTP 200, and all had
+response-size measurements. Each page made zero per-rental payment requests
+and exactly one completed summary request. Summary response size was
+108,862 bytes, replacing 392,131 bytes of rental-payment responses per page.
+Peak initiated/pending requests were 4/8/7 respectively. Summary browser
+request-start delays were 0.410/4.630/2.238 ms respectively; these are three
+individual observations, not P95 values or measured server queue times.
+
+The separate unthrottled authenticated API summary benchmark used five warmups
+and 30 recorded successful samples: P50/P95/max **15.9 / 20.6 / 21.2 ms**,
+zero errors, one summary request per sample. The historical raw API fan-out
+group used 501 requests per sample and measured **1,942.5 / 2,162.9 / 2,237.5
+ms**. These API-only groups are distinct from navigation-to-financial-readiness
+and must not be compared directly to page timings. Page results remain
+single-visit diagnostics rather than page P95 or navigation-gate proof.
+
+Reviewed after-state artifacts (ignored by Git) under
+`apps/web/test-results/benchmark/`:
+
+- API samples: `2026-09-30T10-24-35.204Z.json`.
+- Rentals: `slice3-rentals-2026-09-30T10-24-19.034Z.json`.
+- Dashboard: `slice3-dashboard-2026-09-30T10-24-25.453Z.json`.
+- Analytics: `slice3-analytics-2026-09-30T10-24-33.004Z.json`.
+
+Verification: focused payment API and frontend consumer tests, full API suite
+(351 tests), full web suite (446 tests), workspace typecheck, targeted ESLint,
+normal OpenAPI code generation and deterministic generated-output checks,
+API/web production builds, changed-file formatting and `git diff --check`.
+The web build retains its existing sourcemap and large-chunk warnings. React
+Doctor reported 87/100 with existing Analytics/large-page warnings; no unrelated
+UI refactor was included.
+
+Remaining Step 64 candidates are initial usable load/route-bundle work, long-list
+rendering and payload cost (notably remaining Rentals readiness), broader
+report/analytics fetches, media behavior, representative query-plan and resource
+measurements, and real connectivity-restoration validation blocked by local
+Chromium emulation. No additional slice was implemented. The one-second
+navigation gate and production-like staging release evidence remain open.

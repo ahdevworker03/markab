@@ -59,18 +59,19 @@ import {
   useOrgOutstandingBalances,
 } from "@/features/payments/hooks";
 import {
-  getOutstandingPerCustomer,
   getPaymentRevenueForPeriod,
   getPaymentRevenuePerVehicle,
-  getTotalOutstanding,
-  type RentalOutstandingBalance,
 } from "@/features/payments/selectors";
 import {
   getBusinessPerformanceTrend,
   getVehicleProfitability,
   getYearlyMaintenanceCostPerVehicle,
 } from "@/features/reports/selectors";
-import { useListCustomers, useListVehicles } from "@workspace/api-client-react";
+import {
+  useListCustomers,
+  useListVehicles,
+  useListRentals,
+} from "@workspace/api-client-react";
 import { getApiErrorMessage } from "@/lib/api-error";
 import type {
   ExpenseResponse,
@@ -80,7 +81,20 @@ import type {
 
 const MOCK_YEAR = 2025;
 const ANALYTICS_YEARS = [2026, 2025, 2024];
-const ANALYTICS_MONTHS = ["كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران", "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"];
+const ANALYTICS_MONTHS = [
+  "كانون الثاني",
+  "شباط",
+  "آذار",
+  "نيسان",
+  "أيار",
+  "حزيران",
+  "تموز",
+  "آب",
+  "أيلول",
+  "تشرين الأول",
+  "تشرين الثاني",
+  "كانون الأول",
+];
 
 type AnalyticsVehicle = {
   id: string;
@@ -109,7 +123,11 @@ function AnalyticsPeriodSelect({
   minWidthClassName: string;
 }) {
   return (
-    <Select dir="rtl" value={String(value)} onValueChange={(nextValue) => onChange(Number(nextValue))}>
+    <Select
+      dir="rtl"
+      value={String(value)}
+      onValueChange={(nextValue) => onChange(Number(nextValue))}
+    >
       <SelectTrigger
         aria-label={label}
         className={cn(
@@ -117,12 +135,19 @@ function AnalyticsPeriodSelect({
           minWidthClassName,
         )}
       >
-        <CalendarDays className="size-4 shrink-0 text-primary" aria-hidden="true" />
+        <CalendarDays
+          className="size-4 shrink-0 text-primary"
+          aria-hidden="true"
+        />
         <span className="shrink-0 text-muted-foreground">{label}</span>
         <SelectValue className="shrink-0 text-start" />
       </SelectTrigger>
       <SelectContent>
-        {options.map((option) => <SelectItem key={option.value} value={String(option.value)}>{option.label}</SelectItem>)}
+        {options.map((option) => (
+          <SelectItem key={option.value} value={String(option.value)}>
+            {option.label}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );
@@ -141,7 +166,10 @@ function vehicleName(vehicle: AnalyticsVehicle) {
 function VehicleIdentity({ vehicle }: { vehicle: AnalyticsVehicle }) {
   return (
     <span className="min-w-0">
-      <span dir="ltr" className="block truncate text-start text-sm font-semibold text-foreground">
+      <span
+        dir="ltr"
+        className="block truncate text-start text-sm font-semibold text-foreground"
+      >
         {vehicleName(vehicle)}
       </span>
       {vehicle.plateNumber && (
@@ -354,11 +382,38 @@ function PerformanceTrend({
       </div>
       <p className="sr-only">اتجاه أداء الأعمال لسنة {year}</p>
       <details className="rounded-lg border border-border bg-muted/20 p-3 text-sm">
-        <summary className="cursor-pointer font-semibold text-foreground">عرض البيانات الشهرية كجدول</summary>
+        <summary className="cursor-pointer font-semibold text-foreground">
+          عرض البيانات الشهرية كجدول
+        </summary>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full min-w-136 text-right text-xs">
-            <thead className="border-b border-border text-muted-foreground"><tr><th className="pb-2 font-medium">الشهر</th><th className="pb-2 font-medium">الإيرادات</th><th className="pb-2 font-medium">المصروفات</th><th className="pb-2 font-medium">صافي الربح</th></tr></thead>
-            <tbody>{points.map((point) => <tr key={point.period} className="border-b border-border/60 last:border-0"><td className="py-2">{point.period}</td><td dir="ltr" className="py-2 tabular-nums">{formatCurrency(point.revenue)}</td><td dir="ltr" className="py-2 tabular-nums">{formatCurrency(point.expenses)}</td><td dir="ltr" className="py-2 tabular-nums">{formatCurrency(point.netProfit)}</td></tr>)}</tbody>
+            <thead className="border-b border-border text-muted-foreground">
+              <tr>
+                <th className="pb-2 font-medium">الشهر</th>
+                <th className="pb-2 font-medium">الإيرادات</th>
+                <th className="pb-2 font-medium">المصروفات</th>
+                <th className="pb-2 font-medium">صافي الربح</th>
+              </tr>
+            </thead>
+            <tbody>
+              {points.map((point) => (
+                <tr
+                  key={point.period}
+                  className="border-b border-border/60 last:border-0"
+                >
+                  <td className="py-2">{point.period}</td>
+                  <td dir="ltr" className="py-2 tabular-nums">
+                    {formatCurrency(point.revenue)}
+                  </td>
+                  <td dir="ltr" className="py-2 tabular-nums">
+                    {formatCurrency(point.expenses)}
+                  </td>
+                  <td dir="ltr" className="py-2 tabular-nums">
+                    {formatCurrency(point.netProfit)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
       </details>
@@ -376,7 +431,10 @@ function deriveAnalytics(
   expenses: ExpenseResponse[],
   payments: ReturnType<typeof usePayments>["payments"],
   apiRentals: RentalResponse[],
-  outstandingBalances: RentalOutstandingBalance[],
+  outstanding: Pick<
+    ReturnType<typeof useOrgOutstandingBalances>,
+    "totalOutstanding" | "customerOutstanding"
+  >,
   realCustomersById: Map<
     string,
     { id: string; name: string; location: string }
@@ -384,7 +442,10 @@ function deriveAnalytics(
   selectedYear: number,
   selectedMonth: number,
 ) {
-  const previousPeriod = selectedMonth === 0 ? { month: 11, year: selectedYear - 1 } : { month: selectedMonth - 1, year: selectedYear };
+  const previousPeriod =
+    selectedMonth === 0
+      ? { month: 11, year: selectedYear - 1 }
+      : { month: selectedMonth - 1, year: selectedYear };
   const thisMonthRevenue = getPaymentRevenueForPeriod(
     payments,
     selectedMonth,
@@ -407,7 +468,7 @@ function deriveAnalytics(
           ((thisMonthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100,
         )
       : null;
-  const totalPending = getTotalOutstanding(outstandingBalances);
+  const totalPending = outstanding.totalOutstanding ?? 0;
   const vehicleRevenueList = Object.entries(vehicleRevenueThisMonth)
     .map(([vehicleId, amount]) => ({
       vehicle: realVehicles.find((vehicle) => vehicle.id === vehicleId),
@@ -423,9 +484,8 @@ function deriveAnalytics(
     rented: rentedCount,
     maintenance: maintenanceCount,
   } = getVehicleStatusCounts(vehicles);
-  const customerBalance = getOutstandingPerCustomer(outstandingBalances);
-  const customerOutstandingList = Object.entries(customerBalance)
-    .map(([customerId, balance]) => ({
+  const customerOutstandingList = outstanding.customerOutstanding
+    .map(({ customerId, outstandingBalance: balance }) => ({
       customer: realCustomersById.get(customerId),
       balance,
     }))
@@ -522,8 +582,8 @@ export default function AnalyticsPage() {
   const paymentsQuery = usePayments();
   const payments = paymentsQuery.payments;
   const outstandingQuery = useOrgOutstandingBalances();
-  const apiRentals = outstandingQuery.rentals;
-  const outstandingBalances = outstandingQuery.balances;
+  const apiRentalsQuery = useListRentals();
+  const apiRentals = apiRentalsQuery.data?.data ?? [];
   const realCustomersQuery = useListCustomers();
   const realCustomers = realCustomersQuery.data?.data ?? [];
   const realCustomersById = useMemo(
@@ -550,17 +610,21 @@ export default function AnalyticsPage() {
     expenses,
     payments,
     apiRentals,
-    outstandingBalances,
+    outstandingQuery,
     realCustomersById,
     selectedYear,
     selectedMonth,
   );
   const financialLoading =
+    apiRentalsQuery.isLoading ||
     paymentsQuery.isLoading ||
     expensesQuery.isLoading ||
     outstandingQuery.isLoading;
   const financialFailure =
-    paymentsQuery.error ?? expensesQuery.error ?? outstandingQuery.error;
+    paymentsQuery.error ??
+    expensesQuery.error ??
+    outstandingQuery.error ??
+    apiRentalsQuery.error;
   const hasFinancialError = Boolean(financialFailure);
   const financialError = getApiErrorMessage(financialFailure).title;
   const analyticsLoading =
@@ -601,23 +665,33 @@ export default function AnalyticsPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-          <AnalyticsPeriodSelect
-            label="سنة التحليل"
-            value={selectedYear}
-            options={ANALYTICS_YEARS.map((year) => ({ value: year, label: String(year) }))}
-            onChange={setSelectedYear}
-            minWidthClassName="min-w-[12rem]"
-          />
-          <AnalyticsPeriodSelect
-            label="شهر الملخص"
-            value={selectedMonth}
-            options={ANALYTICS_MONTHS.map((month, index) => ({ value: index, label: month }))}
-            onChange={setSelectedMonth}
-            minWidthClassName="min-w-[15rem]"
-          />
+            <AnalyticsPeriodSelect
+              label="سنة التحليل"
+              value={selectedYear}
+              options={ANALYTICS_YEARS.map((year) => ({
+                value: year,
+                label: String(year),
+              }))}
+              onChange={setSelectedYear}
+              minWidthClassName="min-w-[12rem]"
+            />
+            <AnalyticsPeriodSelect
+              label="شهر الملخص"
+              value={selectedMonth}
+              options={ANALYTICS_MONTHS.map((month, index) => ({
+                value: index,
+                label: month,
+              }))}
+              onChange={setSelectedMonth}
+              minWidthClassName="min-w-[15rem]"
+            />
           </div>
         </div>
-        <InlineFeedback variant="info">يعرض الملخص المالي شهر {ANALYTICS_MONTHS[selectedMonth]} {selectedYear}. تشمل رؤى السيارات بيانات السجلات المتاحة، وقد تختلف عن نطاق الشهر المحدد.</InlineFeedback>
+        <InlineFeedback variant="info">
+          يعرض الملخص المالي شهر {ANALYTICS_MONTHS[selectedMonth]}{" "}
+          {selectedYear}. تشمل رؤى السيارات بيانات السجلات المتاحة، وقد تختلف عن
+          نطاق الشهر المحدد.
+        </InlineFeedback>
         {hasFinancialError && (
           <InlineFeedback variant="error">
             تعذر تحديث بعض البيانات المالية: {financialError}
@@ -1019,7 +1093,10 @@ export default function AnalyticsPage() {
                       className="flex w-full items-center justify-between gap-3 py-3 text-right"
                     >
                       <StatusBadge status={status} />
-                      <span dir="ltr" className="min-w-0 truncate text-sm font-semibold text-foreground">
+                      <span
+                        dir="ltr"
+                        className="min-w-0 truncate text-sm font-semibold text-foreground"
+                      >
                         {vehicle.make} {vehicle.model}
                       </span>
                     </button>

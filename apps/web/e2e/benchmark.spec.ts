@@ -1,4 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
+import { mkdir, writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import {
   benchmarkDatasetCounts,
   createMobileProfile,
@@ -368,6 +370,33 @@ test.afterAll(async () => {
 });
 
 test.describe("benchmark API", () => {
+  test("measures bounded outstanding summary", async ({ request }) => {
+    await resetBenchmark();
+    try {
+      const token = await login(request);
+      const measurement = await runSamples(
+        "outstanding-balances-summary",
+        async () => {
+          const response = (await requestJson(
+            request,
+            token,
+            "/payments/outstanding-balances",
+          )) as { data: { balances: unknown[] } };
+          expect(response.data.balances).toHaveLength(500);
+        },
+        sampling,
+      );
+      expect(measurement.errorCount).toBe(0);
+      recordMeasurements([measurement], {
+        name: "api-outstanding-summary",
+        summaryRequestsPerSample: 1,
+      });
+      console.log("SLICE3_API_SUMMARY", JSON.stringify(measurement));
+    } finally {
+      await resetBenchmark();
+    }
+  });
+
   test("measures authenticated list, search, and payment-summary reads", async ({
     request,
   }) => {
@@ -1045,6 +1074,260 @@ test.describe("benchmark mobile IndexedDB and sync", () => {
       recordMeasurements([vehicleSearch], profileContext.profile);
     } finally {
       await profileContext.context.close();
+      await resetBenchmark();
+    }
+  });
+
+  test("diagnoses real finance page request fan-out", async ({ browser }) => {
+    await resetBenchmark();
+    const {
+      context,
+      page: loginPage,
+      profile,
+    } = await createMobileProfile(browser);
+    try {
+      await loginMobilePage(loginPage);
+      await loginPage.close();
+      for (const destination of new Set<"dashboard" | "analytics" | "rentals">([
+        "rentals",
+        "dashboard",
+        "analytics",
+      ])) {
+        const page = await context.newPage();
+        const session = await context.newCDPSession(page);
+        await session.send("Network.enable");
+        await setMobileNetworkOffline(session, false);
+        await session.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+        await page.goto("/customers");
+        await page
+          .getByRole("heading", { name: "العملاء", exact: true })
+          .waitFor();
+        await syncAndWaitForFinalPull(page, fullPilotProjectionCounts);
+        const requests: Array<{
+          path: string;
+          method: string;
+          started: number;
+          ended?: number;
+          status?: number;
+          bytes?: number;
+          queueMs?: number;
+        }> = [];
+        const byRequest = new Map<
+          import("@playwright/test").Request,
+          (typeof requests)[number]
+        >();
+        const sizes: Promise<void>[] = [];
+        let active = 0;
+        let maxActive = 0;
+        page.on("request", (request) => {
+          const path = new URL(request.url()).pathname;
+          if (!path.startsWith("/api/")) return;
+          active += 1;
+          maxActive = Math.max(active, maxActive);
+          const entry: (typeof requests)[number] = {
+            path: path.replace(
+              /\/rentals\/[^/]+\/payments$/,
+              "/rentals/:id/payments",
+            ),
+            method: request.method(),
+            started: performance.now(),
+          };
+          requests.push(entry);
+          byRequest.set(request, entry);
+        });
+        page.on("requestfinished", (request) => {
+          const path = new URL(request.url()).pathname;
+          if (!path.startsWith("/api/")) return;
+          const entry = byRequest.get(request);
+          if (!entry) return;
+          active -= 1;
+          entry.ended = performance.now();
+          const timing = request.timing();
+          entry.queueMs =
+            timing.requestStart >= 0 ? timing.requestStart : undefined;
+          sizes.push(
+            (async () => {
+              entry.status = (await request.response())?.status();
+              const size = await request.sizes();
+              entry.bytes = size.responseBodySize + size.responseHeadersSize;
+            })().catch(() => undefined),
+          );
+        });
+        page.on("requestfailed", (request) => {
+          const path = new URL(request.url()).pathname;
+          if (!path.startsWith("/api/")) return;
+          const entry = byRequest.get(request);
+          if (!entry) return;
+          active -= 1;
+          entry.ended = performance.now();
+        });
+        const started = performance.now();
+        if (destination === "dashboard") {
+          await page
+            .locator('nav.fixed[aria-label="التنقل الرئيسي"] a[href="/"]')
+            .click();
+        } else if (destination === "rentals") {
+          await page
+            .locator(
+              'nav.fixed[aria-label="التنقل الرئيسي"] a[href="/rentals"]',
+            )
+            .click();
+        } else {
+          await page
+            .getByRole("button", { name: "المزيد من وحدات النظام" })
+            .click();
+          await page
+            .locator('nav[aria-label="كل وحدات النظام"] a[href="/analytics"]')
+            .click();
+        }
+        await page.waitForURL(
+          destination === "dashboard" ? "/" : `/${destination}`,
+        );
+        const ready =
+          destination === "analytics"
+            ? page
+                .locator('section[aria-label="ملخص الأداء المالي"]')
+                .getByText("الأرصدة المستحقة", { exact: true })
+                .locator("..")
+                .locator("..")
+                .locator("..")
+                .locator("span.text-2xl")
+            : destination === "dashboard"
+              ? page
+                  .getByText("الأرصدة المستحقة", { exact: true })
+                  .first()
+                  .locator("..")
+                  .locator("..")
+                  .locator("p.number-ltr")
+              : page.getByRole("heading", { name: "الإيجارات", exact: true });
+        try {
+          await ready.waitFor({ state: "visible", timeout: 120_000 });
+        } catch (error) {
+          console.log(
+            "SLICE3_PAGE_BLOCKER",
+            JSON.stringify({
+              destination,
+              totalRequests: requests.length,
+              paymentRequests: requests.filter(
+                (item) => item.path === "/api/rentals/:id/payments",
+              ).length,
+              statuses: Object.entries(
+                Object.groupBy(
+                  requests.filter((item) => item.status !== undefined),
+                  (item) => String(item.status),
+                ),
+              ).map(([status, items]) => [status, items?.length]),
+              financialLoading: await page
+                .getByLabel("جارٍ تحميل الأرصدة المستحقة")
+                .count(),
+              financialError: await page.getByText("تعذر تحميل القيمة").count(),
+              targetCount: await ready.count(),
+            }),
+          );
+          throw error;
+        }
+        if (destination === "rentals") {
+          await page
+            .getByTestId("payment-status-slot")
+            .first()
+            .waitFor({ state: "attached", timeout: 120_000 });
+          await expect
+            .poll(() => page.getByLabel("جارٍ تحميل حالة الدفع").count(), {
+              timeout: 120_000,
+            })
+            .toBe(0);
+        }
+        const usableMs = performance.now() - started;
+        await expect
+          .poll(
+            () =>
+              requests.filter(
+                (item) =>
+                  item.path === "/api/payments/outstanding-balances" &&
+                  item.ended !== undefined,
+              ).length,
+            { timeout: 120_000 },
+          )
+          .toBe(1);
+        await expect.poll(() => active).toBe(0);
+        await Promise.all(sizes);
+        const summaries = requests.filter(
+          (item) => item.path === "/api/payments/outstanding-balances",
+        );
+        const payments = requests.filter(
+          (item) => item.path === "/api/rentals/:id/payments",
+        );
+        const counts = Object.entries(
+          Object.groupBy(requests, (item) => item.path),
+        ).map(([path, values]) => [path, values?.length]);
+        const percent = (values: number[], p: number) =>
+          values.sort((a, b) => a - b)[Math.ceil(p * values.length) - 1] ??
+          null;
+        const result = {
+          diagnosticOnly: true,
+          boundary: "navigation-to-financial-readiness",
+          profile,
+          destination,
+          usableMs,
+          totalRequests: requests.length,
+          paymentRequests: payments.length,
+          summaryRequests: summaries.length,
+          summaryCompleted: summaries.filter((item) => item.ended !== undefined)
+            .length,
+          summarySuccesses: summaries.filter((item) => item.status === 200)
+            .length,
+          failures: requests.filter((item) => item.status !== 200).length,
+          statuses: Object.entries(
+            Object.groupBy(requests, (item) => String(item.status ?? "failed")),
+          ).map(([status, items]) => [status, items?.length]),
+          byteMeasurements: requests.filter((item) => item.bytes !== undefined)
+            .length,
+          maxInflight: maxActive,
+          totalResponseBytes: requests.reduce(
+            (sum, item) => sum + (item.bytes ?? 0),
+            0,
+          ),
+          summaryResponseBytes: summaries.reduce(
+            (sum, item) => sum + (item.bytes ?? 0),
+            0,
+          ),
+          summaryResponseMs: summaries.map(
+            (item) => (item.ended ?? item.started) - item.started,
+          ),
+          summaryRequestStartDelayMs: summaries.map(
+            (item) => item.queueMs ?? null,
+          ),
+          responseP50Ms: percent(
+            requests.map((item) => (item.ended ?? item.started) - item.started),
+            0.5,
+          ),
+          responseP95Ms: percent(
+            requests.map((item) => (item.ended ?? item.started) - item.started),
+            0.95,
+          ),
+          paths: counts,
+        };
+        console.log("SLICE3_PAGE_PROFILE", JSON.stringify(result));
+        const artifactDirectory = resolve(
+          import.meta.dirname,
+          "../test-results/benchmark",
+        );
+        await mkdir(artifactDirectory, { recursive: true });
+        await writeFile(
+          resolve(
+            artifactDirectory,
+            `slice3-${destination}-${new Date().toISOString().replaceAll(":", "-")}.json`,
+          ),
+          JSON.stringify(result, null, 2),
+        );
+        expect(payments).toHaveLength(0);
+        expect(summaries).toHaveLength(1);
+        expect(summaries[0]?.status).toBe(200);
+        expect(result.failures).toBe(0);
+        await page.close();
+      }
+    } finally {
+      await context.close();
       await resetBenchmark();
     }
   });

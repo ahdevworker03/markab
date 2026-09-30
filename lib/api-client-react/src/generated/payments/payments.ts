@@ -19,6 +19,7 @@ import type {
 import type {
   CreatePaymentRequest,
   ErrorResponse,
+  OutstandingBalancesResponse,
   PaymentListResponse,
   PaymentResponseWrapper,
   RentalPaymentsResponse,
@@ -118,6 +119,85 @@ export function useListPayments<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getListPaymentsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetOutstandingBalancesUrl = () => {
+  return `/api/payments/outstanding-balances`;
+};
+
+/**
+ * @summary Get outstanding balances for non-deleted rentals in the current organization
+ */
+export const getOutstandingBalances = async (
+  options?: RequestInit,
+): Promise<OutstandingBalancesResponse> => {
+  return customFetch<OutstandingBalancesResponse>(
+    getGetOutstandingBalancesUrl(),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetOutstandingBalancesQueryKey = () => {
+  return [`/api/payments/outstanding-balances`] as const;
+};
+
+export const getGetOutstandingBalancesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getOutstandingBalances>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getOutstandingBalances>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetOutstandingBalancesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getOutstandingBalances>>
+  > = ({ signal }) => getOutstandingBalances({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getOutstandingBalances>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetOutstandingBalancesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getOutstandingBalances>>
+>;
+export type GetOutstandingBalancesQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get outstanding balances for non-deleted rentals in the current organization
+ */
+
+export function useGetOutstandingBalances<
+  TData = Awaited<ReturnType<typeof getOutstandingBalances>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getOutstandingBalances>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetOutstandingBalancesQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
