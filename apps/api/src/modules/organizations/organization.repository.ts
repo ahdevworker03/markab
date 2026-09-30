@@ -113,6 +113,34 @@ async function findPlatformByIdWithinTx(
   });
 }
 
+/** Platform support read: explicit non-secret columns only (no password hash, token or token hash). */
+async function listPlatformOrganizationAccess(orgId: string) {
+  const [users, invitations] = await prisma.$transaction([
+    prisma.user.findMany({
+      where: { organization_id: orgId },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        created_at: true,
+        deleted_at: true,
+      },
+    }),
+    prisma.employeeInvitation.findMany({
+      where: { organization_id: orgId },
+      select: {
+        id: true,
+        email: true,
+        expires_at: true,
+        accepted_at: true,
+        created_at: true,
+      },
+    }),
+  ]);
+
+  return { users, invitations };
+}
+
 async function updateStatusWithinTx(
   orgId: string,
   status: OrganizationStatus,
@@ -124,16 +152,18 @@ async function updateStatusWithinTx(
   });
 }
 
+/** Compare-and-set on the previous status; returns null if it changed concurrently. */
 async function updatePlatformStatusWithinTx(
   orgId: string,
+  previousStatus: OrganizationStatus,
   status: OrganizationStatus,
   tx: DbClient,
-): Promise<PlatformOrganizationRecord> {
-  await tx.organization.updateMany({
-    where: { id: orgId, ...clientOrganizationWhere },
+): Promise<PlatformOrganizationRecord | null> {
+  const { count } = await tx.organization.updateMany({
+    where: { id: orgId, status: previousStatus, ...clientOrganizationWhere },
     data: { status },
   });
-  return (await findPlatformByIdWithinTx(orgId, tx))!;
+  return count === 0 ? null : findPlatformByIdWithinTx(orgId, tx);
 }
 
 async function softDelete(orgId: string): Promise<OrganizationRecord> {
@@ -149,6 +179,7 @@ export {
   findPlatformById,
   findPlatformByIdWithinTx,
   listPlatformOrganizations,
+  listPlatformOrganizationAccess,
   update,
   updatePlatformStatusWithinTx,
   updateStatusWithinTx,

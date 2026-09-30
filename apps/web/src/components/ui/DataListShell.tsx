@@ -25,7 +25,8 @@ export function DataListShell({ children, title, description, toolbar, className
           {toolbar && <div className="flex flex-wrap items-center gap-2">{toolbar}</div>}
         </header>
       )}
-      <div className="overflow-x-auto">{children}</div>
+      {/* relative: keeps absolutely positioned sr-only content inside this scroll boundary. */}
+      <div className="relative overflow-x-auto">{children}</div>
     </section>
   );
 }

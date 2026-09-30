@@ -180,6 +180,77 @@ export interface PlatformOrganizationResponseWrapper {
   data: PlatformOrganizationResponse;
 }
 
+export type PlatformOrganizationUserRole =
+  (typeof PlatformOrganizationUserRole)[keyof typeof PlatformOrganizationUserRole];
+
+export const PlatformOrganizationUserRole = {
+  OWNER: "OWNER",
+  EMPLOYEE: "EMPLOYEE",
+} as const;
+
+/**
+ * ACTIVE when the account is not soft-deleted, DEACTIVATED otherwise.
+ */
+export type PlatformOrganizationUserStatus =
+  (typeof PlatformOrganizationUserStatus)[keyof typeof PlatformOrganizationUserStatus];
+
+export const PlatformOrganizationUserStatus = {
+  ACTIVE: "ACTIVE",
+  DEACTIVATED: "DEACTIVATED",
+} as const;
+
+export interface PlatformOrganizationUser {
+  id: string;
+  email: string;
+  role: PlatformOrganizationUserRole;
+  status: PlatformOrganizationUserStatus;
+  createdAt: string;
+  deactivatedAt: string | null;
+}
+
+/**
+ * ACCEPTED when accepted_at is set; otherwise EXPIRED when the expiry has passed, else PENDING. Revoked or replaced invitations are not distinguishable in the stored data (a resend overwrites the same record).
+ */
+export type PlatformOrganizationInvitationStatus =
+  (typeof PlatformOrganizationInvitationStatus)[keyof typeof PlatformOrganizationInvitationStatus];
+
+export const PlatformOrganizationInvitationStatus = {
+  PENDING: "PENDING",
+  EXPIRED: "EXPIRED",
+  ACCEPTED: "ACCEPTED",
+} as const;
+
+export interface PlatformOrganizationInvitation {
+  id: string;
+  email: string;
+  status: PlatformOrganizationInvitationStatus;
+  createdAt: string;
+  expiresAt: string;
+  acceptedAt: string | null;
+}
+
+export interface PlatformOrganizationUsersResponse {
+  users: PlatformOrganizationUser[];
+  invitations: PlatformOrganizationInvitation[];
+}
+
+export interface PlatformOrganizationUsersResponseWrapper {
+  data: PlatformOrganizationUsersResponse;
+}
+
+export interface DeactivatePlatformEmployeeRequest {
+  /**
+   * Mandatory operator reason recorded in the audit log. Trimmed; whitespace-only values are rejected.
+   * @minLength 1
+   * @maxLength 500
+   */
+  reason: string;
+}
+
+export interface PlatformOrganizationUserResponseWrapper {
+  data: PlatformOrganizationUser;
+}
+
 export interface PlatformOrganizationPagination {
   page: number;
   pageSize: number;
@@ -208,6 +279,11 @@ export interface UpdateOrganizationRequest {
 
 export interface UpdateOrganizationStatusRequest {
   status: OrganizationStatus;
+  /**
+   * Operator-provided reason recorded in the audit log. Required when moving to SUSPENDED or CANCELLED, and when reactivating a CANCELLED organization; optional otherwise. Surrounding whitespace is trimmed.
+   * @maxLength 500
+   */
+  reason?: string;
 }
 
 export interface CustomerResponse {
