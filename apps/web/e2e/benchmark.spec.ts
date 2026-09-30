@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type Request } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import {
@@ -1334,13 +1334,20 @@ test.describe("benchmark mobile IndexedDB and sync", () => {
 });
 
 test.describe("Slice 4 initial usable load profile", () => {
-  test("profiles the existing login usable-load boundary", async ({ browser }) => {
+  test("profiles the existing login usable-load boundary", async ({
+    browser,
+  }) => {
     const samples: Array<Record<string, unknown>> = [];
 
-    for (let sample = -sampling.warmups; sample <= sampling.samples; sample += 1) {
+    for (
+      let sample = -sampling.warmups;
+      sample <= sampling.samples;
+      sample += 1
+    ) {
       if (sample === 0) continue;
 
-      const { context, page, profile, session } = await createMobileProfile(browser);
+      const { context, page, profile, session } =
+        await createMobileProfile(browser);
       const requests: Array<{
         url: string;
         type: string;
@@ -1362,9 +1369,14 @@ test.describe("Slice 4 initial usable load profile", () => {
               });
             }
           }).observe({ type: "longtask", buffered: true });
-          (window as Window & {
-            __slice4LongTasks?: Array<{ startTime: number; duration: number }>;
-          }).__slice4LongTasks = longTasks;
+          (
+            window as Window & {
+              __slice4LongTasks?: Array<{
+                startTime: number;
+                duration: number;
+              }>;
+            }
+          ).__slice4LongTasks = longTasks;
         });
         page.on("requestfinished", (request) => {
           sizeTasks.push(
@@ -1388,9 +1400,8 @@ test.describe("Slice 4 initial usable load profile", () => {
         await Promise.all(sizeTasks);
         const afterMetrics = await session.send("Performance.getMetrics");
         const browserEvidence = await page.evaluate(() => {
-          const navigation = performance.getEntriesByType(
-            "navigation",
-          )[0] as PerformanceNavigationTiming | undefined;
+          const navigation = performance.getEntriesByType("navigation")[0] as
+            PerformanceNavigationTiming | undefined;
           const resources = performance
             .getEntriesByType("resource")
             .map((entry) => {
@@ -1402,11 +1413,15 @@ test.describe("Slice 4 initial usable load profile", () => {
                 duration: resource.duration,
               };
             });
-          const longTasks = (
-            window as Window & {
-              __slice4LongTasks?: Array<{ startTime: number; duration: number }>;
-            }
-          ).__slice4LongTasks ?? [];
+          const longTasks =
+            (
+              window as Window & {
+                __slice4LongTasks?: Array<{
+                  startTime: number;
+                  duration: number;
+                }>;
+              }
+            ).__slice4LongTasks ?? [];
 
           return {
             navigation: navigation
@@ -1420,11 +1435,13 @@ test.describe("Slice 4 initial usable load profile", () => {
             longTasks,
           };
         });
-        const metricMap = (metrics: { metrics: Array<{ name: string; value: number }> }) =>
-          new Map(metrics.metrics.map(({ name, value }) => [name, value]));
+        const metricMap = (metrics: {
+          metrics: Array<{ name: string; value: number }>;
+        }) => new Map(metrics.metrics.map(({ name, value }) => [name, value]));
         const before = metricMap(beforeMetrics);
         const after = metricMap(afterMetrics);
-        const delta = (name: string) => (after.get(name) ?? 0) - (before.get(name) ?? 0);
+        const delta = (name: string) =>
+          (after.get(name) ?? 0) - (before.get(name) ?? 0);
         const byType = Object.groupBy(requests, (request) => request.type);
         const authRequests = requests.filter((request) =>
           new URL(request.url).pathname.startsWith("/api/auth/"),
@@ -1441,12 +1458,18 @@ test.describe("Slice 4 initial usable load profile", () => {
             sample,
             usableMs,
             requestCount: requests.length,
-            requestBytes: requests.reduce((total, request) => total + request.bytes, 0),
+            requestBytes: requests.reduce(
+              (total, request) => total + request.bytes,
+              0,
+            ),
             javaScriptBytes: initialJavaScript.reduce(
               (total, request) => total + request.bytes,
               0,
             ),
-            cssBytes: initialCss.reduce((total, request) => total + request.bytes, 0),
+            cssBytes: initialCss.reduce(
+              (total, request) => total + request.bytes,
+              0,
+            ),
             requestTypes: Object.fromEntries(
               Object.entries(byType).map(([type, entries]) => [
                 type,
@@ -1459,7 +1482,9 @@ test.describe("Slice 4 initial usable load profile", () => {
                 },
               ]),
             ),
-            authRequests: authRequests.map((request) => new URL(request.url).pathname),
+            authRequests: authRequests.map(
+              (request) => new URL(request.url).pathname,
+            ),
             initialJavaScript,
             initialCss,
             navigation: browserEvidence.navigation,
@@ -1486,15 +1511,20 @@ test.describe("Slice 4 initial usable load profile", () => {
 
       return sorted[Math.ceil(sorted.length * fraction) - 1] ?? null;
     };
-    const sampleNumbers = (selector: (sample: Record<string, unknown>) => number) =>
-      samples.map(selector);
+    const sampleNumbers = (
+      selector: (sample: Record<string, unknown>) => number,
+    ) => samples.map(selector);
     const navigation = samples.map(
-      (sample) => sample.navigation as { domContentLoaded: number; load: number },
+      (sample) =>
+        sample.navigation as { domContentLoaded: number; load: number },
     );
     const metrics = samples.map(
       (sample) =>
         sample.performanceMetricsMs as Record<
-          "mainThreadTask" | "scriptExecution" | "layout" | "styleRecalculation",
+          | "mainThreadTask"
+          | "scriptExecution"
+          | "layout"
+          | "styleRecalculation",
           number
         >,
     );
@@ -1517,9 +1547,17 @@ test.describe("Slice 4 initial usable load profile", () => {
           sampling,
           summary: {
             usableLoadMs: {
-              p50: percentile(sampleNumbers((sample) => Number(sample.usableMs)), 0.5),
-              p95: percentile(sampleNumbers((sample) => Number(sample.usableMs)), 0.95),
-              max: Math.max(...sampleNumbers((sample) => Number(sample.usableMs))),
+              p50: percentile(
+                sampleNumbers((sample) => Number(sample.usableMs)),
+                0.5,
+              ),
+              p95: percentile(
+                sampleNumbers((sample) => Number(sample.usableMs)),
+                0.95,
+              ),
+              max: Math.max(
+                ...sampleNumbers((sample) => Number(sample.usableMs)),
+              ),
               errors: 0,
               gateMs: 3_000,
             },
@@ -1528,24 +1566,30 @@ test.describe("Slice 4 initial usable load profile", () => {
                 navigation.map((entry) => entry.domContentLoaded),
                 0.5,
               ),
-              loadP50: percentile(navigation.map((entry) => entry.load), 0.5),
+              loadP50: percentile(
+                navigation.map((entry) => entry.load),
+                0.5,
+              ),
             },
             mainThreadMs: Object.fromEntries(
-              ["mainThreadTask", "scriptExecution", "layout", "styleRecalculation"].map(
-                (name) => [
-                  name,
-                  {
-                    p50: percentile(
-                      metrics.map((entry) => entry[name as keyof typeof entry]),
-                      0.5,
-                    ),
-                    p95: percentile(
-                      metrics.map((entry) => entry[name as keyof typeof entry]),
-                      0.95,
-                    ),
-                  },
-                ],
-              ),
+              [
+                "mainThreadTask",
+                "scriptExecution",
+                "layout",
+                "styleRecalculation",
+              ].map((name) => [
+                name,
+                {
+                  p50: percentile(
+                    metrics.map((entry) => entry[name as keyof typeof entry]),
+                    0.5,
+                  ),
+                  p95: percentile(
+                    metrics.map((entry) => entry[name as keyof typeof entry]),
+                    0.95,
+                  ),
+                },
+              ]),
             ),
             longTasks: {
               count: longTasks.length,
@@ -1559,7 +1603,8 @@ test.describe("Slice 4 initial usable load profile", () => {
                 0.95,
               ),
             },
-            parseAndCompile: "Not exposed separately by the stable CDP Performance domain; ScriptDuration is captured.",
+            parseAndCompile:
+              "Not exposed separately by the stable CDP Performance domain; ScriptDuration is captured.",
           },
           samples,
           eagerAuthenticatedRouteImports: [
@@ -1581,6 +1626,453 @@ test.describe("Slice 4 initial usable load profile", () => {
             "registerApplicationShell after window load",
             "AuthProvider refresh restoration",
           ],
+        },
+        null,
+        2,
+      ),
+    );
+  });
+});
+
+type PostLoadRoute = {
+  name:
+    | "rentals"
+    | "customers"
+    | "vehicles"
+    | "dashboard"
+    | "analytics"
+    | "reports";
+  path: string;
+  usableContent: string;
+};
+
+const postLoadRoutes: PostLoadRoute[] = [
+  {
+    name: "rentals",
+    path: "/rentals",
+    usableContent:
+      "500 mobile rental cards are rendered and payment placeholders are cleared",
+  },
+  {
+    name: "customers",
+    path: "/customers",
+    usableContent:
+      "1,000 mobile customer cards are rendered and the list skeleton is cleared",
+  },
+  {
+    name: "vehicles",
+    path: "/vehicles",
+    usableContent:
+      "50 mobile vehicle cards are rendered and the list skeleton is cleared",
+  },
+  {
+    name: "dashboard",
+    path: "/",
+    usableContent:
+      "the four operational KPI cards are populated and no dashboard loaders remain",
+  },
+  {
+    name: "analytics",
+    path: "/analytics",
+    usableContent:
+      "the four financial summary values are populated and their loaders are cleared",
+  },
+  {
+    name: "reports",
+    path: "/reports",
+    usableContent:
+      "report controls and the four financial summary values are populated",
+  },
+];
+
+function percentile(values: number[], fraction: number): number | null {
+  const sorted = [...values].sort((left, right) => left - right);
+  return sorted[Math.ceil(sorted.length * fraction) - 1] ?? null;
+}
+
+async function waitForPostLoadUsable(
+  page: Page,
+  route: PostLoadRoute,
+): Promise<void> {
+  await page.waitForFunction(
+    ({ name }) => {
+      const mobileCards = (count: number) =>
+        Array.from(document.querySelectorAll("div")).some(
+          (element) =>
+            element.classList.contains("md:hidden") &&
+            element.querySelectorAll("article").length === count,
+        );
+      const noLoader = (label: string) =>
+        !document.querySelector(`[aria-label="${label}"]`);
+
+      if (name === "rentals")
+        return (
+          mobileCards(500) &&
+          noLoader("جارٍ تحميل الإيجارات") &&
+          noLoader("جارٍ تحميل حالة الدفع")
+        );
+      if (name === "customers")
+        return mobileCards(1_000) && noLoader("جارٍ تحميل العملاء");
+      if (name === "vehicles")
+        return mobileCards(50) && noLoader("جارٍ تحميل السيارات");
+      if (name === "dashboard") {
+        const section = document.querySelector(
+          'section[aria-label="نظرة تشغيلية سريعة"]',
+        );
+        return (
+          section?.querySelectorAll("button").length === 4 &&
+          !document.querySelector('[aria-label^="جارٍ تحميل"]')
+        );
+      }
+      if (name === "analytics") {
+        const section = document.querySelector(
+          'section[aria-label="ملخص الأداء المالي"]',
+        );
+        return (
+          section?.querySelectorAll(".text-2xl").length === 4 &&
+          !document.querySelector('[aria-label^="جارٍ تحميل"]')
+        );
+      }
+      const section = document.querySelector(
+        'section[aria-label="الملخص المالي للتقرير"]',
+      );
+      return (
+        document.querySelector('[aria-label="طباعة التقرير"]') !== null &&
+        document.querySelector('[aria-label="تصدير التقرير بصيغة CSV"]') !==
+          null &&
+        section?.querySelectorAll(".text-2xl").length === 4 &&
+        noLoader("جارٍ تحميل التقرير")
+      );
+    },
+    { name: route.name },
+    { timeout: 120_000 },
+  );
+}
+
+async function navigateToPostLoadRoute(
+  page: Page,
+  route: PostLoadRoute,
+): Promise<void> {
+  if (route.path === "/") {
+    await page
+      .locator('nav.fixed[aria-label="التنقل الرئيسي"] a[href="/"]')
+      .click();
+  } else if (route.path === "/analytics" || route.path === "/reports") {
+    await page.getByRole("button", { name: "المزيد من وحدات النظام" }).click();
+    await page
+      .locator(`nav[aria-label="كل وحدات النظام"] a[href="${route.path}"]`)
+      .click();
+  } else {
+    await page
+      .locator(`nav.fixed[aria-label="التنقل الرئيسي"] a[href="${route.path}"]`)
+      .click();
+  }
+  await page.waitForURL(route.path);
+}
+
+test.describe("Slice 5 post-load navigation profile", () => {
+  test("profiles usable content, route chunks, requests, and DOM volume", async ({
+    browser,
+  }) => {
+    const routeProfiles: Record<string, Array<Record<string, unknown>>> = {};
+
+    for (const route of postLoadRoutes) {
+      const samples: Array<Record<string, unknown>> = [];
+      let requests: Array<{
+        url: string;
+        path: string;
+        type: string;
+        bytes: number;
+      }> = [];
+      let sizeTasks: Promise<void>[] = [];
+      let startedAt = 0;
+      let usableMs = 0;
+      let beforeMetrics:
+        { metrics: Array<{ name: string; value: number }> } | undefined;
+      let coldLazyChunks: Array<{ path: string; bytes: number }> = [];
+      let observeRequest: ((request: Request) => void) | undefined;
+      const profileContext = await createMobileProfile(browser);
+      const { context, page, session } = profileContext;
+
+      try {
+        await page.addInitScript(() => {
+          const longTasks: Array<{ startTime: number; duration: number }> = [];
+          new PerformanceObserver((list) => {
+            for (const entry of list.getEntries())
+              longTasks.push({
+                startTime: entry.startTime,
+                duration: entry.duration,
+              });
+          }).observe({ type: "longtask", buffered: true });
+          (
+            window as Window & {
+              __slice5LongTasks?: Array<{
+                startTime: number;
+                duration: number;
+              }>;
+            }
+          ).__slice5LongTasks = longTasks;
+        });
+        await loginMobilePage(page);
+        await syncAndWaitForFinalPull(page, fullPilotProjectionCounts);
+        await waitForPostLoadUsable(page, postLoadRoutes[3]!);
+
+        const measurement = await runSamples(
+          `mobile-post-load-navigation-${route.name}`,
+          async (sample) => {
+            startedAt = performance.now();
+            await navigateToPostLoadRoute(page, route);
+            await waitForPostLoadUsable(page, route);
+            usableMs = performance.now() - startedAt;
+            await page.waitForTimeout(50);
+            await Promise.all(sizeTasks);
+
+            const afterMetrics = await session.send("Performance.getMetrics");
+            const metricMap = (metrics: {
+              metrics: Array<{ name: string; value: number }>;
+            }) =>
+              new Map(metrics.metrics.map(({ name, value }) => [name, value]));
+            const before = metricMap(beforeMetrics!);
+            const after = metricMap(afterMetrics);
+            const delta = (name: string) =>
+              (after.get(name) ?? 0) - (before.get(name) ?? 0);
+            const evidence = await page.evaluate(() => {
+              const longTasks =
+                (
+                  window as Window & {
+                    __slice5LongTasks?: Array<{
+                      startTime: number;
+                      duration: number;
+                    }>;
+                  }
+                ).__slice5LongTasks ?? [];
+              const visible = (element: Element) =>
+                (element as HTMLElement).offsetParent !== null;
+              return {
+                domNodes: document.querySelectorAll("*").length,
+                tableRows: document.querySelectorAll("tbody tr").length,
+                cards: document.querySelectorAll("article").length,
+                visibleRows: Array.from(
+                  document.querySelectorAll("tbody tr, article"),
+                ).filter(visible).length,
+                longTasks,
+              };
+            });
+
+            const apiRequests = requests.filter((request) =>
+              request.path.startsWith("/api/"),
+            );
+            const lazyChunks = requests.filter(
+              (request) =>
+                request.type === "script" &&
+                new URL(request.url).pathname.includes("/assets/"),
+            );
+            if (sample === -sampling.warmups) {
+              coldLazyChunks = lazyChunks.map((request) => ({
+                path: new URL(request.url).pathname,
+                bytes: request.bytes,
+              }));
+            }
+            if (sample > 0) {
+              samples.push({
+                sample,
+                usableMs,
+                apiRequestCount: apiRequests.length,
+                apiResponseBytes: apiRequests.reduce(
+                  (total, request) => total + request.bytes,
+                  0,
+                ),
+                apiPaths: Object.entries(
+                  Object.groupBy(apiRequests, (request) => request.path),
+                ).map(([path, entries]) => [path, entries?.length ?? 0]),
+                lazyChunkCount: lazyChunks.length,
+                lazyChunkBytes: lazyChunks.reduce(
+                  (total, request) => total + request.bytes,
+                  0,
+                ),
+                lazyChunks: lazyChunks.map(
+                  (request) => new URL(request.url).pathname,
+                ),
+                mainThreadMs: {
+                  task: delta("TaskDuration") * 1000,
+                  script: delta("ScriptDuration") * 1000,
+                  layout: delta("LayoutDuration") * 1000,
+                  style: delta("RecalcStyleDuration") * 1000,
+                },
+                ...evidence,
+              });
+            }
+          },
+          {
+            ...sampling,
+            durationMs: async () => usableMs,
+            beforeSample: async () => {
+              if (route.path === "/") {
+                await page
+                  .locator(
+                    'nav.fixed[aria-label="التنقل الرئيسي"] a[href="/customers"]',
+                  )
+                  .click();
+                await page.waitForURL("/customers");
+                await waitForPostLoadUsable(page, postLoadRoutes[1]!);
+              } else if (new URL(page.url()).pathname !== "/") {
+                await page
+                  .locator('nav.fixed[aria-label="التنقل الرئيسي"] a[href="/"]')
+                  .click();
+                await page.waitForURL("/");
+                await waitForPostLoadUsable(page, postLoadRoutes[3]!);
+              }
+              await session.send("Performance.enable");
+              beforeMetrics = await session.send("Performance.getMetrics");
+              await page.evaluate(() => {
+                (
+                  window as Window & {
+                    __slice5LongTasks?: Array<{
+                      startTime: number;
+                      duration: number;
+                    }>;
+                  }
+                ).__slice5LongTasks = [];
+              });
+              requests = [];
+              sizeTasks = [];
+              observeRequest = (request) => {
+                sizeTasks.push(
+                  (async () => {
+                    const size = await request.sizes();
+                    const url = new URL(request.url());
+                    requests.push({
+                      url: request.url(),
+                      path: url.pathname.replace(
+                        /\/rentals\/[^/]+\/payments$/,
+                        "/rentals/:id/payments",
+                      ),
+                      type: request.resourceType(),
+                      bytes: size.responseBodySize + size.responseHeadersSize,
+                    });
+                  })().catch(() => undefined),
+                );
+              };
+              page.on("requestfinished", observeRequest);
+            },
+            afterSample: async () => {
+              if (observeRequest) page.off("requestfinished", observeRequest);
+              observeRequest = undefined;
+            },
+          },
+        );
+
+        expect(measurement.errorCount).toBe(0);
+        expect(samples).toHaveLength(sampling.samples);
+        routeProfiles[route.name] = samples;
+        recordMeasurements([measurement], {
+          name: `slice5-${route.name}`,
+          usableContent: route.usableContent,
+          gateMs: 1_000,
+          coldLazyChunkCount: coldLazyChunks.length,
+          coldLazyChunkBytes: coldLazyChunks.reduce(
+            (total, chunk) => total + chunk.bytes,
+            0,
+          ),
+        });
+      } finally {
+        await context.close();
+      }
+    }
+
+    const artifactDirectory = resolve(
+      import.meta.dirname,
+      "../test-results/benchmark",
+    );
+    await mkdir(artifactDirectory, { recursive: true });
+    await writeFile(
+      resolve(
+        artifactDirectory,
+        `slice5-post-load-navigation-${new Date().toISOString().replaceAll(":", "-")}.json`,
+      ),
+      JSON.stringify(
+        {
+          boundary:
+            "authenticated-synchronized-tenant-navigation-to-route-specific-usable-content",
+          sampling,
+          gateMs: 1_000,
+          routes: Object.fromEntries(
+            postLoadRoutes.map((route) => {
+              const samples = routeProfiles[route.name] ?? [];
+              const usableMs = samples.map((sample) => Number(sample.usableMs));
+              const longTasks = samples.flatMap(
+                (sample) => sample.longTasks as Array<{ duration: number }>,
+              );
+              return [
+                route.name,
+                {
+                  path: route.path,
+                  usableContent: route.usableContent,
+                  status:
+                    usableMs.length === sampling.samples &&
+                    Math.max(...usableMs) <= 1_000
+                      ? "PASS"
+                      : "FAIL",
+                  usableMs: {
+                    p50: percentile(usableMs, 0.5),
+                    p95: percentile(usableMs, 0.95),
+                    max: Math.max(...usableMs),
+                    errors: sampling.samples - usableMs.length,
+                  },
+                  apiRequests: {
+                    p50: percentile(
+                      samples.map((sample) => Number(sample.apiRequestCount)),
+                      0.5,
+                    ),
+                    p95: percentile(
+                      samples.map((sample) => Number(sample.apiRequestCount)),
+                      0.95,
+                    ),
+                    bytesP50: percentile(
+                      samples.map((sample) => Number(sample.apiResponseBytes)),
+                      0.5,
+                    ),
+                  },
+                  lazyChunks: {
+                    countP50: percentile(
+                      samples.map((sample) => Number(sample.lazyChunkCount)),
+                      0.5,
+                    ),
+                    bytesP50: percentile(
+                      samples.map((sample) => Number(sample.lazyChunkBytes)),
+                      0.5,
+                    ),
+                  },
+                  dom: {
+                    nodesP50: percentile(
+                      samples.map((sample) => Number(sample.domNodes)),
+                      0.5,
+                    ),
+                    tableRowsP50: percentile(
+                      samples.map((sample) => Number(sample.tableRows)),
+                      0.5,
+                    ),
+                    cardsP50: percentile(
+                      samples.map((sample) => Number(sample.cards)),
+                      0.5,
+                    ),
+                    visibleRowsP50: percentile(
+                      samples.map((sample) => Number(sample.visibleRows)),
+                      0.5,
+                    ),
+                  },
+                  longTasks: {
+                    count: longTasks.length,
+                    maxMs: Math.max(
+                      0,
+                      ...longTasks.map((task) => task.duration),
+                    ),
+                  },
+                  samples,
+                },
+              ];
+            }),
+          ),
         },
         null,
         2,
