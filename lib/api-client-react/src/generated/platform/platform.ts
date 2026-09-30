@@ -17,10 +17,14 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  DeactivatePlatformEmployeeRequest,
+  EmployeeInvitationResponseWrapper,
   ErrorResponse,
   ListPlatformOrganizationsParams,
   PlatformOrganizationListResponse,
   PlatformOrganizationResponseWrapper,
+  PlatformOrganizationUserResponseWrapper,
+  PlatformOrganizationUsersResponseWrapper,
   UpdateOrganizationStatusRequest,
 } from "../api.schemas";
 
@@ -349,4 +353,424 @@ export const useUpdateOrganizationStatus = <
   TContext
 > => {
   return useMutation(getUpdateOrganizationStatusMutationOptions(options));
+};
+export const getListPlatformOrganizationUsersUrl = (organizationId: string) => {
+  return `/api/platform/organizations/${organizationId}/users`;
+};
+
+/**
+ * Read-only access overview for one client organization: its user accounts (including deactivated ones) and its employee invitations. Restricted to PLATFORM_OWNER. Internal and deleted organizations are not found. This does not grant tenant-business access and never returns password hashes, session tokens, invitation tokens or token hashes.
+ *
+ * Users are ordered OWNER first, then active EMPLOYEE accounts, then deactivated accounts, each by creation time. Invitations are ordered pending, expired, then accepted, newest first.
+ *
+ * If a PLATFORM_OWNER account is found inside a client organization the request fails with 500 ORGANIZATION_DATA_INTEGRITY_ERROR instead of presenting it as a tenant user.
+ * @summary List an organization's users and invitations for platform support visibility
+ */
+export const listPlatformOrganizationUsers = async (
+  organizationId: string,
+  options?: RequestInit,
+): Promise<PlatformOrganizationUsersResponseWrapper> => {
+  return customFetch<PlatformOrganizationUsersResponseWrapper>(
+    getListPlatformOrganizationUsersUrl(organizationId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListPlatformOrganizationUsersQueryKey = (
+  organizationId: string,
+) => {
+  return [`/api/platform/organizations/${organizationId}/users`] as const;
+};
+
+export const getListPlatformOrganizationUsersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPlatformOrganizationUsers>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  organizationId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listPlatformOrganizationUsers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getListPlatformOrganizationUsersQueryKey(organizationId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listPlatformOrganizationUsers>>
+  > = ({ signal }) =>
+    listPlatformOrganizationUsers(organizationId, {
+      signal,
+      ...requestOptions,
+    });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: organizationId !== null && organizationId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listPlatformOrganizationUsers>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListPlatformOrganizationUsersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listPlatformOrganizationUsers>>
+>;
+export type ListPlatformOrganizationUsersQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary List an organization's users and invitations for platform support visibility
+ */
+
+export function useListPlatformOrganizationUsers<
+  TData = Awaited<ReturnType<typeof listPlatformOrganizationUsers>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  organizationId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listPlatformOrganizationUsers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListPlatformOrganizationUsersQueryOptions(
+    organizationId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getResendPlatformEmployeeInvitationUrl = (
+  organizationId: string,
+  invitationId: string,
+) => {
+  return `/api/platform/organizations/${organizationId}/invitations/${invitationId}/resend`;
+};
+
+/**
+ * Support action restricted to PLATFORM_OWNER. Reissues the existing invitation with the same semantics as the tenant flow: the previous token is invalidated, a new seven-day token is created, and only its hash is stored. The new acceptance token is returned once for manual secure delivery.
+ *
+ * Allowed for PENDING and EXPIRED invitations of TRIAL or ACTIVE organizations. ACCEPTED invitations return 409 INVITATION_ALREADY_ACCEPTED; SUSPENDED and CANCELLED organizations return 403 ORGANIZATION_NOT_OPERATIONAL. Internal, deleted and unknown organizations, and invitations of other organizations, are not found.
+ * @summary Resend an employee invitation on behalf of a client organization
+ */
+export const resendPlatformEmployeeInvitation = async (
+  organizationId: string,
+  invitationId: string,
+  options?: RequestInit,
+): Promise<EmployeeInvitationResponseWrapper> => {
+  return customFetch<EmployeeInvitationResponseWrapper>(
+    getResendPlatformEmployeeInvitationUrl(organizationId, invitationId),
+    {
+      ...options,
+      method: "POST",
+    },
+  );
+};
+
+export const getResendPlatformEmployeeInvitationMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resendPlatformEmployeeInvitation>>,
+    TError,
+    { organizationId: string; invitationId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof resendPlatformEmployeeInvitation>>,
+  TError,
+  { organizationId: string; invitationId: string },
+  TContext
+> => {
+  const mutationKey = ["resendPlatformEmployeeInvitation"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof resendPlatformEmployeeInvitation>>,
+    { organizationId: string; invitationId: string }
+  > = (props) => {
+    const { organizationId, invitationId } = props ?? {};
+
+    return resendPlatformEmployeeInvitation(
+      organizationId,
+      invitationId,
+      requestOptions,
+    );
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ResendPlatformEmployeeInvitationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof resendPlatformEmployeeInvitation>>
+>;
+
+export type ResendPlatformEmployeeInvitationMutationError =
+  ErrorType<ErrorResponse>;
+
+/**
+ * @summary Resend an employee invitation on behalf of a client organization
+ */
+export const useResendPlatformEmployeeInvitation = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resendPlatformEmployeeInvitation>>,
+    TError,
+    { organizationId: string; invitationId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof resendPlatformEmployeeInvitation>>,
+  TError,
+  { organizationId: string; invitationId: string },
+  TContext
+> => {
+  return useMutation(
+    getResendPlatformEmployeeInvitationMutationOptions(options),
+  );
+};
+export const getRequestPlatformOwnerPasswordResetUrl = (
+  organizationId: string,
+) => {
+  return `/api/platform/organizations/${organizationId}/owner/password-reset`;
+};
+
+/**
+ * Support action restricted to PLATFORM_OWNER. The server resolves the organization's single active OWNER, issues the normal one-time reset credential (hash stored, prior tokens invalidated, one-hour expiry) and hands it to the configured delivery channel. No email is accepted from the client, and no token or password is ever returned.
+ *
+ * Allowed for every lifecycle status, including SUSPENDED and CANCELLED; it does not change organization status or restore business access. A deactivated OWNER returns 409 OWNER_DEACTIVATED; a missing or duplicated OWNER returns 500 ORGANIZATION_DATA_INTEGRITY_ERROR.
+ * @summary Send a password recovery link to an organization's owner
+ */
+export const requestPlatformOwnerPasswordReset = async (
+  organizationId: string,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(
+    getRequestPlatformOwnerPasswordResetUrl(organizationId),
+    {
+      ...options,
+      method: "POST",
+    },
+  );
+};
+
+export const getRequestPlatformOwnerPasswordResetMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestPlatformOwnerPasswordReset>>,
+    TError,
+    { organizationId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof requestPlatformOwnerPasswordReset>>,
+  TError,
+  { organizationId: string },
+  TContext
+> => {
+  const mutationKey = ["requestPlatformOwnerPasswordReset"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof requestPlatformOwnerPasswordReset>>,
+    { organizationId: string }
+  > = (props) => {
+    const { organizationId } = props ?? {};
+
+    return requestPlatformOwnerPasswordReset(organizationId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RequestPlatformOwnerPasswordResetMutationResult = NonNullable<
+  Awaited<ReturnType<typeof requestPlatformOwnerPasswordReset>>
+>;
+
+export type RequestPlatformOwnerPasswordResetMutationError =
+  ErrorType<ErrorResponse>;
+
+/**
+ * @summary Send a password recovery link to an organization's owner
+ */
+export const useRequestPlatformOwnerPasswordReset = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestPlatformOwnerPasswordReset>>,
+    TError,
+    { organizationId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof requestPlatformOwnerPasswordReset>>,
+  TError,
+  { organizationId: string },
+  TContext
+> => {
+  return useMutation(
+    getRequestPlatformOwnerPasswordResetMutationOptions(options),
+  );
+};
+export const getDeactivatePlatformEmployeeUrl = (
+  organizationId: string,
+  userId: string,
+) => {
+  return `/api/platform/organizations/${organizationId}/users/${userId}/deactivate`;
+};
+
+/**
+ * Support action restricted to PLATFORM_OWNER. Soft-deletes the EMPLOYEE, revokes all of their refresh sessions and appends an audit entry containing the mandatory reason, in one transaction. Only EMPLOYEE accounts of the selected client organization can be targeted: OWNER and PLATFORM_OWNER accounts return 409 USER_NOT_DEACTIVATABLE, accounts of other organizations return 404, and an already deactivated account returns 409 USER_ALREADY_DEACTIVATED. Allowed for every lifecycle status.
+ * @summary Deactivate an employee account on behalf of a client organization
+ */
+export const deactivatePlatformEmployee = async (
+  organizationId: string,
+  userId: string,
+  deactivatePlatformEmployeeRequest: DeactivatePlatformEmployeeRequest,
+  options?: RequestInit,
+): Promise<PlatformOrganizationUserResponseWrapper> => {
+  return customFetch<PlatformOrganizationUserResponseWrapper>(
+    getDeactivatePlatformEmployeeUrl(organizationId, userId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(deactivatePlatformEmployeeRequest),
+    },
+  );
+};
+
+export const getDeactivatePlatformEmployeeMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deactivatePlatformEmployee>>,
+    TError,
+    {
+      organizationId: string;
+      userId: string;
+      data: BodyType<DeactivatePlatformEmployeeRequest>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deactivatePlatformEmployee>>,
+  TError,
+  {
+    organizationId: string;
+    userId: string;
+    data: BodyType<DeactivatePlatformEmployeeRequest>;
+  },
+  TContext
+> => {
+  const mutationKey = ["deactivatePlatformEmployee"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deactivatePlatformEmployee>>,
+    {
+      organizationId: string;
+      userId: string;
+      data: BodyType<DeactivatePlatformEmployeeRequest>;
+    }
+  > = (props) => {
+    const { organizationId, userId, data } = props ?? {};
+
+    return deactivatePlatformEmployee(
+      organizationId,
+      userId,
+      data,
+      requestOptions,
+    );
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeactivatePlatformEmployeeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deactivatePlatformEmployee>>
+>;
+export type DeactivatePlatformEmployeeMutationBody =
+  BodyType<DeactivatePlatformEmployeeRequest>;
+export type DeactivatePlatformEmployeeMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Deactivate an employee account on behalf of a client organization
+ */
+export const useDeactivatePlatformEmployee = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deactivatePlatformEmployee>>,
+    TError,
+    {
+      organizationId: string;
+      userId: string;
+      data: BodyType<DeactivatePlatformEmployeeRequest>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deactivatePlatformEmployee>>,
+  TError,
+  {
+    organizationId: string;
+    userId: string;
+    data: BodyType<DeactivatePlatformEmployeeRequest>;
+  },
+  TContext
+> => {
+  return useMutation(getDeactivatePlatformEmployeeMutationOptions(options));
 };

@@ -113,6 +113,34 @@ async function findPlatformByIdWithinTx(
   });
 }
 
+/** Platform support read: explicit non-secret columns only (no password hash, token or token hash). */
+async function listPlatformOrganizationAccess(orgId: string) {
+  const [users, invitations] = await prisma.$transaction([
+    prisma.user.findMany({
+      where: { organization_id: orgId },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        created_at: true,
+        deleted_at: true,
+      },
+    }),
+    prisma.employeeInvitation.findMany({
+      where: { organization_id: orgId },
+      select: {
+        id: true,
+        email: true,
+        expires_at: true,
+        accepted_at: true,
+        created_at: true,
+      },
+    }),
+  ]);
+
+  return { users, invitations };
+}
+
 async function updateStatusWithinTx(
   orgId: string,
   status: OrganizationStatus,
@@ -151,6 +179,7 @@ export {
   findPlatformById,
   findPlatformByIdWithinTx,
   listPlatformOrganizations,
+  listPlatformOrganizationAccess,
   update,
   updatePlatformStatusWithinTx,
   updateStatusWithinTx,

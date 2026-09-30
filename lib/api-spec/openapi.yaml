@@ -574,6 +574,250 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /platform/organizations/{organizationId}/users:
+    get:
+      operationId: listPlatformOrganizationUsers
+      tags: [platform]
+      summary: List an organization's users and invitations for platform support visibility
+      description: |
+        Read-only access overview for one client organization: its user accounts (including deactivated ones) and its employee invitations. Restricted to PLATFORM_OWNER. Internal and deleted organizations are not found. This does not grant tenant-business access and never returns password hashes, session tokens, invitation tokens or token hashes.
+
+        Users are ordered OWNER first, then active EMPLOYEE accounts, then deactivated accounts, each by creation time. Invitations are ordered pending, expired, then accepted, newest first.
+
+        If a PLATFORM_OWNER account is found inside a client organization the request fails with 500 ORGANIZATION_DATA_INTEGRITY_ERROR instead of presenting it as a tenant user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organizationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Organization users and invitations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformOrganizationUsersResponseWrapper"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Organization not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Organization data violates a platform invariant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /platform/organizations/{organizationId}/invitations/{invitationId}/resend:
+    post:
+      operationId: resendPlatformEmployeeInvitation
+      tags: [platform]
+      summary: Resend an employee invitation on behalf of a client organization
+      description: |
+        Support action restricted to PLATFORM_OWNER. Reissues the existing invitation with the same semantics as the tenant flow: the previous token is invalidated, a new seven-day token is created, and only its hash is stored. The new acceptance token is returned once for manual secure delivery.
+
+        Allowed for PENDING and EXPIRED invitations of TRIAL or ACTIVE organizations. ACCEPTED invitations return 409 INVITATION_ALREADY_ACCEPTED; SUSPENDED and CANCELLED organizations return 403 ORGANIZATION_NOT_OPERATIONAL. Internal, deleted and unknown organizations, and invitations of other organizations, are not found.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organizationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: invitationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Invitation reissued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmployeeInvitationResponseWrapper"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /platform/organizations/{organizationId}/owner/password-reset:
+    post:
+      operationId: requestPlatformOwnerPasswordReset
+      tags: [platform]
+      summary: Send a password recovery link to an organization's owner
+      description: |
+        Support action restricted to PLATFORM_OWNER. The server resolves the organization's single active OWNER, issues the normal one-time reset credential (hash stored, prior tokens invalidated, one-hour expiry) and hands it to the configured delivery channel. No email is accepted from the client, and no token or password is ever returned.
+
+        Allowed for every lifecycle status, including SUSPENDED and CANCELLED; it does not change organization status or restore business access. A deactivated OWNER returns 409 OWNER_DEACTIVATED; a missing or duplicated OWNER returns 500 ORGANIZATION_DATA_INTEGRITY_ERROR.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organizationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Recovery requested
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Data integrity error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /platform/organizations/{organizationId}/users/{userId}/deactivate:
+    post:
+      operationId: deactivatePlatformEmployee
+      tags: [platform]
+      summary: Deactivate an employee account on behalf of a client organization
+      description: |
+        Support action restricted to PLATFORM_OWNER. Soft-deletes the EMPLOYEE, revokes all of their refresh sessions and appends an audit entry containing the mandatory reason, in one transaction. Only EMPLOYEE accounts of the selected client organization can be targeted: OWNER and PLATFORM_OWNER accounts return 409 USER_NOT_DEACTIVATABLE, accounts of other organizations return 404, and an already deactivated account returns 409 USER_ALREADY_DEACTIVATED. Allowed for every lifecycle status.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organizationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeactivatePlatformEmployeeRequest"
+      responses:
+        "200":
+          description: Employee deactivated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformOrganizationUserResponseWrapper"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /users:
     get:
       operationId: listUsers
@@ -4461,6 +4705,119 @@ components:
       properties:
         data:
           $ref: "#/components/schemas/PlatformOrganizationResponse"
+      required:
+        - data
+
+    PlatformOrganizationUserRole:
+      type: string
+      enum: [OWNER, EMPLOYEE]
+
+    PlatformOrganizationUserStatus:
+      type: string
+      description: ACTIVE when the account is not soft-deleted, DEACTIVATED otherwise.
+      enum: [ACTIVE, DEACTIVATED]
+
+    PlatformOrganizationUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        role:
+          $ref: "#/components/schemas/PlatformOrganizationUserRole"
+        status:
+          $ref: "#/components/schemas/PlatformOrganizationUserStatus"
+        createdAt:
+          type: string
+          format: date-time
+        deactivatedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - email
+        - role
+        - status
+        - createdAt
+        - deactivatedAt
+
+    PlatformOrganizationInvitationStatus:
+      type: string
+      description: ACCEPTED when accepted_at is set; otherwise EXPIRED when the expiry has passed, else PENDING. Revoked or replaced invitations are not distinguishable in the stored data (a resend overwrites the same record).
+      enum: [PENDING, EXPIRED, ACCEPTED]
+
+    PlatformOrganizationInvitation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        status:
+          $ref: "#/components/schemas/PlatformOrganizationInvitationStatus"
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        acceptedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - email
+        - status
+        - createdAt
+        - expiresAt
+        - acceptedAt
+
+    PlatformOrganizationUsersResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlatformOrganizationUser"
+        invitations:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlatformOrganizationInvitation"
+      required:
+        - users
+        - invitations
+
+    PlatformOrganizationUsersResponseWrapper:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/PlatformOrganizationUsersResponse"
+      required:
+        - data
+
+    DeactivatePlatformEmployeeRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Mandatory operator reason recorded in the audit log. Trimmed; whitespace-only values are rejected.
+      required:
+        - reason
+
+    PlatformOrganizationUserResponseWrapper:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/PlatformOrganizationUser"
       required:
         - data
 

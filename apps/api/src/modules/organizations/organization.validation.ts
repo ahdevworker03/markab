@@ -1,5 +1,6 @@
 import {
   GetPlatformOrganizationParams,
+  ListPlatformOrganizationUsersParams,
   ListPlatformOrganizationsQueryParams,
   UpdateMyOrganizationBody,
   UpdateOrganizationStatusBody,
@@ -14,6 +15,7 @@ export const updateOrganizationStatusSchema = UpdateOrganizationStatusBody;
 export const updateOrganizationStatusParamsSchema = UpdateOrganizationStatusParams;
 export const listPlatformOrganizationsQuerySchema = ListPlatformOrganizationsQueryParams;
 export const getPlatformOrganizationParamsSchema = GetPlatformOrganizationParams;
+export const listPlatformOrganizationUsersParamsSchema = ListPlatformOrganizationUsersParams;
 
 export type { UpdateOrganizationInput } from "./organization.types";
 export type UpdateOrganizationStatusInput = {

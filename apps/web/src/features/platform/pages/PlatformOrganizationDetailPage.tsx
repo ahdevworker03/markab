@@ -29,6 +29,7 @@ import {
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { FormField, inputClass } from "@/components/ui/FormField";
+import { OrganizationUsersSection } from "../components/OrganizationUsersSection";
 import {
   REASON_MAX_LENGTH,
   getNextStatuses,
@@ -229,6 +230,10 @@ export default function PlatformOrganizationDetailPage({ params }: Props) {
           </Button>
         </div>
       </DetailSection>
+      <OrganizationUsersSection
+        organizationId={params.organizationId}
+        organizationStatus={organization.status}
+      />
       <AlertDialog open={confirmOpen} onOpenChange={changeOpen}>
         <AlertDialogContent dir="rtl" className="max-w-md">
           <AlertDialogHeader className="text-start sm:text-start">

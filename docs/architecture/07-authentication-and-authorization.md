@@ -159,6 +159,27 @@ Only `PLATFORM_OWNER` may update tenant lifecycle status through the dedicated
 platform endpoint. A `PLATFORM_OWNER` is not granted ordinary tenant-business
 access merely because it has an organization claim.
 
+`PLATFORM_OWNER` may view an organization's user accounts (including
+deactivated ones) and employee invitations through the platform-specific
+`GET /api/platform/organizations/{organizationId}/users` read endpoint. This is
+support visibility only: it is read-only, excludes secrets and tokens, and does
+not open tenant `/api/users` or any other tenant-business route.
+
+Beyond that read, `PLATFORM_OWNER` has exactly three platform-specific support
+actions, each audited in the append-only log with the platform actor and never
+containing tokens, passwords, or invitation links:
+
+- Resend an existing pending/expired employee invitation
+  (`PLATFORM_EMPLOYEE_INVITATION_RESENT`); refused for accepted invitations and
+  for `SUSPENDED`/`CANCELLED` organizations.
+- Trigger the normal password-reset delivery for the organization's server-resolved
+  `OWNER` (`PLATFORM_OWNER_PASSWORD_RESET_REQUESTED`); allowed in every lifecycle
+  status, changes no organization state, and never returns the reset token.
+- Deactivate an `EMPLOYEE` with a mandatory reason
+  (`PLATFORM_EMPLOYEE_DEACTIVATED`); soft-deletes the account and revokes its
+  sessions. Owners and platform owners cannot be targeted, and there is no
+  reactivation, employee creation, password assignment, or role change.
+
 Lifecycle transitions are restricted: `TRIAL` may move to `ACTIVE`,
 `SUSPENDED`, or `CANCELLED`; `ACTIVE` to `SUSPENDED` or `CANCELLED`;
 `SUSPENDED` to `ACTIVE` or `CANCELLED`; `CANCELLED` only to `ACTIVE`. A

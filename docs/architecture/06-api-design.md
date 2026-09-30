@@ -26,19 +26,23 @@
 | 20 | [Organization Identity From Authentication](#organization-identity-from-authentication) |
 | 21 | [GET /api/organizations/me](#get-apiorganizationsme) |
 | 22 | [PATCH /api/organizations/me](#patch-apiorganizationsme) |
-| 23 | [PATCH /api/platform/organizations/:organizationId/status](#patch-apiplatformorganizationsorganizationidstatus) |
-| 24 | [DELETE /api/organizations/me](#delete-apiorganizationsme) |
-| 25 | [Authorization](#authorization) |
-| 26 | [Pagination](#pagination) |
-| 27 | [Filtering](#filtering) |
-| 28 | [Sorting](#sorting) |
-| 29 | [Searching](#searching) |
-| 30 | [Versioning](#versioning) |
-| 31 | [Offline Synchronization](#offline-synchronization) |
-| 32 | [Security](#security) |
-| 33 | [Consistency](#consistency) |
-| 34 | [Future Expansion](#future-expansion) |
-| 35 | [Guiding Principle](#guiding-principle) |
+| 23 | [GET /api/platform/organizations/:organizationId/users](#get-apiplatformorganizationsorganizationidusers) |
+| 24 | [POST /api/platform/organizations/:organizationId/invitations/:invitationId/resend](#post-apiplatformorganizationsorganizationidinvitationsinvitationidresend) |
+| 25 | [POST /api/platform/organizations/:organizationId/owner/password-reset](#post-apiplatformorganizationsorganizationidownerpassword-reset) |
+| 26 | [POST /api/platform/organizations/:organizationId/users/:userId/deactivate](#post-apiplatformorganizationsorganizationidusersuseriddeactivate) |
+| 27 | [PATCH /api/platform/organizations/:organizationId/status](#patch-apiplatformorganizationsorganizationidstatus) |
+| 28 | [DELETE /api/organizations/me](#delete-apiorganizationsme) |
+| 29 | [Authorization](#authorization) |
+| 30 | [Pagination](#pagination) |
+| 31 | [Filtering](#filtering) |
+| 32 | [Sorting](#sorting) |
+| 33 | [Searching](#searching) |
+| 34 | [Versioning](#versioning) |
+| 35 | [Offline Synchronization](#offline-synchronization) |
+| 36 | [Security](#security) |
+| 37 | [Consistency](#consistency) |
+| 38 | [Future Expansion](#future-expansion) |
+| 39 | [Guiding Principle](#guiding-principle) |
 
 ## Purpose
 
@@ -439,6 +443,103 @@ Since every authenticated user belongs to exactly one organization, the API deri
   - `403` Insufficient permissions
   - `404` Organization not found
   - `422` Validation failed
+
+## GET /api/platform/organizations/:organizationId/users
+
+- **Purpose:** Read-only support visibility into who has access to a client
+  organization.
+- **Authorization:** `PLATFORM_OWNER` only. This is a platform-specific read; it
+  does not use tenant `/api/users` routes and grants no tenant-business access.
+  Internal, deleted, and unknown organizations return `404`.
+- **Success response:** `200`
+  ```json
+  {
+    "data": {
+      "users": [
+        {
+          "id": "uuid",
+          "email": "owner@example.com",
+          "role": "OWNER",
+          "status": "ACTIVE",
+          "createdAt": "2026-01-01T00:00:00.000Z",
+          "deactivatedAt": null
+        }
+      ],
+      "invitations": [
+        {
+          "id": "uuid",
+          "email": "employee@example.com",
+          "status": "PENDING",
+          "createdAt": "2026-01-01T00:00:00.000Z",
+          "expiresAt": "2026-01-08T00:00:00.000Z",
+          "acceptedAt": null
+        }
+      ]
+    }
+  }
+  ```
+- **User state:** `status` is `DEACTIVATED` when the account is soft-deleted
+  (`deactivatedAt` is set), otherwise `ACTIVE`. Ordering: `OWNER`, active
+  `EMPLOYEE` accounts, then deactivated accounts, each by creation time.
+- **Invitation state:** `ACCEPTED` when `acceptedAt` is set, otherwise `EXPIRED`
+  when the expiry has passed, else `PENDING`. Revoked or replaced invitations
+  cannot be distinguished (a resend overwrites the same record). Ordering:
+  pending, expired, accepted, newest first.
+- **Never returned:** password hashes, session or reset tokens, invitation
+  tokens or token hashes, acceptance URLs, tenant business data.
+- **Invariant:** a `PLATFORM_OWNER` found inside a client organization is not
+  shown as a tenant user; the request fails with
+  `500 ORGANIZATION_DATA_INTEGRITY_ERROR`.
+- **Error responses:** `401`, `403`, `404`, `422`, `500`.
+
+## POST /api/platform/organizations/:organizationId/invitations/:invitationId/resend
+
+- **Purpose:** Support action: reissue an existing employee invitation of a
+  client organization.
+- **Authorization:** `PLATFORM_OWNER` only; platform-specific (tenant invitation
+  routes stay closed to `PLATFORM_OWNER`). Internal, deleted, and unknown
+  organizations, and invitations of other organizations, return `404`.
+- **Behavior:** identical to the tenant resend: the previous token is
+  invalidated, a new seven-day token is created and only its hash stored, and
+  the new acceptance token is returned once for manual secure delivery.
+  Allowed for pending and expired invitations of `TRIAL`/`ACTIVE` organizations.
+- **Success response:** `200` with the invitation (`EmployeeInvitationResponse`,
+  including `acceptanceToken`).
+- **Errors:** `403 ORGANIZATION_NOT_OPERATIONAL` for `SUSPENDED`/`CANCELLED`,
+  `409 INVITATION_ALREADY_ACCEPTED`, `409 EMAIL_ALREADY_EXISTS`, `404`, `422`.
+
+## POST /api/platform/organizations/:organizationId/owner/password-reset
+
+- **Purpose:** Support action: send a password recovery link to the
+  organization's owner.
+- **Authorization:** `PLATFORM_OWNER` only; internal/deleted/unknown
+  organizations return `404`.
+- **Behavior:** no body. The server resolves the single active `OWNER`, issues
+  the normal one-hour reset token (hash stored, earlier tokens invalidated) and
+  passes it to the configured delivery channel. No email is accepted from the
+  client and no token or password is ever returned. Allowed for every lifecycle
+  status; it does not change organization status. Completing the reset follows
+  the normal flow (sessions revoked).
+- **Success response:** `204 No Content`.
+- **Errors:** `409 OWNER_DEACTIVATED`; `500 ORGANIZATION_DATA_INTEGRITY_ERROR`
+  for a missing or duplicated active owner; `404`; `422`.
+
+## POST /api/platform/organizations/:organizationId/users/:userId/deactivate
+
+- **Purpose:** Support action: deactivate a tenant employee account.
+- **Authorization:** `PLATFORM_OWNER` only. Only `EMPLOYEE` accounts of the
+  selected client organization can be targeted.
+- **Request body:** `{ "reason": "Left the company" }` — mandatory, trimmed,
+  1–500 characters.
+- **Behavior:** in one transaction the user is soft-deleted (never hard-deleted;
+  business history is preserved), all refresh sessions are revoked, and an audit
+  entry with the reason is appended. There is no reactivation. Allowed for every
+  lifecycle status.
+- **Success response:** `200` with the updated organization user
+  (`status: "DEACTIVATED"`).
+- **Errors:** `409 USER_NOT_DEACTIVATABLE` (owner or platform owner),
+  `409 USER_ALREADY_DEACTIVATED`, `404 USER_NOT_FOUND` (including users of other
+  organizations), `422` (missing, blank, or over-long reason).
 
 ## PATCH /api/platform/organizations/:organizationId/status
 

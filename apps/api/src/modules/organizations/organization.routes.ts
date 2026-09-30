@@ -3,6 +3,7 @@ import {
   get,
   getPlatform,
   listPlatform,
+  listPlatformUsers,
   update,
   updateStatus,
   remove,
@@ -18,6 +19,7 @@ import {
   updateOrganizationSchema,
   getPlatformOrganizationParamsSchema,
   listPlatformOrganizationsQuerySchema,
+  listPlatformOrganizationUsersParamsSchema,
   updateOrganizationStatusParamsSchema,
   updateOrganizationStatusSchema,
 } from "./organization.validation";
@@ -48,6 +50,13 @@ router.get(
   requireRole("PLATFORM_OWNER"),
   validateParams(getPlatformOrganizationParamsSchema),
   getPlatform,
+);
+router.get(
+  "/platform/organizations/:organizationId/users",
+  authenticate,
+  requireRole("PLATFORM_OWNER"),
+  validateParams(listPlatformOrganizationUsersParamsSchema),
+  listPlatformUsers,
 );
 router.patch(
   "/platform/organizations/:organizationId/status",
