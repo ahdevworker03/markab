@@ -135,6 +135,24 @@ async function acceptEmployeeInvitation(
           throw invalidInvitationError();
         }
 
+        // Thrown before any write so the invitation stays valid for a retry once the organization is restored.
+        const organization = await tx.organization.findUnique({
+          where: { id: invitation.organization_id },
+          select: { status: true, deleted_at: true },
+        });
+        if (
+          !organization ||
+          organization.deleted_at ||
+          organization.status === "SUSPENDED" ||
+          organization.status === "CANCELLED"
+        ) {
+          throw new AppError(
+            403,
+            "ORGANIZATION_NOT_OPERATIONAL",
+            "This organization is not available for business operations.",
+          );
+        }
+
         const existingUser = await tx.user.findUnique({
           where: { email: invitation.email },
           select: { id: true },

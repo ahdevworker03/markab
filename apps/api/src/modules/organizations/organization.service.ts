@@ -2,6 +2,7 @@ import { AppError } from "../../shared";
 import { transaction } from "../../database";
 import { recordAuditLog } from "../audit";
 import * as repo from "./organization.repository";
+import { assertTransition } from "./organization.lifecycle";
 import type {
   OrganizationResponse,
   PlatformOrganizationResponse,
@@ -62,6 +63,7 @@ async function updateOrganizationStatus(
   orgId: string,
   actorUserId: string,
   status: OrganizationResponse["status"],
+  reason?: string,
 ): Promise<PlatformOrganizationResponse> {
   const organization = await transaction(async (tx) => {
     const org = await repo.findPlatformByIdWithinTx(orgId, tx);
@@ -78,7 +80,22 @@ async function updateOrganizationStatus(
       return org;
     }
 
-    const updated = await repo.updatePlatformStatusWithinTx(orgId, status, tx);
+    const normalizedReason = assertTransition(org.status, status, reason);
+    const updated = await repo.updatePlatformStatusWithinTx(
+      orgId,
+      org.status,
+      status,
+      tx,
+    );
+
+    if (!updated) {
+      throw new AppError(
+        409,
+        "INVALID_ORGANIZATION_STATUS_TRANSITION",
+        "Organization status changed concurrently. Reload and try again.",
+      );
+    }
+
     await recordAuditLog(tx, {
       organizationId: updated.id,
       actorUserId,
@@ -88,6 +105,7 @@ async function updateOrganizationStatus(
       metadata: {
         previousStatus: org.status,
         newStatus: updated.status,
+        ...(normalizedReason ? { reason: normalizedReason } : {}),
       },
     });
 

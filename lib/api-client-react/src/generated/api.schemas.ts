@@ -208,6 +208,11 @@ export interface UpdateOrganizationRequest {
 
 export interface UpdateOrganizationStatusRequest {
   status: OrganizationStatus;
+  /**
+   * Operator-provided reason recorded in the audit log. Required when moving to SUSPENDED or CANCELLED, and when reactivating a CANCELLED organization; optional otherwise. Surrounding whitespace is trimmed.
+   * @maxLength 500
+   */
+  reason?: string;
 }
 
 export interface CustomerResponse {

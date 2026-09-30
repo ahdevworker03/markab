@@ -1,15 +1,17 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import PlatformOrganizationDetailPage from "./PlatformOrganizationDetailPage";
 
 const {
   invalidateQueries,
   mutate,
+  reset,
   useGetPlatformOrganization,
   useUpdateOrganizationStatus,
 } = vi.hoisted(() => ({
   invalidateQueries: vi.fn(),
   mutate: vi.fn(),
+  reset: vi.fn(),
   useGetPlatformOrganization: vi.fn(),
   useUpdateOrganizationStatus: vi.fn(),
 }));
@@ -20,6 +22,9 @@ vi.mock("wouter", () => ({
 vi.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({ invalidateQueries }),
 }));
+vi.mock("@/lib/api-error", () => ({
+  getApiErrorMessage: () => ({ title: "ليس لديك صلاحية لتنفيذ هذا الإجراء." }),
+}));
 vi.mock("@workspace/api-client-react", () => ({
   getGetPlatformOrganizationQueryKey: vi.fn((id) => ["organization", id]),
   getListPlatformOrganizationsQueryKey: vi.fn(() => ["organizations"]),
@@ -27,44 +32,215 @@ vi.mock("@workspace/api-client-react", () => ({
   useUpdateOrganizationStatus,
 }));
 
-describe("PlatformOrganizationDetailPage", () => {
-  it("requires confirmation before mutating organization status", () => {
-    useGetPlatformOrganization.mockReturnValue({
+function mockOrganization(status: string) {
+  useGetPlatformOrganization.mockReturnValue({
+    data: {
       data: {
-        data: {
-          id: "org-1",
-          name: "مؤسسة الاختبار",
-          status: "ACTIVE",
-          legalName: null,
-          phone: null,
-          email: null,
-          address: null,
-          createdAt: "2026-01-01T00:00:00.000Z",
-          updatedAt: "2026-01-01T00:00:00.000Z",
-        },
+        id: "org-1",
+        name: "مؤسسة الاختبار",
+        status,
+        legalName: null,
+        phone: null,
+        email: null,
+        address: null,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
       },
-      isPending: false,
-      isError: false,
-    });
-    useUpdateOrganizationStatus.mockReturnValue({
-      mutate,
-      isPending: false,
-      isError: false,
-    });
+    },
+    isPending: false,
+    isError: false,
+  });
+}
 
-    render(
-      <PlatformOrganizationDetailPage params={{ organizationId: "org-1" }} />,
-    );
+function mockMutation(overrides: Record<string, unknown> = {}) {
+  useUpdateOrganizationStatus.mockReturnValue({
+    mutate,
+    reset,
+    isPending: false,
+    isError: false,
+    ...overrides,
+  });
+}
 
-    fireEvent.change(screen.getByLabelText("الحالة الجديدة"), {
-      target: { value: "SUSPENDED" },
+function renderPage() {
+  render(
+    <PlatformOrganizationDetailPage params={{ organizationId: "org-1" }} />,
+  );
+}
+
+function optionValues(): string[] {
+  const select = screen.getByLabelText("الحالة الجديدة") as HTMLSelectElement;
+  return Array.from(select.options).map((option) => option.value);
+}
+
+function selectStatus(value: string) {
+  fireEvent.change(screen.getByLabelText("الحالة الجديدة"), {
+    target: { value },
+  });
+}
+
+describe("PlatformOrganizationDetailPage", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockMutation();
+  });
+
+  it.each([
+    ["TRIAL", ["TRIAL", "ACTIVE", "SUSPENDED", "CANCELLED"]],
+    ["ACTIVE", ["ACTIVE", "SUSPENDED", "CANCELLED"]],
+    ["SUSPENDED", ["SUSPENDED", "ACTIVE", "CANCELLED"]],
+    ["CANCELLED", ["CANCELLED", "ACTIVE"]],
+  ])("offers only the current and valid next statuses from %s", (status, expected) => {
+    mockOrganization(status);
+    renderPage();
+
+    expect(optionValues()).toEqual(expected);
+  });
+
+  it("disables submission until a different status is chosen", () => {
+    mockOrganization("ACTIVE");
+    renderPage();
+
+    const submit = screen.getByRole("button", { name: "تغيير الحالة" });
+    expect(submit).toBeDisabled();
+    selectStatus("SUSPENDED");
+    expect(screen.getByLabelText(/سبب التغيير/)).toBeInTheDocument();
+    expect(submit).toBeDisabled();
+  });
+
+  it("requires a reason for suspension and sends it trimmed after confirmation", () => {
+    mockOrganization("ACTIVE");
+    renderPage();
+
+    selectStatus("SUSPENDED");
+    const submit = screen.getByRole("button", { name: "تغيير الحالة" });
+    fireEvent.change(screen.getByLabelText(/سبب التغيير/), {
+      target: { value: "   " },
     });
-    fireEvent.click(screen.getByRole("button", { name: "تغيير الحالة" }));
+    expect(submit).toBeDisabled();
+    fireEvent.change(screen.getByLabelText(/سبب التغيير/), {
+      target: { value: "  فواتير غير مسددة  " },
+    });
+    expect(submit).toBeEnabled();
+
+    fireEvent.click(submit);
     expect(mutate).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "تأكيد التغيير" }));
+    const dialog = screen.getByRole("alertdialog");
+    expect(within(dialog).getByText("فواتير غير مسددة")).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole("button", { name: "تعليق المؤسسة" }));
+
     expect(mutate).toHaveBeenCalledWith({
       organizationId: "org-1",
-      data: { status: "SUSPENDED" },
+      data: { status: "SUSPENDED", reason: "فواتير غير مسددة" },
+    });
+  });
+
+  it("does not ask for a reason on a plain activation and omits it from the request", () => {
+    mockOrganization("TRIAL");
+    renderPage();
+
+    selectStatus("ACTIVE");
+    expect(screen.queryByLabelText(/سبب التغيير/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "تغيير الحالة" }));
+    fireEvent.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: "تأكيد التفعيل",
+      }),
+    );
+
+    expect(mutate).toHaveBeenCalledWith({
+      organizationId: "org-1",
+      data: { status: "ACTIVE" },
+    });
+  });
+
+  it("styles suspension as destructive and activation as a normal action", () => {
+    mockOrganization("ACTIVE");
+    renderPage();
+    selectStatus("SUSPENDED");
+    fireEvent.change(screen.getByLabelText(/سبب التغيير/), {
+      target: { value: "سبب" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "تغيير الحالة" }));
+    expect(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: "تعليق المؤسسة",
+      }),
+    ).toHaveClass("bg-destructive");
+  });
+
+  it("does not style activation as destructive", () => {
+    mockOrganization("SUSPENDED");
+    renderPage();
+    selectStatus("ACTIVE");
+    fireEvent.click(screen.getByRole("button", { name: "تغيير الحالة" }));
+    const confirm = within(screen.getByRole("alertdialog")).getByRole("button", {
+      name: "تأكيد التفعيل",
+    });
+    expect(confirm).not.toHaveClass("bg-destructive");
+  });
+
+  it("requires a reason to reactivate a cancelled organization", () => {
+    mockOrganization("CANCELLED");
+    renderPage();
+
+    selectStatus("ACTIVE");
+
+    expect(screen.getByLabelText(/سبب التغيير/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "تغيير الحالة" })).toBeDisabled();
+  });
+
+  it("shows a failed mutation inside the open confirmation dialog", () => {
+    mockOrganization("ACTIVE");
+    mockMutation({ isError: true, error: new Error("forbidden") });
+    renderPage();
+
+    selectStatus("CANCELLED");
+    fireEvent.change(screen.getByLabelText(/سبب التغيير/), {
+      target: { value: "إنهاء العقد" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "تغيير الحالة" }));
+
+    const dialog = screen.getByRole("alertdialog");
+    expect(
+      within(dialog).getByRole("alert"),
+    ).toHaveTextContent("ليس لديك صلاحية لتنفيذ هذا الإجراء.");
+    expect(screen.getAllByRole("alert")).toHaveLength(1);
+    expect(
+      within(dialog).getByRole("button", { name: "إلغاء المؤسسة" }),
+    ).toBeEnabled();
+  });
+
+  it("clears the mutation error when the dialog is cancelled", () => {
+    mockOrganization("ACTIVE");
+    renderPage();
+
+    selectStatus("SUSPENDED");
+    fireEvent.change(screen.getByLabelText(/سبب التغيير/), {
+      target: { value: "سبب" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "تغيير الحالة" }));
+    fireEvent.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", { name: "رجوع" }),
+    );
+
+    expect(reset).toHaveBeenCalled();
+  });
+
+  it("invalidates detail and list queries after a successful update", () => {
+    mockOrganization("ACTIVE");
+    renderPage();
+
+    const options = useUpdateOrganizationStatus.mock.calls[0]?.[0] as {
+      mutation: { onSuccess: () => void };
+    };
+    options.mutation.onSuccess();
+
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ["organization", "org-1"],
+    });
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ["organizations"],
     });
   });
 });

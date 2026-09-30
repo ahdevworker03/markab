@@ -402,6 +402,9 @@ Since every authenticated user belongs to exactly one organization, the API deri
 ## PATCH /api/organizations/me
 
 - **Purpose:** Update the current authenticated user's organization.
+- **Authorization:** `OWNER` of an operational (`TRIAL` or `ACTIVE`) organization;
+  `SUSPENDED` and `CANCELLED` organizations receive
+  `403 ORGANIZATION_NOT_OPERATIONAL`.
 - **Request headers:** `Authorization: Bearer <accessToken>`
 - **Request body:**
   ```json
@@ -441,10 +444,21 @@ Since every authenticated user belongs to exactly one organization, the API deri
 
 - **Purpose:** Update a tenant organization's SaaS lifecycle status.
 - **Authorization:** `PLATFORM_OWNER` only.
-- **Request body:** `{ "status": "ACTIVE" }`, where status is `TRIAL`,
-  `ACTIVE`, `SUSPENDED`, or `CANCELLED`.
+- **Request body:** `{ "status": "SUSPENDED", "reason": "Unpaid invoice" }`,
+  where status is `TRIAL`, `ACTIVE`, `SUSPENDED`, or `CANCELLED` and `reason` is
+  an optional string of at most 500 characters (trimmed).
+- **Allowed transitions:** `TRIAL` → `ACTIVE`, `SUSPENDED`, `CANCELLED`;
+  `ACTIVE` → `SUSPENDED`, `CANCELLED`; `SUSPENDED` → `ACTIVE`, `CANCELLED`;
+  `CANCELLED` → `ACTIVE`. Requesting the current status is an idempotent no-op
+  with no audit entry. Any other transition returns
+  `409 INVALID_ORGANIZATION_STATUS_TRANSITION` (also returned if the status
+  changed concurrently).
+- **Reason:** required (`422 STATUS_CHANGE_REASON_REQUIRED`) when moving to
+  `SUSPENDED` or `CANCELLED` and when reactivating a `CANCELLED` organization;
+  stored in the audit entry metadata.
 - **Behavior:** suspended and cancelled organizations retain authentication and
-  account-status visibility, but their tenant business APIs return
+  account-status visibility, but their tenant business APIs, organization
+  profile updates, and invitation acceptance return
   `403 ORGANIZATION_NOT_OPERATIONAL`.
 
 ## DELETE /api/organizations/me

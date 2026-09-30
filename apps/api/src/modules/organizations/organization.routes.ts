@@ -9,6 +9,7 @@ import {
 } from "./organization.controller";
 import {
   authenticate,
+  requireOperationalOrganization,
   requireRole,
   validateQuery,
   validateParams,
@@ -29,6 +30,7 @@ router.patch(
   "/organizations/me",
   authenticate,
   requireRole("OWNER"),
+  requireOperationalOrganization,
   validateBody(updateOrganizationSchema),
   update,
 );

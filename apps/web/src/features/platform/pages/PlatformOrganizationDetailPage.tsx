@@ -8,7 +8,7 @@ import {
   useUpdateOrganizationStatus,
   type OrganizationStatus,
 } from "@workspace/api-client-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   ErrorState,
   InlineError,
@@ -28,6 +28,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDate, formatDateTime } from "@/lib/format";
+import { FormField, inputClass } from "@/components/ui/FormField";
+import {
+  REASON_MAX_LENGTH,
+  getNextStatuses,
+  isReasonRequired,
+  isRestrictiveStatus,
+  statusLabels,
+} from "../organizationLifecycle";
 
 interface Props {
   params: { organizationId: string };
@@ -50,17 +58,14 @@ function FieldBlock({
   );
 }
 
-const statuses: readonly OrganizationStatus[] = [
-  "TRIAL",
-  "ACTIVE",
-  "SUSPENDED",
-  "CANCELLED",
-];
-const statusLabels: Record<OrganizationStatus, string> = {
-  TRIAL: "تجريبي",
-  ACTIVE: "نشط",
-  SUSPENDED: "معلّق",
-  CANCELLED: "ملغي",
+const confirmationCopy: Record<
+  OrganizationStatus,
+  { title: string; action: string }
+> = {
+  TRIAL: { title: "تأكيد تغيير الحالة", action: "تأكيد التغيير" },
+  ACTIVE: { title: "تأكيد تفعيل المؤسسة", action: "تأكيد التفعيل" },
+  SUSPENDED: { title: "تأكيد تعليق المؤسسة", action: "تعليق المؤسسة" },
+  CANCELLED: { title: "تأكيد إلغاء المؤسسة", action: "إلغاء المؤسسة" },
 };
 
 export default function PlatformOrganizationDetailPage({ params }: Props) {
@@ -68,6 +73,7 @@ export default function PlatformOrganizationDetailPage({ params }: Props) {
   const queryClient = useQueryClient();
   const [selectedStatus, setSelectedStatus] =
     useState<OrganizationStatus | null>(null);
+  const [reason, setReason] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const organizationQuery = useGetPlatformOrganization(params.organizationId);
   const organization = organizationQuery.data?.data;
@@ -82,17 +88,37 @@ export default function PlatformOrganizationDetailPage({ params }: Props) {
         });
         setConfirmOpen(false);
         setSelectedStatus(null);
+        setReason("");
       },
     },
   });
-  const nextStatus = selectedStatus ?? organization?.status;
+  const currentStatus = organization?.status;
+  const validNext = currentStatus ? getNextStatuses(currentStatus) : [];
+  const nextStatus =
+    selectedStatus && validNext.includes(selectedStatus)
+      ? selectedStatus
+      : currentStatus;
+  const changed = !!nextStatus && nextStatus !== currentStatus;
+  const reasonRequired =
+    changed && !!currentStatus && isReasonRequired(currentStatus, nextStatus);
+  const trimmedReason = reason.trim();
+  const canSubmit = changed && (!reasonRequired || trimmedReason.length > 0);
 
   function confirmStatusChange() {
-    if (!nextStatus) return;
+    if (!nextStatus || !canSubmit) return;
     mutation.mutate({
       organizationId: params.organizationId,
-      data: { status: nextStatus },
+      data: {
+        status: nextStatus,
+        ...(trimmedReason ? { reason: trimmedReason } : {}),
+      },
     });
+  }
+
+  function changeOpen(open: boolean) {
+    if (mutation.isPending) return;
+    setConfirmOpen(open);
+    if (!open) mutation.reset();
   }
 
   if (organizationQuery.isPending) return <LoadingState rows={5} />;
@@ -155,61 +181,108 @@ export default function PlatformOrganizationDetailPage({ params }: Props) {
         title="تغيير حالة المؤسسة"
         description="يؤثر التغيير فوراً على وصول المؤسسة إلى عملياتها."
       >
-        <div className="flex max-w-md flex-col gap-3 sm:flex-row sm:items-end">
-          <label className="flex-1 text-sm font-medium">
+        <div className="flex max-w-md flex-col gap-4">
+          <label className="text-sm font-medium">
             الحالة الجديدة
             <select
               value={nextStatus}
-              onChange={(event) =>
-                setSelectedStatus(event.target.value as OrganizationStatus)
-              }
+              onChange={(event) => {
+                setSelectedStatus(event.target.value as OrganizationStatus);
+                mutation.reset();
+              }}
               className="mt-1 block h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
             >
-              {statuses.map((item) => (
+              <option value={organization.status}>
+                {statusLabels[organization.status]} (الحالة الحالية)
+              </option>
+              {validNext.map((item) => (
                 <option key={item} value={item}>
                   {statusLabels[item]}
                 </option>
               ))}
             </select>
           </label>
+          {reasonRequired && (
+            <FormField
+              label="سبب التغيير"
+              required
+              htmlFor="status-change-reason"
+              hint="يُسجَّل السبب في سجل التدقيق."
+            >
+              <textarea
+                id="status-change-reason"
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+                maxLength={REASON_MAX_LENGTH}
+                rows={3}
+                className={inputClass}
+              />
+            </FormField>
+          )}
           <Button
             type="button"
+            className="self-start"
             onClick={() => setConfirmOpen(true)}
-            disabled={nextStatus === organization.status}
+            disabled={!canSubmit}
           >
             تغيير الحالة
           </Button>
         </div>
-        {mutation.isError && (
-          <InlineError className="mt-3">
-            {getApiErrorMessage(mutation.error).title}
-          </InlineError>
-        )}
       </DetailSection>
-      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+      <AlertDialog open={confirmOpen} onOpenChange={changeOpen}>
         <AlertDialogContent dir="rtl" className="max-w-md">
           <AlertDialogHeader className="text-start sm:text-start">
-            <AlertDialogTitle>تأكيد تغيير الحالة</AlertDialogTitle>
+            <AlertDialogTitle>
+              {nextStatus ? confirmationCopy[nextStatus].title : ""}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              سيتم تغيير حالة مؤسسة {organization.name} إلى{" "}
-              {nextStatus ? statusLabels[nextStatus] : ""}. قد يتغير وصول
-              مستخدميها إلى النظام.
+              سيتم تغيير حالة مؤسسة {organization.name} من{" "}
+              {statusLabels[organization.status]} إلى{" "}
+              {nextStatus ? statusLabels[nextStatus] : ""}.{" "}
+              {nextStatus && isRestrictiveStatus(nextStatus)
+                ? "سيفقد مستخدمو المؤسسة الوصول إلى عملياتها فوراً."
+                : "قد يتغير وصول مستخدميها إلى النظام."}
             </AlertDialogDescription>
+            {trimmedReason && reasonRequired && (
+              <p className="text-sm text-foreground">
+                <span className="font-semibold">السبب: </span>
+                {trimmedReason}
+              </p>
+            )}
           </AlertDialogHeader>
+          {mutation.isError && (
+            <InlineError>{getApiErrorMessage(mutation.error).title}</InlineError>
+          )}
           <AlertDialogFooter className="gap-2 sm:space-x-0">
             <AlertDialogCancel disabled={mutation.isPending}>
-              إلغاء
+              رجوع
             </AlertDialogCancel>
-            <AlertDialogAction asChild>
+            <AlertDialogAction
+              asChild
+              className={
+                nextStatus && isRestrictiveStatus(nextStatus)
+                  ? buttonVariants({ variant: "destructive" })
+                  : undefined
+              }
+            >
               <Button
                 type="button"
+                variant={
+                  nextStatus && isRestrictiveStatus(nextStatus)
+                    ? "destructive"
+                    : "default"
+                }
                 onClick={(event) => {
                   event.preventDefault();
                   confirmStatusChange();
                 }}
                 disabled={mutation.isPending}
               >
-                {mutation.isPending ? "جارٍ الحفظ" : "تأكيد التغيير"}
+                {mutation.isPending
+                  ? "جارٍ الحفظ"
+                  : nextStatus
+                    ? confirmationCopy[nextStatus].action
+                    : "تأكيد"}
               </Button>
             </AlertDialogAction>
           </AlertDialogFooter>

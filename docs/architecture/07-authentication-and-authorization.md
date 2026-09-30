@@ -159,9 +159,20 @@ Only `PLATFORM_OWNER` may update tenant lifecycle status through the dedicated
 platform endpoint. A `PLATFORM_OWNER` is not granted ordinary tenant-business
 access merely because it has an organization claim.
 
+Lifecycle transitions are restricted: `TRIAL` may move to `ACTIVE`,
+`SUSPENDED`, or `CANCELLED`; `ACTIVE` to `SUSPENDED` or `CANCELLED`;
+`SUSPENDED` to `ACTIVE` or `CANCELLED`; `CANCELLED` only to `ACTIVE`. A
+short operator reason is required when suspending, cancelling, or reactivating
+a cancelled organization. Requesting the current status is an idempotent no-op.
+
+`SUSPENDED` and `CANCELLED` organizations also cannot update their profile
+(`PATCH /api/organizations/me`) or accept employee invitations; both return
+`403 ORGANIZATION_NOT_OPERATIONAL`. Reading account state stays available.
+
 Each actual lifecycle status change creates an append-only audit entry in the
 same database transaction. The entry records the platform actor, tenant target,
-and previous/new status without including credentials or token material.
+previous/new status, and the operator reason when one was given, without
+including credentials or token material.
 
 ---
 
@@ -237,6 +248,12 @@ select a role: every accepted invitation creates an `EMPLOYEE`. Invitation
 tokens are secure random values, stored only as hashes, expire after seven
 days, and cannot be replayed after acceptance or resend. The initial release
 uses manual secure delivery by the owner rather than an email-delivery platform.
+After creating an invitation, the Account page shows the acceptance link
+(`/accept-invitation?token=…`, built from the app's own origin and base path)
+once, with a copy control. The link is held only in component state, is never
+persisted, and disappears when dismissed. Acceptance is rejected with
+`403 ORGANIZATION_NOT_OPERATIONAL` while the organization is `SUSPENDED` or
+`CANCELLED`, without consuming the invitation.
 
 Creation, resend, and acceptance are recorded in the narrow platform/security
 audit log without token or password material. `PLATFORM_OWNER` and `EMPLOYEE`
