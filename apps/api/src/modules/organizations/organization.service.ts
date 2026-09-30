@@ -5,7 +5,10 @@ import * as repo from "./organization.repository";
 import { assertTransition } from "./organization.lifecycle";
 import type {
   OrganizationResponse,
+  PlatformOrganizationInvitationResponse,
   PlatformOrganizationResponse,
+  PlatformOrganizationUserResponse,
+  PlatformOrganizationUsersResponse,
   UpdateOrganizationInput,
 } from "./organization.types";
 
@@ -148,6 +151,77 @@ async function getPlatformOrganization(
   return toPlatformResponse(org);
 }
 
+function byCreatedThenId<T extends { createdAt: string; id: string }>(a: T, b: T) {
+  return a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id);
+}
+
+function userRank(user: PlatformOrganizationUserResponse): number {
+  if (user.status === "DEACTIVATED") return 2;
+  return user.role === "OWNER" ? 0 : 1;
+}
+
+const invitationRank = { PENDING: 0, EXPIRED: 1, ACCEPTED: 2 } as const;
+
+async function listPlatformOrganizationUsers(
+  orgId: string,
+  now: Date = new Date(),
+): Promise<PlatformOrganizationUsersResponse> {
+  const organization = await repo.findPlatformById(orgId);
+
+  if (!organization) {
+    throw new AppError(404, "ORGANIZATION_NOT_FOUND", "Organization not found.");
+  }
+
+  const { users, invitations } = await repo.listPlatformOrganizationAccess(orgId);
+
+  if (users.some((user) => user.role === "PLATFORM_OWNER")) {
+    // Never present a platform account as a tenant user; surface the broken invariant instead.
+    throw new AppError(
+      500,
+      "ORGANIZATION_DATA_INTEGRITY_ERROR",
+      "Organization contains an account that violates platform role invariants.",
+    );
+  }
+
+  const mappedUsers = users
+    .map(
+      (user): PlatformOrganizationUserResponse => ({
+        id: user.id,
+        email: user.email,
+        role: user.role as "OWNER" | "EMPLOYEE",
+        status: user.deleted_at ? "DEACTIVATED" : "ACTIVE",
+        createdAt: user.created_at.toISOString(),
+        deactivatedAt: user.deleted_at ? user.deleted_at.toISOString() : null,
+      }),
+    )
+    .sort((a, b) => userRank(a) - userRank(b) || byCreatedThenId(a, b));
+
+  const mappedInvitations = invitations
+    .map(
+      (invitation): PlatformOrganizationInvitationResponse => ({
+        id: invitation.id,
+        email: invitation.email,
+        status: invitation.accepted_at
+          ? "ACCEPTED"
+          : invitation.expires_at <= now
+            ? "EXPIRED"
+            : "PENDING",
+        createdAt: invitation.created_at.toISOString(),
+        expiresAt: invitation.expires_at.toISOString(),
+        acceptedAt: invitation.accepted_at
+          ? invitation.accepted_at.toISOString()
+          : null,
+      }),
+    )
+    .sort(
+      (a, b) =>
+        invitationRank[a.status] - invitationRank[b.status] ||
+        byCreatedThenId(b, a),
+    );
+
+  return { users: mappedUsers, invitations: mappedInvitations };
+}
+
 async function getOrganization(orgId: string): Promise<OrganizationResponse> {
   const org = await repo.findById(orgId);
 
@@ -203,6 +277,7 @@ export {
   getOrganization,
   getPlatformOrganization,
   listPlatformOrganizations,
+  listPlatformOrganizationUsers,
   updateOrganization,
   updateOrganizationStatus,
   deleteOrganization,

@@ -7,14 +7,18 @@ const {
   mutate,
   reset,
   useGetPlatformOrganization,
+  useListPlatformOrganizationUsers,
   useUpdateOrganizationStatus,
 } = vi.hoisted(() => ({
   invalidateQueries: vi.fn(),
   mutate: vi.fn(),
   reset: vi.fn(),
   useGetPlatformOrganization: vi.fn(),
+  useListPlatformOrganizationUsers: vi.fn(),
   useUpdateOrganizationStatus: vi.fn(),
 }));
+
+const idleMutation = { mutate: vi.fn(), reset: vi.fn(), isPending: false, isError: false };
 
 vi.mock("wouter", () => ({
   useLocation: () => ["/platform/organizations/org-1", vi.fn()],
@@ -29,6 +33,11 @@ vi.mock("@workspace/api-client-react", () => ({
   getGetPlatformOrganizationQueryKey: vi.fn((id) => ["organization", id]),
   getListPlatformOrganizationsQueryKey: vi.fn(() => ["organizations"]),
   useGetPlatformOrganization,
+  getListPlatformOrganizationUsersQueryKey: vi.fn((id) => ["users", id]),
+  useListPlatformOrganizationUsers,
+  useResendPlatformEmployeeInvitation: () => idleMutation,
+  useRequestPlatformOwnerPasswordReset: () => idleMutation,
+  useDeactivatePlatformEmployee: () => idleMutation,
   useUpdateOrganizationStatus,
 }));
 
@@ -83,6 +92,12 @@ describe("PlatformOrganizationDetailPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockMutation();
+    useListPlatformOrganizationUsers.mockReturnValue({
+      data: { data: { users: [], invitations: [] } },
+      isPending: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
   });
 
   it.each([
@@ -225,6 +240,34 @@ describe("PlatformOrganizationDetailPage", () => {
     );
 
     expect(reset).toHaveBeenCalled();
+  });
+
+  it("keeps the organization and lifecycle controls usable when the users query fails", () => {
+    mockOrganization("ACTIVE");
+    useListPlatformOrganizationUsers.mockReturnValue({
+      isPending: false,
+      isError: true,
+      error: new Error("users failed"),
+      refetch: vi.fn(),
+    });
+    renderPage();
+
+    expect(screen.getByRole("alert")).toHaveTextContent("تعذر تحميل مستخدمي المؤسسة");
+    expect(screen.getByRole("heading", { name: "مؤسسة الاختبار" })).toBeInTheDocument();
+    selectStatus("SUSPENDED");
+    fireEvent.change(screen.getByLabelText(/سبب التغيير/), {
+      target: { value: "سبب" },
+    });
+    expect(screen.getByRole("button", { name: "تغيير الحالة" })).toBeEnabled();
+  });
+
+  it("keeps the organization usable while the users are loading", () => {
+    mockOrganization("ACTIVE");
+    useListPlatformOrganizationUsers.mockReturnValue({ isPending: true, isError: false });
+    renderPage();
+
+    expect(screen.getByLabelText("جارٍ تحميل البيانات")).toBeInTheDocument();
+    expect(screen.getByLabelText("الحالة الجديدة")).toBeEnabled();
   });
 
   it("invalidates detail and list queries after a successful update", () => {

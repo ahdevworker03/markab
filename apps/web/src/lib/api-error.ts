@@ -54,6 +54,8 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   MAINTENANCE_SCHEDULE_NOT_FOUND: "لم يتم العثور على جدول الصيانة.",
   MALFORMED_JSON: "تعذر قراءة البيانات المرسلة.",
   NOT_FOUND: "لم يتم العثور على المورد المطلوب.",
+  ORGANIZATION_DATA_INTEGRITY_ERROR:
+    "بيانات المؤسسة غير متسقة. تواصل مع فريق التطوير.",
   ORGANIZATION_NOT_FOUND: "لم يتم العثور على المؤسسة.",
   ORGANIZATION_NOT_OPERATIONAL: "المؤسسة غير مفعلة حالياً.",
   OWNER_ROLE_CHANGE_NOT_SUPPORTED: "لا يمكن تغيير دور المالك.",

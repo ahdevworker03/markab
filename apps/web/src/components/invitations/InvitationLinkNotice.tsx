@@ -3,7 +3,7 @@ import { Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InlineFeedback } from "@/components/ui/FeedbackState";
 import { formatDate } from "@/lib/format";
-import { buildInvitationUrl } from "../invitationLink";
+import { buildInvitationUrl } from "./invitationLink";
 
 export interface IssuedInvitation {
   email: string;
@@ -14,12 +14,15 @@ export interface IssuedInvitation {
 interface InvitationLinkNoticeProps {
   invitation: IssuedInvitation;
   onDismiss: () => void;
+  /** "resent" also states that the previous link stopped working. */
+  variant?: "created" | "resent";
 }
 
 /** One-time display of the employee invitation link; the token lives only in this component's props. */
 export function InvitationLinkNotice({
   invitation,
   onDismiss,
+  variant = "created",
 }: InvitationLinkNoticeProps) {
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">(
     "idle",
@@ -39,8 +42,12 @@ export function InvitationLinkNotice({
     <InlineFeedback variant="success" className="flex-col">
       <div className="space-y-3">
         <p className="font-semibold">
-          تم إنشاء دعوة الموظف {invitation.email}
+          {variant === "resent" ? "تمت إعادة إصدار دعوة الموظف" : "تم إنشاء دعوة الموظف"}{" "}
+          <span dir="ltr" className="break-all">{invitation.email}</span>
         </p>
+        {variant === "resent" && (
+          <p>الرابط السابق لم يعد صالحاً.</p>
+        )}
         <p>
           شارك هذا الرابط مع الموظف عبر وسيلة تواصل آمنة. يظهر مرة واحدة فقط،
           وينتهي في {formatDate(invitation.expiresAt)}. إنشاء دعوة جديدة لنفس
@@ -53,7 +60,7 @@ export function InvitationLinkNotice({
             aria-label="رابط الدعوة"
             value={link}
             onFocus={(event) => event.currentTarget.select()}
-            className="h-10 min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm text-foreground"
+            className="min-h-11 w-full min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm text-foreground"
           />
           <Button type="button" variant="outline" onClick={() => void copy()}>
             {copyState === "copied" ? (

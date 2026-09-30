@@ -487,7 +487,7 @@ Subscription plans, billing accounts, invoices, pricing, and payment collection 
 
 ### 9.4 Platform Administration UI
 
-The `PLATFORM_OWNER` role, organization lifecycle endpoint, and audit capability are implemented. A minimal Platform Admin UI (`/platform`) lists and searches client organizations, shows organization details, and changes lifecycle status within the allowed transitions. Organization users, invitations, and audit views in the UI are deferred.
+The `PLATFORM_OWNER` role, organization lifecycle endpoint, and audit capability are implemented. A minimal Platform Admin UI (`/platform`) lists and searches client organizations, shows organization details, and changes lifecycle status within the allowed transitions. The detail page also shows an Organization Users section (accounts, deactivated accounts, and invitations) from `GET /api/platform/organizations/{organizationId}/users`. It offers three support actions (resend an employee invitation, send the owner a password recovery link, and deactivate an employee with a reason). Employee creation, reactivation, owner changes, and audit views in the UI are deferred.
 
 ### 9.5 Future Product Modules
 

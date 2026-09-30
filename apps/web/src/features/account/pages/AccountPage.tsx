@@ -11,7 +11,7 @@ import { getApiErrorMessage } from "@/lib/api-error";
 import {
   InvitationLinkNotice,
   type IssuedInvitation,
-} from "../components/InvitationLinkNotice";
+} from "@/components/invitations/InvitationLinkNotice";
 
 export function AccountPage() {
   const { user } = useAuth();
