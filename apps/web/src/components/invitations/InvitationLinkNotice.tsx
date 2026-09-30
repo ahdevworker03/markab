@@ -43,7 +43,7 @@ export function InvitationLinkNotice({
       <div className="space-y-3">
         <p className="font-semibold">
           {variant === "resent" ? "تمت إعادة إصدار دعوة الموظف" : "تم إنشاء دعوة الموظف"}{" "}
-          <span dir="ltr" className="break-all">{invitation.email}</span>
+          <span className="identifier-ltr break-all">{invitation.email}</span>
         </p>
         {variant === "resent" && (
           <p>الرابط السابق لم يعد صالحاً.</p>
