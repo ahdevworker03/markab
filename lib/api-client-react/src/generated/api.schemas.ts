@@ -872,6 +872,31 @@ export interface RentalPaymentsResponse {
   data: RentalPaymentsResponseData;
 }
 
+export type OutstandingBalancesResponseDataBalancesItem = {
+  rentalId: string;
+  customerId: string;
+  totalAmount: number;
+  paidAmount: number;
+  outstandingBalance: number;
+};
+
+export type OutstandingBalancesResponseDataCustomerOutstandingItem = {
+  customerId: string;
+  outstandingBalance: number;
+};
+
+export type OutstandingBalancesResponseData = {
+  balances: OutstandingBalancesResponseDataBalancesItem[];
+  /** Signed sum of all per-rental outstanding balances. */
+  totalOutstanding: number;
+  /** Positive outstanding balances grouped by customer. */
+  customerOutstanding: OutstandingBalancesResponseDataCustomerOutstandingItem[];
+};
+
+export interface OutstandingBalancesResponse {
+  data: OutstandingBalancesResponseData;
+}
+
 export type CreatePaymentRequestMethod =
   (typeof CreatePaymentRequestMethod)[keyof typeof CreatePaymentRequestMethod];
 

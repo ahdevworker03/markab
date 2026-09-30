@@ -47,10 +47,42 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/SyncPushRequest" }
       responses:
-        "200": { description: Operations processed, content: { application/json: { schema: { $ref: "#/components/schemas/SyncPushResponse" } } } }
-        "401": { description: Authentication required, content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
-        "403": { description: Tenant access forbidden or organization not operational, content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
-        "422": { description: Validation failed, content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        "200":
+          {
+            description: Operations processed,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/SyncPushResponse" } },
+              },
+          }
+        "401":
+          {
+            description: Authentication required,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+              },
+          }
+        "403":
+          {
+            description: Tenant access forbidden or organization not operational,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+              },
+          }
+        "422":
+          {
+            description: Validation failed,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+              },
+          }
   /sync/pull:
     get:
       operationId: syncPull
@@ -65,9 +97,33 @@ paths:
           in: query
           schema: { type: integer, minimum: 1, maximum: 100, default: 100 }
       responses:
-        "200": { description: Tenant changes, content: { application/json: { schema: { $ref: "#/components/schemas/SyncPullResponse" } } } }
-        "401": { description: Authentication required, content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
-        "403": { description: Tenant access forbidden or organization not operational, content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        "200":
+          {
+            description: Tenant changes,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/SyncPullResponse" } },
+              },
+          }
+        "401":
+          {
+            description: Authentication required,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+              },
+          }
+        "403":
+          {
+            description: Tenant access forbidden or organization not operational,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+              },
+          }
   /healthz:
     get:
       operationId: healthCheck
@@ -3688,6 +3744,33 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /payments/outstanding-balances:
+    get:
+      operationId: getOutstandingBalances
+      tags: [payments]
+      summary: Get outstanding balances for non-deleted rentals in the current organization
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Authoritative per-rental, organization and positive per-customer balances
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OutstandingBalancesResponse"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Organization not operational or tenant access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /rentals/{rentalId}/payments:
     get:
       operationId: listRentalPayments
@@ -5433,6 +5516,55 @@ components:
       required:
         - data
 
+    OutstandingBalancesResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            balances:
+              type: array
+              items:
+                type: object
+                properties:
+                  rentalId:
+                    type: string
+                    format: uuid
+                  customerId:
+                    type: string
+                    format: uuid
+                  totalAmount:
+                    type: number
+                  paidAmount:
+                    type: number
+                  outstandingBalance:
+                    type: number
+                required:
+                  [
+                    rentalId,
+                    customerId,
+                    totalAmount,
+                    paidAmount,
+                    outstandingBalance,
+                  ]
+            totalOutstanding:
+              type: number
+              description: Signed sum of all per-rental outstanding balances.
+            customerOutstanding:
+              type: array
+              description: Positive outstanding balances grouped by customer.
+              items:
+                type: object
+                properties:
+                  customerId:
+                    type: string
+                    format: uuid
+                  outstandingBalance:
+                    type: number
+                required: [customerId, outstandingBalance]
+          required: [balances, totalOutstanding, customerOutstanding]
+      required: [data]
+
     CreatePaymentRequest:
       type: object
       properties:
@@ -5720,16 +5852,44 @@ components:
       enum: [APPLIED, DUPLICATE, CONFLICT, REJECTED, EXPIRED]
     SyncResultCode:
       type: string
-      enum: [SYNC_APPLIED, SYNC_DUPLICATE, SYNC_CUSTOMER_STALE, SYNC_OPERATION_PAYLOAD_MISMATCH, SYNC_OPERATION_EXPIRED, SYNC_DEPENDENCY_NOT_APPLIED, SYNC_UNSUPPORTED_OPERATION, SYNC_OPERATION_INVALID, CUSTOMER_NOT_FOUND, VEHICLE_NOT_FOUND, VEHICLE_UNAVAILABLE, DUPLICATE_CUSTOMER, INVALID_RENTAL_PERIOD, INVALID_RENTAL_AMOUNT]
+      enum:
+        [
+          SYNC_APPLIED,
+          SYNC_DUPLICATE,
+          SYNC_CUSTOMER_STALE,
+          SYNC_OPERATION_PAYLOAD_MISMATCH,
+          SYNC_OPERATION_EXPIRED,
+          SYNC_DEPENDENCY_NOT_APPLIED,
+          SYNC_UNSUPPORTED_OPERATION,
+          SYNC_OPERATION_INVALID,
+          CUSTOMER_NOT_FOUND,
+          VEHICLE_NOT_FOUND,
+          VEHICLE_UNAVAILABLE,
+          DUPLICATE_CUSTOMER,
+          INVALID_RENTAL_PERIOD,
+          INVALID_RENTAL_AMOUNT,
+        ]
     SyncCustomerReference:
       type: object
       properties:
         customer_id: { type: string, format: uuid, nullable: true }
-        customer_create_operation_id: { type: string, format: uuid, nullable: true }
+        customer_create_operation_id:
+          { type: string, format: uuid, nullable: true }
       description: Exactly one reference is required. customer_create_operation_id references an earlier CUSTOMER_CREATE in this ordered batch or a previously applied receipt.
     SyncCustomerUpdatePayload:
       type: object
-      required: [customer_id, expected_updated_at, first_name, last_name, phone, address, national_id, license_number, license_expiry_date]
+      required:
+        [
+          customer_id,
+          expected_updated_at,
+          first_name,
+          last_name,
+          phone,
+          address,
+          national_id,
+          license_number,
+          license_expiry_date,
+        ]
       properties:
         customer_id: { type: string, format: uuid }
         expected_updated_at: { type: string, format: date-time }
@@ -5746,16 +5906,26 @@ components:
         - type: object
           required: [customer_reference]
           properties:
-            customer_reference: { $ref: "#/components/schemas/SyncCustomerReference" }
+            customer_reference:
+              { $ref: "#/components/schemas/SyncCustomerReference" }
     SyncOperation:
       type: object
       required: [operation_id, type]
       properties:
         operation_id: { type: string, format: uuid }
         type: { $ref: "#/components/schemas/SyncOperationType" }
-        customer_create: { $ref: "#/components/schemas/CreateCustomerRequest", nullable: true }
-        customer_update: { $ref: "#/components/schemas/SyncCustomerUpdatePayload", nullable: true }
-        rental_create: { $ref: "#/components/schemas/SyncRentalCreatePayload", nullable: true }
+        customer_create:
+          { $ref: "#/components/schemas/CreateCustomerRequest", nullable: true }
+        customer_update:
+          {
+            $ref: "#/components/schemas/SyncCustomerUpdatePayload",
+            nullable: true,
+          }
+        rental_create:
+          {
+            $ref: "#/components/schemas/SyncRentalCreatePayload",
+            nullable: true,
+          }
       description: Backend validation requires exactly one payload matching type.
     SyncPushRequest:
       type: object
@@ -5774,15 +5944,22 @@ components:
         type: { $ref: "#/components/schemas/SyncOperationType" }
         status: { $ref: "#/components/schemas/SyncOperationStatus" }
         code: { $ref: "#/components/schemas/SyncResultCode" }
-        resource_type: { type: string, enum: [CUSTOMER, RENTAL], nullable: true }
-        customer: { $ref: "#/components/schemas/CustomerResponse", nullable: true }
+        resource_type:
+          { type: string, enum: [CUSTOMER, RENTAL], nullable: true }
+        customer:
+          { $ref: "#/components/schemas/CustomerResponse", nullable: true }
         rental: { $ref: "#/components/schemas/RentalResponse", nullable: true }
-        current_customer: { $ref: "#/components/schemas/CustomerResponse", nullable: true }
+        current_customer:
+          { $ref: "#/components/schemas/CustomerResponse", nullable: true }
     SyncPushResponse:
       type: object
       required: [results]
       properties:
-        results: { type: array, items: { $ref: "#/components/schemas/SyncOperationResult" } }
+        results:
+          {
+            type: array,
+            items: { $ref: "#/components/schemas/SyncOperationResult" },
+          }
     SyncPullChange:
       type: object
       required: [resource_type, resource_id, updated_at, deleted]
@@ -5791,13 +5968,24 @@ components:
         resource_id: { type: string, format: uuid }
         updated_at: { type: string, format: date-time }
         deleted: { type: boolean }
-        customer: { $ref: "#/components/schemas/CustomerResponse", nullable: true }
-        vehicle: { $ref: "#/components/schemas/VehicleResponse", nullable: true }
+        customer:
+          { $ref: "#/components/schemas/CustomerResponse", nullable: true }
+        vehicle:
+          { $ref: "#/components/schemas/VehicleResponse", nullable: true }
         rental: { $ref: "#/components/schemas/RentalResponse", nullable: true }
     SyncPullResponse:
       type: object
       required: [changes, next_cursor, completion_cursor]
       properties:
-        changes: { type: array, items: { $ref: "#/components/schemas/SyncPullChange" } }
+        changes:
+          {
+            type: array,
+            items: { $ref: "#/components/schemas/SyncPullChange" },
+          }
         next_cursor: { type: string, nullable: true }
-        completion_cursor: { type: string, nullable: true, description: Opaque signed cursor representing the completed traversal upper watermark. Present only on the final page; send it as cursor to begin the next pull cycle. }
+        completion_cursor:
+          {
+            type: string,
+            nullable: true,
+            description: Opaque signed cursor representing the completed traversal upper watermark. Present only on the final page; send it as cursor to begin the next pull cycle.,
+          }

@@ -4,6 +4,7 @@ import app from "../../app";
 import { prisma } from "../../database";
 import { generateAccessToken } from "../../modules/auth";
 import { cleanup } from "../../test/helpers";
+import { GetOutstandingBalancesResponse } from "@workspace/api-zod";
 
 describe("payment routes", () => {
   let rentalId: string;
@@ -192,8 +193,12 @@ describe("payment routes", () => {
       recordPayment(300, "2026-08-03T09:00:00Z"),
     ]);
 
-    expect(responses.filter((response) => response.status === 201)).toHaveLength(1);
-    expect(responses.filter((response) => response.status === 409)).toHaveLength(1);
+    expect(
+      responses.filter((response) => response.status === 201),
+    ).toHaveLength(1);
+    expect(
+      responses.filter((response) => response.status === 409),
+    ).toHaveLength(1);
     expect(
       responses.find((response) => response.status === 409)?.body.error.code,
     ).toBe("PAYMENT_EXCEEDS_OUTSTANDING_BALANCE");
@@ -217,6 +222,102 @@ describe("payment routes", () => {
     expect(res.body.data).toHaveLength(1);
     expect(res.body.data[0].amount).toBe(50);
   });
+
+  it("serves only the authenticated tenant's outstanding summary to OWNER and EMPLOYEE", async () => {
+    const employee = await prisma.user.create({
+      data: {
+        organization_id: (
+          await prisma.rental.findUniqueOrThrow({ where: { id: rentalId } })
+        ).organization_id,
+        email: `employee-pay-${Date.now()}@example.com`,
+        password_hash: "hash",
+        role: "EMPLOYEE",
+      },
+    });
+    const org = await prisma.organization.create({
+      data: { name: "Other payments tenant" },
+    });
+    const otherUser = await prisma.user.create({
+      data: {
+        organization_id: org.id,
+        email: `other-pay-${Date.now()}@example.com`,
+        password_hash: "hash",
+        role: "EMPLOYEE",
+      },
+    });
+    const otherToken = generateAccessToken({
+      sub: otherUser.id,
+      org: org.id,
+      role: "EMPLOYEE",
+    });
+    for (const bearer of [
+      token,
+      generateAccessToken({
+        sub: employee.id,
+        org: employee.organization_id,
+        role: "EMPLOYEE",
+      }),
+    ]) {
+      const result = await request(app)
+        .get(`/api/payments/outstanding-balances?organization_id=${org.id}`)
+        .set("Authorization", `Bearer ${bearer}`);
+      expect(result.status).toBe(200);
+      expect(
+        GetOutstandingBalancesResponse.safeParse(result.body).success,
+      ).toBe(true);
+      expect(result.body.data.balances).toContainEqual(
+        expect.objectContaining({
+          rentalId,
+          totalAmount: 500,
+          paidAmount: 0,
+          outstandingBalance: 500,
+        }),
+      );
+      expect(result.body.data.totalOutstanding).toBe(500);
+    }
+    const other = await request(app)
+      .get("/api/payments/outstanding-balances")
+      .set("Authorization", `Bearer ${otherToken}`);
+    expect(other.status).toBe(200);
+    expect(other.body.data.balances).toEqual([]);
+    expect(other.body.data.totalOutstanding).toBe(0);
+  });
+
+  it("denies unauthenticated and platform-owner outstanding summary reads", async () => {
+    expect(
+      (await request(app).get("/api/payments/outstanding-balances")).status,
+    ).toBe(401);
+    const platform = generateAccessToken({
+      sub: (await prisma.user.findFirstOrThrow()).id,
+      org: (await prisma.rental.findUniqueOrThrow({ where: { id: rentalId } }))
+        .organization_id,
+      role: "PLATFORM_OWNER",
+    });
+    const response = await request(app)
+      .get("/api/payments/outstanding-balances")
+      .set("Authorization", `Bearer ${platform}`);
+    expect(response.status).toBe(403);
+  });
+
+  it.each(["SUSPENDED", "CANCELLED"] as const)(
+    "denies outstanding summary reads for a %s organization",
+    async (status) => {
+      const rental = await prisma.rental.findUniqueOrThrow({
+        where: { id: rentalId },
+      });
+      await prisma.organization.update({
+        where: { id: rental.organization_id },
+        data: { status },
+      });
+      expect(
+        (
+          await request(app)
+            .get("/api/payments/outstanding-balances")
+            .set("Authorization", `Bearer ${token}`)
+        ).status,
+      ).toBe(403);
+    },
+  );
 
   it("rejects a non-positive amount via validation", async () => {
     const res = await request(app)

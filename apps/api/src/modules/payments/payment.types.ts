@@ -1,4 +1,5 @@
 import type { Decimal } from "@prisma/client/runtime/client";
+import type { OutstandingBalancesResponseData } from "@workspace/api-zod";
 
 export type PaymentMethod = "CASH" | "CARD" | "TRANSFER" | "OTHER";
 
@@ -34,3 +35,5 @@ export interface RentalPaymentsResult {
   payments: PaymentResponse[];
   outstandingBalance: number;
 }
+
+export type OutstandingBalancesResult = OutstandingBalancesResponseData;

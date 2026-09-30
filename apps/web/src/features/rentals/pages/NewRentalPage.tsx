@@ -5,7 +5,14 @@ import type {
   CustomerResponse,
   VehicleResponse,
 } from "@workspace/api-client-react";
-import { getCheckRentalAvailabilityQueryKey, getListRentalsQueryKey, getListVehiclesQueryKey, useCheckRentalAvailability, useCreateRental } from "@workspace/api-client-react";
+import {
+  getCheckRentalAvailabilityQueryKey,
+  getListRentalsQueryKey,
+  getListVehiclesQueryKey,
+  getGetOutstandingBalancesQueryKey,
+  useCheckRentalAvailability,
+  useCreateRental,
+} from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -78,6 +85,9 @@ export default function NewRentalPage() {
   const createMutation = useCreateRental({
     mutation: {
       onSuccess: () => {
+        void queryClient.invalidateQueries({
+          queryKey: getGetOutstandingBalancesQueryKey(),
+        });
         void queryClient.invalidateQueries({
           queryKey: getListRentalsQueryKey(),
         });
@@ -171,7 +181,8 @@ export default function NewRentalPage() {
   const rate = Number.parseFloat(dailyRate.replace(/,/g, "")) || 0;
   const deposit = Number.parseFloat(depositAmount.replace(/,/g, "")) || 0;
   const total = days * rate;
-  const availabilityAvailable = isOffline || availabilityQuery.data?.data?.available === true;
+  const availabilityAvailable =
+    isOffline || availabilityQuery.data?.data?.available === true;
   const canSave = Boolean(
     selectedVehicleId &&
     selectedCustomerId &&
@@ -236,13 +247,22 @@ export default function NewRentalPage() {
       if (isOffline) {
         if (!workspace) throw new Error("لا تتوفر مساحة عمل دون اتصال.");
         const customerReference = selectedCustomerId.startsWith("local:")
-          ? { customer_create_operation_id: selectedCustomerId.slice("local:".length) }
+          ? {
+              customer_create_operation_id: selectedCustomerId.slice(
+                "local:".length,
+              ),
+            }
           : { customer_id: selectedCustomerId };
-        await createOfflineCommands({ workspace, store }).queueRentalCreate(draft, customerReference);
+        await createOfflineCommands({ workspace, store }).queueRentalCreate(
+          draft,
+          customerReference,
+        );
         refreshProjections();
         setQueuedOffline(true);
       } else {
-        await createMutation.mutateAsync({ data: { ...draft, customer_id: selectedCustomerId } });
+        await createMutation.mutateAsync({
+          data: { ...draft, customer_id: selectedCustomerId },
+        });
       }
       setSaved(true);
     } catch (error) {
@@ -259,7 +279,9 @@ export default function NewRentalPage() {
           <Check className="size-8" aria-hidden="true" />
         </div>
         <h2 className="ui-page-title">
-          {queuedOffline ? "تمت إضافة الإيجار إلى قائمة الانتظار" : "تم إنشاء عقد الإيجار"}
+          {queuedOffline
+            ? "تمت إضافة الإيجار إلى قائمة الانتظار"
+            : "تم إنشاء عقد الإيجار"}
         </h2>
         <p className="ui-secondary-text">
           {selectedCustomer && selectedVehicle
@@ -433,7 +455,9 @@ export default function NewRentalPage() {
                 selectedVehicleId &&
                 availabilityQuery.data &&
                 (availabilityAvailable ? (
-                  <InlineFeedback variant="success" icon={Check}>متاحة للفترة المحددة</InlineFeedback>
+                  <InlineFeedback variant="success" icon={Check}>
+                    متاحة للفترة المحددة
+                  </InlineFeedback>
                 ) : (
                   <InlineError className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5">
                     هذه السيارة غير متاحة في الفترة المحددة.
@@ -583,7 +607,9 @@ export default function NewRentalPage() {
             onClick={handleSave}
             disabled={!canSave || isSubmitting || createMutation.isPending}
           >
-            {isSubmitting || createMutation.isPending ? "جارٍ الحفظ" : "حفظ الإيجار"}
+            {isSubmitting || createMutation.isPending
+              ? "جارٍ الحفظ"
+              : "حفظ الإيجار"}
           </Button>
         </div>
       </div>
@@ -797,7 +823,9 @@ function DateField({
         value={value}
         min={min}
         onChange={onChange}
-        className={error ? "border-destructive focus:ring-destructive/30" : undefined}
+        className={
+          error ? "border-destructive focus:ring-destructive/30" : undefined
+        }
       />
     </FormField>
   );

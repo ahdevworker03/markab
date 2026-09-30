@@ -1,10 +1,7 @@
 import { prisma } from "../../database";
 import type { TxClient } from "../../database";
 import type { Decimal } from "@prisma/client/runtime/client";
-import type {
-  PaymentRecord,
-  PaymentMethod,
-} from "./payment.types";
+import type { PaymentRecord, PaymentMethod } from "./payment.types";
 
 async function findById(
   paymentId: string,
@@ -44,13 +41,41 @@ async function findByOrg(orgId: string): Promise<PaymentRecord[]> {
   });
 }
 
-async function create(data: {
-  organization_id: string;
-  rental_id: string;
-  amount: number;
-  payment_date: Date;
-  method: PaymentMethod;
-}, client: TxClient = prisma): Promise<PaymentRecord> {
+async function findOutstandingRentals(
+  orgId: string,
+  client: TxClient = prisma,
+) {
+  return client.rental.findMany({
+    where: { organization_id: orgId, deleted_at: null },
+    select: { id: true, customer_id: true, total_amount: true },
+  });
+}
+
+async function sumOutstandingPayments(
+  orgId: string,
+  client: TxClient = prisma,
+) {
+  return client.payment.groupBy({
+    by: ["rental_id"],
+    where: {
+      organization_id: orgId,
+      deleted_at: null,
+      rental: { organization_id: orgId, deleted_at: null },
+    },
+    _sum: { amount: true },
+  });
+}
+
+async function create(
+  data: {
+    organization_id: string;
+    rental_id: string;
+    amount: number;
+    payment_date: Date;
+    method: PaymentMethod;
+  },
+  client: TxClient = prisma,
+): Promise<PaymentRecord> {
   return client.payment.create({ data });
 }
 
@@ -59,5 +84,7 @@ export {
   findRental,
   findByRental,
   findByOrg,
+  findOutstandingRentals,
+  sumOutstandingPayments,
   create,
 };

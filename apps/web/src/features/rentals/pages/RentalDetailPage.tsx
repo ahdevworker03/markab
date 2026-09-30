@@ -15,6 +15,7 @@ import {
   getGetRentalQueryKey,
   getListCustomersQueryKey,
   getListRentalsQueryKey,
+  getGetOutstandingBalancesQueryKey,
   getListVehiclesQueryKey,
   useCancelRental,
   useExtendRental,
@@ -88,6 +89,9 @@ export default function RentalDetailPage({ params }: Props) {
   const vehicleQuery = useGetVehicle(rental?.vehicleId ?? "");
 
   const invalidateRental = () => {
+    void queryClient.invalidateQueries({
+      queryKey: getGetOutstandingBalancesQueryKey(),
+    });
     void queryClient.invalidateQueries({
       queryKey: getGetRentalQueryKey(params.id),
     });
@@ -219,7 +223,13 @@ export default function RentalDetailPage({ params }: Props) {
       />
       <div className="space-y-4 px-4 pb-6 pt-4 sm:px-6 lg:space-y-5">
         {successMsg && (
-          <InlineFeedback variant="success" icon={CheckCircle2} onDismiss={() => setSuccessMsg(null)}>{successMsg}</InlineFeedback>
+          <InlineFeedback
+            variant="success"
+            icon={CheckCircle2}
+            onDismiss={() => setSuccessMsg(null)}
+          >
+            {successMsg}
+          </InlineFeedback>
         )}
 
         <DetailSection className="shadow-none">
@@ -330,7 +340,9 @@ export default function RentalDetailPage({ params }: Props) {
         )}
 
         {!isOwner && (
-          <InlineFeedback variant="info">لا تملك صلاحية تنفيذ إجراءات العقد.</InlineFeedback>
+          <InlineFeedback variant="info">
+            لا تملك صلاحية تنفيذ إجراءات العقد.
+          </InlineFeedback>
         )}
 
         <DetailSection
@@ -339,10 +351,7 @@ export default function RentalDetailPage({ params }: Props) {
           className="shadow-none"
         >
           <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
-            <DateTimeValue
-              label="الاستلام المخطط"
-              value={rental.pickupDate}
-            />
+            <DateTimeValue label="الاستلام المخطط" value={rental.pickupDate} />
             {rental.actualPickupDate && (
               <DateTimeValue
                 label="الاستلام الفعلي"

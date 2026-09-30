@@ -8,14 +8,10 @@ import type {
   PaymentRecord,
   PaymentMethod,
   RentalPaymentsResult,
+  OutstandingBalancesResult,
 } from "./payment.types";
 
-const VALID_METHODS: PaymentMethod[] = [
-  "CASH",
-  "CARD",
-  "TRANSFER",
-  "OTHER",
-];
+const VALID_METHODS: PaymentMethod[] = ["CASH", "CARD", "TRANSFER", "OTHER"];
 
 function toResponse(record: PaymentRecord): PaymentResponse {
   return {
@@ -49,9 +45,7 @@ function assertValidAmount(amount: number): void {
   }
 }
 
-async function listPayments(
-  orgId: string,
-): Promise<PaymentResponse[]> {
+async function listPayments(orgId: string): Promise<PaymentResponse[]> {
   const payments = await repo.findByOrg(orgId);
   return payments.map(toResponse);
 }
@@ -82,6 +76,58 @@ async function listRentalPayments(
   };
 }
 
+async function listOutstandingBalances(
+  orgId: string,
+): Promise<OutstandingBalancesResult> {
+  const [rentals, payments] = await transaction(
+    (tx) =>
+      Promise.all([
+        repo.findOutstandingRentals(orgId, tx),
+        repo.sumOutstandingPayments(orgId, tx),
+      ]),
+    { isolationLevel: "RepeatableRead" },
+  );
+  const paidByRental = new Map(
+    payments.map((payment) => [
+      payment.rental_id,
+      payment._sum.amount ?? new Decimal(0),
+    ]),
+  );
+  let totalOutstanding = new Decimal(0);
+  const byCustomer = new Map<string, Decimal>();
+  const balances = rentals.map((rental) => {
+    const paidAmount = paidByRental.get(rental.id) ?? new Decimal(0);
+    const outstandingBalance = rental.total_amount.minus(paidAmount);
+    totalOutstanding = totalOutstanding.plus(outstandingBalance);
+    if (outstandingBalance.gt(0)) {
+      byCustomer.set(
+        rental.customer_id,
+        (byCustomer.get(rental.customer_id) ?? new Decimal(0)).plus(
+          outstandingBalance,
+        ),
+      );
+    }
+    return {
+      rentalId: rental.id,
+      customerId: rental.customer_id,
+      totalAmount: rental.total_amount.toNumber(),
+      paidAmount: paidAmount.toNumber(),
+      outstandingBalance: outstandingBalance.toNumber(),
+    };
+  });
+  return {
+    balances,
+    totalOutstanding: totalOutstanding.toNumber(),
+    customerOutstanding: Array.from(
+      byCustomer,
+      ([customerId, outstandingBalance]) => ({
+        customerId,
+        outstandingBalance: outstandingBalance.toNumber(),
+      }),
+    ),
+  };
+}
+
 async function createPayment(
   rentalId: string,
   orgId: string,
@@ -95,11 +141,7 @@ async function createPayment(
   const run = () =>
     transaction(
       async (tx) => {
-        const rentalInTransaction = await repo.findRental(
-          rentalId,
-          orgId,
-          tx,
-        );
+        const rentalInTransaction = await repo.findRental(rentalId, orgId, tx);
 
         if (!rentalInTransaction) {
           throw new AppError(404, "RENTAL_NOT_FOUND", "Rental not found.");
@@ -110,9 +152,8 @@ async function createPayment(
           (sum, payment) => sum.plus(payment.amount),
           new Decimal(0),
         );
-        const outstandingBalance = rentalInTransaction.total_amount.minus(
-          totalPaid,
-        );
+        const outstandingBalance =
+          rentalInTransaction.total_amount.minus(totalPaid);
 
         if (amount.gt(outstandingBalance)) {
           throw new AppError(
@@ -144,5 +185,6 @@ async function createPayment(
 export {
   listPayments,
   listRentalPayments,
+  listOutstandingBalances,
   createPayment,
 };

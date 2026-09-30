@@ -25,6 +25,34 @@ export const ListPaymentsResponse = zod.object({
 });
 
 /**
+ * @summary Get outstanding balances for non-deleted rentals in the current organization
+ */
+export const GetOutstandingBalancesResponse = zod.object({
+  data: zod.object({
+    balances: zod.array(
+      zod.object({
+        rentalId: zod.string().uuid(),
+        customerId: zod.string().uuid(),
+        totalAmount: zod.number(),
+        paidAmount: zod.number(),
+        outstandingBalance: zod.number(),
+      }),
+    ),
+    totalOutstanding: zod
+      .number()
+      .describe("Signed sum of all per-rental outstanding balances."),
+    customerOutstanding: zod
+      .array(
+        zod.object({
+          customerId: zod.string().uuid(),
+          outstandingBalance: zod.number(),
+        }),
+      )
+      .describe("Positive outstanding balances grouped by customer."),
+  }),
+});
+
+/**
  * @summary List payments for a rental in the current organization
  */
 export const ListRentalPaymentsParams = zod.object({

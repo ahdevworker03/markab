@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import {
   listPayments,
   listRentalPayments,
+  listOutstandingBalances,
   createPayment,
 } from "./payment.service";
 import { ok, created } from "../../shared";
@@ -37,6 +38,18 @@ async function listByRental(
   }
 }
 
+async function outstandingBalances(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    ok(res, await listOutstandingBalances(req.user!.org));
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function create(
   req: Request,
   res: Response,
@@ -52,8 +65,4 @@ async function create(
   }
 }
 
-export {
-  list,
-  listByRental,
-  create,
-};
+export { list, listByRental, outstandingBalances, create };
