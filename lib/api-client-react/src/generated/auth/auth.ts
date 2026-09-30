@@ -640,6 +640,7 @@ export const getAcceptEmployeeInvitationUrl = () => {
 };
 
 /**
+ * Rejected with 403 ORGANIZATION_NOT_OPERATIONAL while the invited organization is SUSPENDED or CANCELLED. The invitation is not consumed, so it can be accepted after the organization is restored if it has not expired.
  * @summary Accept an employee invitation and set a password
  */
 export const acceptEmployeeInvitation = async (

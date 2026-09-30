@@ -261,6 +261,10 @@ export const getUpdateOrganizationStatusUrl = (organizationId: string) => {
 
 /**
  * Updates tenant lifecycle status. This endpoint is restricted to PLATFORM_OWNER.
+ *
+ * Allowed transitions: TRIAL to ACTIVE, SUSPENDED or CANCELLED; ACTIVE to SUSPENDED or CANCELLED; SUSPENDED to ACTIVE or CANCELLED; CANCELLED to ACTIVE. Requesting the current status is an idempotent no-op that writes no audit entry. Any other transition is rejected with 409 INVALID_ORGANIZATION_STATUS_TRANSITION.
+ *
+ * A reason is required (422 STATUS_CHANGE_REASON_REQUIRED) when moving to SUSPENDED or CANCELLED and when reactivating a CANCELLED organization. The reason is stored in the audit entry metadata.
  * @summary Update an organization lifecycle status
  */
 export const updateOrganizationStatus = async (

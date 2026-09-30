@@ -124,16 +124,18 @@ async function updateStatusWithinTx(
   });
 }
 
+/** Compare-and-set on the previous status; returns null if it changed concurrently. */
 async function updatePlatformStatusWithinTx(
   orgId: string,
+  previousStatus: OrganizationStatus,
   status: OrganizationStatus,
   tx: DbClient,
-): Promise<PlatformOrganizationRecord> {
-  await tx.organization.updateMany({
-    where: { id: orgId, ...clientOrganizationWhere },
+): Promise<PlatformOrganizationRecord | null> {
+  const { count } = await tx.organization.updateMany({
+    where: { id: orgId, status: previousStatus, ...clientOrganizationWhere },
     data: { status },
   });
-  return (await findPlatformByIdWithinTx(orgId, tx))!;
+  return count === 0 ? null : findPlatformByIdWithinTx(orgId, tx);
 }
 
 async function softDelete(orgId: string): Promise<OrganizationRecord> {

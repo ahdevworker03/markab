@@ -55,6 +55,7 @@ async function updateStatus(
       organizationId,
       req.user!.sub,
       input.status,
+      input.reason,
     );
     ok(res, org);
   } catch (err) {

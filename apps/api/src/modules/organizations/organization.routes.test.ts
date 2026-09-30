@@ -149,7 +149,7 @@ describe("organization lifecycle routes", () => {
     const statusResponse = await request(app)
       .patch(`/api/platform/organizations/${organizationId}/status`)
       .set("Authorization", `Bearer ${platformOwnerToken}`)
-      .send({ status: "SUSPENDED" });
+      .send({ status: "SUSPENDED", reason: "  Unpaid invoice  " });
 
     expect(statusResponse.status).toBe(200);
     expect(statusResponse.body.data.status).toBe("SUSPENDED");
@@ -181,7 +181,11 @@ describe("organization lifecycle routes", () => {
         action: "ORGANIZATION_STATUS_UPDATED",
         target_type: "ORGANIZATION",
         target_id: organizationId,
-        metadata: { previousStatus: "TRIAL", newStatus: "SUSPENDED" },
+        metadata: {
+          previousStatus: "TRIAL",
+          newStatus: "SUSPENDED",
+          reason: "Unpaid invoice",
+        },
       },
     ]);
 
@@ -429,7 +433,7 @@ describe("organization lifecycle routes", () => {
     await request(app)
       .patch(`/api/platform/organizations/${organizationId}/status`)
       .set("Authorization", `Bearer ${platformOwnerToken}`)
-      .send({ status: "CANCELLED" })
+      .send({ status: "CANCELLED", reason: "Contract ended" })
       .expect(200);
 
     const response = await request(app)
@@ -457,5 +461,232 @@ describe("organization lifecycle routes", () => {
 
     expect(response.status).toBe(422);
     expect(response.body.error.code).toBe("VALIDATION_ERROR");
+  });
+  describe("lifecycle transition policy", () => {
+    type Status = "TRIAL" | "ACTIVE" | "SUSPENDED" | "CANCELLED";
+    const validTransitions: Array<[Status, Status, boolean]> = [
+      ["TRIAL", "ACTIVE", false],
+      ["TRIAL", "SUSPENDED", true],
+      ["TRIAL", "CANCELLED", true],
+      ["ACTIVE", "SUSPENDED", true],
+      ["ACTIVE", "CANCELLED", true],
+      ["SUSPENDED", "ACTIVE", false],
+      ["SUSPENDED", "CANCELLED", true],
+      ["CANCELLED", "ACTIVE", true],
+    ];
+    const invalidTransitions: Array<[Status, Status]> = [
+      ["ACTIVE", "TRIAL"],
+      ["SUSPENDED", "TRIAL"],
+      ["CANCELLED", "TRIAL"],
+      ["CANCELLED", "SUSPENDED"],
+    ];
+
+    function changeStatus(body: Record<string, unknown>, token = platformOwnerToken) {
+      return request(app)
+        .patch(`/api/platform/organizations/${organizationId}/status`)
+        .set("Authorization", `Bearer ${token}`)
+        .send(body);
+    }
+
+    it.each(validTransitions)(
+      "allows %s -> %s and writes one audit entry",
+      async (from, to, reasonRequired) => {
+        await prisma.organization.update({
+          where: { id: organizationId },
+          data: { status: from },
+        });
+
+        const response = await changeStatus({ status: to, reason: "Operator note" });
+
+        expect(response.status).toBe(200);
+        expect(response.body.data.status).toBe(to);
+        const logs = await prisma.auditLog.findMany({
+          where: { organization_id: organizationId },
+        });
+        expect(logs).toHaveLength(1);
+        expect(logs[0]?.metadata).toEqual({
+          previousStatus: from,
+          newStatus: to,
+          reason: "Operator note",
+        });
+        expect(typeof reasonRequired).toBe("boolean");
+      },
+    );
+
+    it.each(validTransitions.filter(([, , required]) => !required))(
+      "allows %s -> %s without a reason and stores no reason",
+      async (from, to) => {
+        await prisma.organization.update({
+          where: { id: organizationId },
+          data: { status: from },
+        });
+
+        const response = await changeStatus({ status: to });
+
+        expect(response.status).toBe(200);
+        const log = await prisma.auditLog.findFirstOrThrow({
+          where: { organization_id: organizationId },
+        });
+        expect(log.metadata).toEqual({ previousStatus: from, newStatus: to });
+      },
+    );
+
+    it.each(validTransitions.filter(([, , required]) => required))(
+      "requires a reason for %s -> %s and changes nothing without one",
+      async (from, to) => {
+        await prisma.organization.update({
+          where: { id: organizationId },
+          data: { status: from },
+        });
+
+        for (const body of [{ status: to }, { status: to, reason: "   " }]) {
+          const response = await changeStatus(body);
+          expect(response.status).toBe(422);
+          expect(response.body.error.code).toBe("STATUS_CHANGE_REASON_REQUIRED");
+        }
+
+        await expect(
+          prisma.organization.findUniqueOrThrow({ where: { id: organizationId } }),
+        ).resolves.toMatchObject({ status: from });
+        await expect(
+          prisma.auditLog.count({ where: { organization_id: organizationId } }),
+        ).resolves.toBe(0);
+      },
+    );
+
+    it.each(invalidTransitions)(
+      "rejects %s -> %s without changing status or writing audit",
+      async (from, to) => {
+        await prisma.organization.update({
+          where: { id: organizationId },
+          data: { status: from },
+        });
+
+        const response = await changeStatus({ status: to, reason: "Operator note" });
+
+        expect(response.status).toBe(409);
+        expect(response.body.error.code).toBe(
+          "INVALID_ORGANIZATION_STATUS_TRANSITION",
+        );
+        await expect(
+          prisma.organization.findUniqueOrThrow({ where: { id: organizationId } }),
+        ).resolves.toMatchObject({ status: from });
+        await expect(
+          prisma.auditLog.count({ where: { organization_id: organizationId } }),
+        ).resolves.toBe(0);
+      },
+    );
+
+    it("keeps same-status requests as idempotent no-ops even for reason-bearing states", async () => {
+      await prisma.organization.update({
+        where: { id: organizationId },
+        data: { status: "SUSPENDED" },
+      });
+
+      const response = await changeStatus({ status: "SUSPENDED" });
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.status).toBe("SUSPENDED");
+      await expect(
+        prisma.auditLog.count({ where: { organization_id: organizationId } }),
+      ).resolves.toBe(0);
+    });
+
+    it("rejects reasons longer than 500 characters", async () => {
+      const response = await changeStatus({
+        status: "SUSPENDED",
+        reason: "x".repeat(501),
+      });
+
+      expect(response.status).toBe(422);
+      expect(response.body.error.code).toBe("VALIDATION_ERROR");
+    });
+
+    it("does not let owners or employees perform transitions", async () => {
+      const employee = await prisma.user.create({
+        data: {
+          email: "employee-transition@example.com",
+          password_hash: "hash",
+          role: "EMPLOYEE",
+          organization_id: organizationId,
+        },
+      });
+      const employeeToken = generateAccessToken({
+        sub: employee.id,
+        org: organizationId,
+        role: employee.role,
+      });
+
+      for (const token of [ownerToken, employeeToken]) {
+        const response = await changeStatus(
+          { status: "SUSPENDED", reason: "Should not work" },
+          token,
+        );
+        expect(response.status).toBe(403);
+      }
+      await expect(
+        prisma.organization.findUniqueOrThrow({ where: { id: organizationId } }),
+      ).resolves.toMatchObject({ status: "TRIAL" });
+    });
+
+    it("keeps the internal platform organization inaccessible to transitions", async () => {
+      const response = await request(app)
+        .patch(`/api/platform/organizations/${platformOrganizationId}/status`)
+        .set("Authorization", `Bearer ${platformOwnerToken}`)
+        .send({ status: "SUSPENDED", reason: "Should not work" });
+
+      expect(response.status).toBe(404);
+      await expect(
+        prisma.organization.findUniqueOrThrow({ where: { id: platformOrganizationId } }),
+      ).resolves.toMatchObject({ status: "ACTIVE" });
+    });
+  });
+
+  describe("non-operational organization profile updates", () => {
+    function updateProfile() {
+      return request(app)
+        .patch("/api/organizations/me")
+        .set("Authorization", `Bearer ${ownerToken}`)
+        .send({ name: "Renamed organization" });
+    }
+
+    it.each(["SUSPENDED", "CANCELLED"] as const)(
+      "rejects owner profile updates while %s and keeps reads available",
+      async (status) => {
+        await prisma.organization.update({
+          where: { id: organizationId },
+          data: { status },
+        });
+
+        const response = await updateProfile();
+
+        expect(response.status).toBe(403);
+        expect(response.body.error.code).toBe("ORGANIZATION_NOT_OPERATIONAL");
+        await expect(
+          prisma.organization.findUniqueOrThrow({ where: { id: organizationId } }),
+        ).resolves.toMatchObject({ name: "Tenant organization" });
+
+        const read = await request(app)
+          .get("/api/organizations/me")
+          .set("Authorization", `Bearer ${ownerToken}`);
+        expect(read.status).toBe(200);
+        expect(read.body.data.status).toBe(status);
+      },
+    );
+
+    it.each(["TRIAL", "ACTIVE"] as const)(
+      "allows owner profile updates while %s",
+      async (status) => {
+        await prisma.organization.update({
+          where: { id: organizationId },
+          data: { status },
+        });
+
+        const response = await updateProfile();
+
+        expect(response.status).toBe(200);
+        expect(response.body.data.name).toBe("Renamed organization");
+      },
+    );
   });
 });

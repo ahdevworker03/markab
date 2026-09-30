@@ -18,6 +18,7 @@ export const getPlatformOrganizationParamsSchema = GetPlatformOrganizationParams
 export type { UpdateOrganizationInput } from "./organization.types";
 export type UpdateOrganizationStatusInput = {
   status: "TRIAL" | "ACTIVE" | "SUSPENDED" | "CANCELLED";
+  reason?: string;
 };
 export type ListPlatformOrganizationsQuery = {
   page: number;

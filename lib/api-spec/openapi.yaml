@@ -334,6 +334,7 @@ paths:
       operationId: updateMyOrganization
       tags: [organizations]
       summary: Update current organization
+      description: Restricted to OWNER of an operational (TRIAL or ACTIVE) organization. SUSPENDED and CANCELLED organizations receive 403 ORGANIZATION_NOT_OPERATIONAL.
       security:
         - bearerAuth: []
       requestBody:
@@ -356,7 +357,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: Insufficient permissions
+          description: Insufficient permissions or organization is not operational
           content:
             application/json:
               schema:
@@ -514,7 +515,12 @@ paths:
       operationId: updateOrganizationStatus
       tags: [platform]
       summary: Update an organization lifecycle status
-      description: Updates tenant lifecycle status. This endpoint is restricted to PLATFORM_OWNER.
+      description: |
+        Updates tenant lifecycle status. This endpoint is restricted to PLATFORM_OWNER.
+
+        Allowed transitions: TRIAL to ACTIVE, SUSPENDED or CANCELLED; ACTIVE to SUSPENDED or CANCELLED; SUSPENDED to ACTIVE or CANCELLED; CANCELLED to ACTIVE. Requesting the current status is an idempotent no-op that writes no audit entry. Any other transition is rejected with 409 INVALID_ORGANIZATION_STATUS_TRANSITION.
+
+        A reason is required (422 STATUS_CHANGE_REASON_REQUIRED) when moving to SUSPENDED or CANCELLED and when reactivating a CANCELLED organization. The reason is stored in the audit entry metadata.
       security:
         - bearerAuth: []
       parameters:
@@ -555,8 +561,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: The requested lifecycle transition is not allowed, or the organization status changed concurrently
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "422":
-          description: Validation failed
+          description: Validation failed or a required reason is missing
           content:
             application/json:
               schema:
@@ -799,6 +811,7 @@ paths:
       operationId: acceptEmployeeInvitation
       tags: [auth]
       summary: Accept an employee invitation and set a password
+      description: Rejected with 403 ORGANIZATION_NOT_OPERATIONAL while the invited organization is SUSPENDED or CANCELLED. The invitation is not consumed, so it can be accepted after the organization is restored if it has not expired.
       requestBody:
         required: true
         content:
@@ -812,6 +825,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AccessTokenResponse"
+        "403":
+          description: The invited organization is not operational
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "409":
           description: Invitation has expired, was already used, or email is no longer available
           content:
@@ -4512,6 +4531,10 @@ components:
       properties:
         status:
           $ref: "#/components/schemas/OrganizationStatus"
+        reason:
+          type: string
+          maxLength: 500
+          description: Operator-provided reason recorded in the audit log. Required when moving to SUSPENDED or CANCELLED, and when reactivating a CANCELLED organization; optional otherwise. Surrounding whitespace is trimmed.
       required:
         - status
 
