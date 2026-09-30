@@ -26,6 +26,7 @@ export const GetMyOrganizationResponse = zod.object({
 });
 
 /**
+ * Restricted to OWNER of an operational (TRIAL or ACTIVE) organization. SUSPENDED and CANCELLED organizations receive 403 ORGANIZATION_NOT_OPERATIONAL.
  * @summary Update current organization
  */
 

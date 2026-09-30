@@ -186,7 +186,7 @@ This document describes the currently implemented PostgreSQL/Prisma model. Imple
 
 **Constraints and indexes:** `@unique(token_hash)`; `@unique(accepted_user_id)`; `@@unique([organization_id, email])`; `@@index([organization_id, expires_at])`; `@@index([accepted_at])`.
 
-**Business rules:** Invitations grant only `EMPLOYEE`. Resending replaces the earlier token hash and expiry for the organization/email record. Acceptance creates the user and marks the invitation accepted in one serializable transaction, preventing replay and concurrent double acceptance while retaining global user-email uniqueness.
+**Business rules:** Invitations grant only `EMPLOYEE`. Resending replaces the earlier token hash and expiry for the organization/email record. Acceptance creates the user and marks the invitation accepted in one serializable transaction, preventing replay and concurrent double acceptance while retaining global user-email uniqueness. Acceptance is rejected before any write while the organization is `SUSPENDED`, `CANCELLED`, or deleted, so a valid invitation can be retried after restoration.
 
 ### 5.5 PasswordResetToken
 
@@ -487,7 +487,7 @@ Subscription plans, billing accounts, invoices, pricing, and payment collection 
 
 ### 9.4 Platform Administration UI
 
-The `PLATFORM_OWNER` role, organization lifecycle endpoint, and audit capability are implemented backend concepts. A platform-admin dashboard UI is deferred.
+The `PLATFORM_OWNER` role, organization lifecycle endpoint, and audit capability are implemented. A minimal Platform Admin UI (`/platform`) lists and searches client organizations, shows organization details, and changes lifecycle status within the allowed transitions. The detail page also shows an Organization Users section (accounts, deactivated accounts, and invitations) from `GET /api/platform/organizations/{organizationId}/users`. It offers three support actions (resend an employee invitation, send the owner a password recovery link, and deactivate an employee with a reason). Employee creation, reactivation, owner changes, and audit views in the UI are deferred.
 
 ### 9.5 Future Product Modules
 

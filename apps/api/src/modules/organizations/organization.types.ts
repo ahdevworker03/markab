@@ -51,3 +51,26 @@ export interface UpdateOrganizationInput {
   address?: string | null;
   contractFooterText?: string | null;
 }
+
+export interface PlatformOrganizationUserResponse {
+  id: string;
+  email: string;
+  role: "OWNER" | "EMPLOYEE";
+  status: "ACTIVE" | "DEACTIVATED";
+  createdAt: string;
+  deactivatedAt: string | null;
+}
+
+export interface PlatformOrganizationInvitationResponse {
+  id: string;
+  email: string;
+  status: "PENDING" | "EXPIRED" | "ACCEPTED";
+  createdAt: string;
+  expiresAt: string;
+  acceptedAt: string | null;
+}
+
+export interface PlatformOrganizationUsersResponse {
+  users: PlatformOrganizationUserResponse[];
+  invitations: PlatformOrganizationInvitationResponse[];
+}

@@ -1332,3 +1332,259 @@ test.describe("benchmark mobile IndexedDB and sync", () => {
     }
   });
 });
+
+test.describe("Slice 4 initial usable load profile", () => {
+  test("profiles the existing login usable-load boundary", async ({ browser }) => {
+    const samples: Array<Record<string, unknown>> = [];
+
+    for (let sample = -sampling.warmups; sample <= sampling.samples; sample += 1) {
+      if (sample === 0) continue;
+
+      const { context, page, profile, session } = await createMobileProfile(browser);
+      const requests: Array<{
+        url: string;
+        type: string;
+        bytes: number;
+      }> = [];
+      const sizeTasks: Promise<void>[] = [];
+      const startedAt = performance.now();
+
+      try {
+        await session.send("Performance.enable");
+        const beforeMetrics = await session.send("Performance.getMetrics");
+        await page.addInitScript(() => {
+          const longTasks: Array<{ startTime: number; duration: number }> = [];
+          new PerformanceObserver((list) => {
+            for (const entry of list.getEntries()) {
+              longTasks.push({
+                startTime: entry.startTime,
+                duration: entry.duration,
+              });
+            }
+          }).observe({ type: "longtask", buffered: true });
+          (window as Window & {
+            __slice4LongTasks?: Array<{ startTime: number; duration: number }>;
+          }).__slice4LongTasks = longTasks;
+        });
+        page.on("requestfinished", (request) => {
+          sizeTasks.push(
+            (async () => {
+              const size = await request.sizes();
+              requests.push({
+                url: request.url(),
+                type: request.resourceType(),
+                bytes: size.responseBodySize + size.responseHeadersSize,
+              });
+            })().catch(() => undefined),
+          );
+        });
+
+        await page.goto("/login");
+        await expect(
+          page.getByRole("heading", { name: "تسجيل الدخول" }),
+        ).toBeVisible();
+        const usableMs = performance.now() - startedAt;
+        await page.waitForTimeout(500);
+        await Promise.all(sizeTasks);
+        const afterMetrics = await session.send("Performance.getMetrics");
+        const browserEvidence = await page.evaluate(() => {
+          const navigation = performance.getEntriesByType(
+            "navigation",
+          )[0] as PerformanceNavigationTiming | undefined;
+          const resources = performance
+            .getEntriesByType("resource")
+            .map((entry) => {
+              const resource = entry as PerformanceResourceTiming;
+              return {
+                name: resource.name,
+                initiatorType: resource.initiatorType,
+                transferSize: resource.transferSize,
+                duration: resource.duration,
+              };
+            });
+          const longTasks = (
+            window as Window & {
+              __slice4LongTasks?: Array<{ startTime: number; duration: number }>;
+            }
+          ).__slice4LongTasks ?? [];
+
+          return {
+            navigation: navigation
+              ? {
+                  responseStart: navigation.responseStart,
+                  domContentLoaded: navigation.domContentLoadedEventEnd,
+                  load: navigation.loadEventEnd,
+                }
+              : null,
+            resources,
+            longTasks,
+          };
+        });
+        const metricMap = (metrics: { metrics: Array<{ name: string; value: number }> }) =>
+          new Map(metrics.metrics.map(({ name, value }) => [name, value]));
+        const before = metricMap(beforeMetrics);
+        const after = metricMap(afterMetrics);
+        const delta = (name: string) => (after.get(name) ?? 0) - (before.get(name) ?? 0);
+        const byType = Object.groupBy(requests, (request) => request.type);
+        const authRequests = requests.filter((request) =>
+          new URL(request.url).pathname.startsWith("/api/auth/"),
+        );
+        const initialJavaScript = requests.filter(
+          (request) => request.type === "script",
+        );
+        const initialCss = requests.filter(
+          (request) => request.type === "stylesheet",
+        );
+
+        if (sample > 0) {
+          samples.push({
+            sample,
+            usableMs,
+            requestCount: requests.length,
+            requestBytes: requests.reduce((total, request) => total + request.bytes, 0),
+            javaScriptBytes: initialJavaScript.reduce(
+              (total, request) => total + request.bytes,
+              0,
+            ),
+            cssBytes: initialCss.reduce((total, request) => total + request.bytes, 0),
+            requestTypes: Object.fromEntries(
+              Object.entries(byType).map(([type, entries]) => [
+                type,
+                {
+                  count: entries?.length ?? 0,
+                  bytes: (entries ?? []).reduce(
+                    (total, request) => total + request.bytes,
+                    0,
+                  ),
+                },
+              ]),
+            ),
+            authRequests: authRequests.map((request) => new URL(request.url).pathname),
+            initialJavaScript,
+            initialCss,
+            navigation: browserEvidence.navigation,
+            performanceMetricsMs: {
+              mainThreadTask: delta("TaskDuration") * 1000,
+              scriptExecution: delta("ScriptDuration") * 1000,
+              layout: delta("LayoutDuration") * 1000,
+              styleRecalculation: delta("RecalcStyleDuration") * 1000,
+            },
+            longTasks: browserEvidence.longTasks,
+            resources: browserEvidence.resources,
+            profile,
+          });
+        }
+      } finally {
+        await context.close();
+      }
+    }
+
+    expect(samples).toHaveLength(30);
+    expect(samples.every((sample) => Number(sample.usableMs) >= 0)).toBe(true);
+    const percentile = (values: number[], fraction: number) => {
+      const sorted = [...values].sort((left, right) => left - right);
+
+      return sorted[Math.ceil(sorted.length * fraction) - 1] ?? null;
+    };
+    const sampleNumbers = (selector: (sample: Record<string, unknown>) => number) =>
+      samples.map(selector);
+    const navigation = samples.map(
+      (sample) => sample.navigation as { domContentLoaded: number; load: number },
+    );
+    const metrics = samples.map(
+      (sample) =>
+        sample.performanceMetricsMs as Record<
+          "mainThreadTask" | "scriptExecution" | "layout" | "styleRecalculation",
+          number
+        >,
+    );
+    const longTasks = samples.flatMap(
+      (sample) => sample.longTasks as Array<{ duration: number }>,
+    );
+    const artifactDirectory = resolve(
+      import.meta.dirname,
+      "../test-results/benchmark",
+    );
+    await mkdir(artifactDirectory, { recursive: true });
+    await writeFile(
+      resolve(
+        artifactDirectory,
+        `slice4-login-${new Date().toISOString().replaceAll(":", "-")}.json`,
+      ),
+      JSON.stringify(
+        {
+          boundary: "navigation-to-login-heading-visible",
+          sampling,
+          summary: {
+            usableLoadMs: {
+              p50: percentile(sampleNumbers((sample) => Number(sample.usableMs)), 0.5),
+              p95: percentile(sampleNumbers((sample) => Number(sample.usableMs)), 0.95),
+              max: Math.max(...sampleNumbers((sample) => Number(sample.usableMs))),
+              errors: 0,
+              gateMs: 3_000,
+            },
+            navigationMs: {
+              domContentLoadedP50: percentile(
+                navigation.map((entry) => entry.domContentLoaded),
+                0.5,
+              ),
+              loadP50: percentile(navigation.map((entry) => entry.load), 0.5),
+            },
+            mainThreadMs: Object.fromEntries(
+              ["mainThreadTask", "scriptExecution", "layout", "styleRecalculation"].map(
+                (name) => [
+                  name,
+                  {
+                    p50: percentile(
+                      metrics.map((entry) => entry[name as keyof typeof entry]),
+                      0.5,
+                    ),
+                    p95: percentile(
+                      metrics.map((entry) => entry[name as keyof typeof entry]),
+                      0.95,
+                    ),
+                  },
+                ],
+              ),
+            ),
+            longTasks: {
+              count: longTasks.length,
+              maxMs: Math.max(...longTasks.map((task) => task.duration)),
+              p50Ms: percentile(
+                longTasks.map((task) => task.duration),
+                0.5,
+              ),
+              p95Ms: percentile(
+                longTasks.map((task) => task.duration),
+                0.95,
+              ),
+            },
+            parseAndCompile: "Not exposed separately by the stable CDP Performance domain; ScriptDuration is captured.",
+          },
+          samples,
+          eagerAuthenticatedRouteImports: [
+            "dashboard",
+            "vehicles",
+            "customers",
+            "rentals (including contracts)",
+            "maintenance",
+            "expenses",
+            "analytics (including recharts)",
+            "reports (including printable reports)",
+            "tasks",
+            "account",
+            "platform admin",
+          ],
+          rootInitialization: [
+            "configureApiClient",
+            "initializeTheme",
+            "registerApplicationShell after window load",
+            "AuthProvider refresh restoration",
+          ],
+        },
+        null,
+        2,
+      ),
+    );
+  });
+});

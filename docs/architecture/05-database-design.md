@@ -200,7 +200,8 @@ action, target type/identifier, non-sensitive structured metadata, and its
 creation timestamp. It is indexed for organization, actor, and target lookup.
 
 Lifecycle-status changes are written in the same transaction as the status
-update. Invitation, password-reset, and account-administration workflows will
+update; the operator reason, when required or given, is stored in the entry's
+`metadata`. Invitation, password-reset, and account-administration workflows will
 use the same mechanism as they are introduced. Audit records are retained and
 are not soft-deleted through normal application operations.
 

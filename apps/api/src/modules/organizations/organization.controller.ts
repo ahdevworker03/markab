@@ -3,6 +3,7 @@ import {
   getOrganization,
   getPlatformOrganization,
   listPlatformOrganizations,
+  listPlatformOrganizationUsers,
   updateOrganization,
   updateOrganizationStatus,
   deleteOrganization,
@@ -55,6 +56,7 @@ async function updateStatus(
       organizationId,
       req.user!.sub,
       input.status,
+      input.reason,
     );
     ok(res, org);
   } catch (err) {
@@ -91,6 +93,19 @@ async function getPlatform(
   }
 }
 
+async function listPlatformUsers(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const organizationId = req.params.organizationId as string;
+    ok(res, await listPlatformOrganizationUsers(organizationId));
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function remove(
   req: Request,
   res: Response,
@@ -104,4 +119,12 @@ async function remove(
   }
 }
 
-export { get, update, updateStatus, listPlatform, getPlatform, remove };
+export {
+  get,
+  update,
+  updateStatus,
+  listPlatform,
+  getPlatform,
+  listPlatformUsers,
+  remove,
+};

@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { retrySerializable, transaction } from "../../database";
+import { retrySerializable, transaction, type TxClient } from "../../database";
 import { AppError } from "../../shared";
 import { recordAuditLog } from "../audit";
 import { hashPassword } from "./auth.hash";
@@ -24,22 +24,32 @@ function invalidTokenError(): AppError {
   );
 }
 
-async function requestPasswordReset(email: string): Promise<void> {
+/** Invalidates outstanding reset tokens for the user and stores a new hashed one; returns the raw token for delivery only. */
+async function issuePasswordResetToken(
+  tx: TxClient,
+  userId: string,
+): Promise<string> {
   const token = createToken();
-  const tokenHash = hashToken(token);
   const expiresAt = new Date(Date.now() + PASSWORD_RESET_EXPIRY_MS);
 
-  const user = await transaction(async (tx) => {
+  await repo.invalidateUnconsumedForUser(userId, tx);
+  await repo.create({ userId, tokenHash: hashToken(token), expiresAt }, tx);
+  return token;
+}
+
+async function requestPasswordReset(email: string): Promise<void> {
+  const issued = await transaction(async (tx) => {
     const activeUser = await repo.findActiveUserByEmail(email, tx);
     if (!activeUser) return null;
 
-    await repo.invalidateUnconsumedForUser(activeUser.id, tx);
-    await repo.create({ userId: activeUser.id, tokenHash, expiresAt }, tx);
-    return activeUser;
+    return {
+      email: activeUser.email,
+      token: await issuePasswordResetToken(tx, activeUser.id),
+    };
   });
 
-  if (user) {
-    await deliverPasswordReset(user.email, token);
+  if (issued) {
+    await deliverPasswordReset(issued.email, issued.token);
   }
 }
 
@@ -83,4 +93,4 @@ async function confirmPasswordReset(
   await retrySerializable(run);
 }
 
-export { requestPasswordReset, confirmPasswordReset };
+export { issuePasswordResetToken, requestPasswordReset, confirmPasswordReset };

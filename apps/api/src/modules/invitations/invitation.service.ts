@@ -3,6 +3,7 @@ import {
   isUniqueConstraintError,
   retrySerializable,
   transaction,
+  type TxClient,
 } from "../../database";
 import { AppError } from "../../shared";
 import { hashPassword, issueTokens } from "../auth";
@@ -59,62 +60,73 @@ function toResponse(
   };
 }
 
-async function createEmployeeInvitation(
+interface IssueInvitationOptions {
+  resentAction: "EMPLOYEE_INVITATION_RESENT" | "PLATFORM_EMPLOYEE_INVITATION_RESENT";
+}
+
+/** Creates or resends (replacing token hash and expiry) an invitation inside the caller's transaction. */
+async function issueEmployeeInvitation(
+  tx: TxClient,
   organizationId: string,
   actorUserId: string,
-  input: CreateEmployeeInvitationInput,
+  email: string,
+  options: IssueInvitationOptions = { resentAction: "EMPLOYEE_INVITATION_RESENT" },
 ): Promise<EmployeeInvitationResponse> {
   const acceptanceToken = createToken();
   const tokenHash = hashToken(acceptanceToken);
   const expiresAt = new Date(Date.now() + INVITATION_EXPIRY_MS);
 
-  const invitation = await transaction(async (tx) => {
-    const existingUser = await tx.user.findUnique({
-      where: { email: input.email },
-      select: { id: true },
-    });
-    if (existingUser) throw emailAlreadyExistsError();
+  const existingUser = await tx.user.findUnique({
+    where: { email },
+    select: { id: true },
+  });
+  if (existingUser) throw emailAlreadyExistsError();
 
-    const existingInvitation = await repo.findByOrganizationAndEmail(
-      organizationId,
-      input.email,
-      tx,
-    );
+  const existingInvitation = await repo.findByOrganizationAndEmail(
+    organizationId,
+    email,
+    tx,
+  );
 
-    if (existingInvitation?.accepted_at) throw emailAlreadyExistsError();
+  if (existingInvitation?.accepted_at) throw emailAlreadyExistsError();
 
-    const record = existingInvitation
-      ? await repo.resend(
-          existingInvitation.id,
-          { tokenHash, expiresAt, createdByUserId: actorUserId },
-          tx,
-        )
-      : await repo.create(
-          {
-            organizationId,
-            email: input.email,
-            tokenHash,
-            expiresAt,
-            createdByUserId: actorUserId,
-          },
-          tx,
-        );
+  const record = existingInvitation
+    ? await repo.resend(
+        existingInvitation.id,
+        { tokenHash, expiresAt, createdByUserId: actorUserId },
+        tx,
+      )
+    : await repo.create(
+        {
+          organizationId,
+          email,
+          tokenHash,
+          expiresAt,
+          createdByUserId: actorUserId,
+        },
+        tx,
+      );
 
-    await recordAuditLog(tx, {
-      organizationId,
-      actorUserId,
-      action: existingInvitation
-        ? "EMPLOYEE_INVITATION_RESENT"
-        : "EMPLOYEE_INVITATION_CREATED",
-      targetType: "EMPLOYEE_INVITATION",
-      targetId: record.id,
-      metadata: { email: input.email },
-    });
-
-    return record;
+  await recordAuditLog(tx, {
+    organizationId,
+    actorUserId,
+    action: existingInvitation ? options.resentAction : "EMPLOYEE_INVITATION_CREATED",
+    targetType: "EMPLOYEE_INVITATION",
+    targetId: record.id,
+    metadata: { email },
   });
 
-  return toResponse(invitation, acceptanceToken);
+  return toResponse(record, acceptanceToken);
+}
+
+async function createEmployeeInvitation(
+  organizationId: string,
+  actorUserId: string,
+  input: CreateEmployeeInvitationInput,
+): Promise<EmployeeInvitationResponse> {
+  return transaction((tx) =>
+    issueEmployeeInvitation(tx, organizationId, actorUserId, input.email),
+  );
 }
 
 async function acceptEmployeeInvitation(
@@ -133,6 +145,24 @@ async function acceptEmployeeInvitation(
           invitation.expires_at <= new Date()
         ) {
           throw invalidInvitationError();
+        }
+
+        // Thrown before any write so the invitation stays valid for a retry once the organization is restored.
+        const organization = await tx.organization.findUnique({
+          where: { id: invitation.organization_id },
+          select: { status: true, deleted_at: true },
+        });
+        if (
+          !organization ||
+          organization.deleted_at ||
+          organization.status === "SUSPENDED" ||
+          organization.status === "CANCELLED"
+        ) {
+          throw new AppError(
+            403,
+            "ORGANIZATION_NOT_OPERATIONAL",
+            "This organization is not available for business operations.",
+          );
         }
 
         const existingUser = await tx.user.findUnique({
@@ -176,4 +206,8 @@ async function acceptEmployeeInvitation(
   }
 }
 
-export { createEmployeeInvitation, acceptEmployeeInvitation };
+export {
+  createEmployeeInvitation,
+  issueEmployeeInvitation,
+  acceptEmployeeInvitation,
+};

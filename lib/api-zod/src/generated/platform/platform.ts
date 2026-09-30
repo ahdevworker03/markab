@@ -76,14 +76,27 @@ export const GetPlatformOrganizationResponse = zod.object({
 
 /**
  * Updates tenant lifecycle status. This endpoint is restricted to PLATFORM_OWNER.
+ *
+ * Allowed transitions: TRIAL to ACTIVE, SUSPENDED or CANCELLED; ACTIVE to SUSPENDED or CANCELLED; SUSPENDED to ACTIVE or CANCELLED; CANCELLED to ACTIVE. Requesting the current status is an idempotent no-op that writes no audit entry. Any other transition is rejected with 409 INVALID_ORGANIZATION_STATUS_TRANSITION.
+ *
+ * A reason is required (422 STATUS_CHANGE_REASON_REQUIRED) when moving to SUSPENDED or CANCELLED and when reactivating a CANCELLED organization. The reason is stored in the audit entry metadata.
  * @summary Update an organization lifecycle status
  */
 export const UpdateOrganizationStatusParams = zod.object({
   organizationId: zod.coerce.string().uuid(),
 });
 
+export const updateOrganizationStatusBodyReasonMax = 500;
+
 export const UpdateOrganizationStatusBody = zod.object({
   status: zod.enum(["TRIAL", "ACTIVE", "SUSPENDED", "CANCELLED"]),
+  reason: zod
+    .string()
+    .max(updateOrganizationStatusBodyReasonMax)
+    .optional()
+    .describe(
+      "Operator-provided reason recorded in the audit log. Required when moving to SUSPENDED or CANCELLED, and when reactivating a CANCELLED organization; optional otherwise. Surrounding whitespace is trimmed.",
+    ),
 });
 
 export const UpdateOrganizationStatusResponse = zod.object({
@@ -97,5 +110,124 @@ export const UpdateOrganizationStatusResponse = zod.object({
     address: zod.string().nullable(),
     createdAt: zod.coerce.date(),
     updatedAt: zod.coerce.date(),
+  }),
+});
+
+/**
+ * Read-only access overview for one client organization: its user accounts (including deactivated ones) and its employee invitations. Restricted to PLATFORM_OWNER. Internal and deleted organizations are not found. This does not grant tenant-business access and never returns password hashes, session tokens, invitation tokens or token hashes.
+ *
+ * Users are ordered OWNER first, then active EMPLOYEE accounts, then deactivated accounts, each by creation time. Invitations are ordered pending, expired, then accepted, newest first.
+ *
+ * If a PLATFORM_OWNER account is found inside a client organization the request fails with 500 ORGANIZATION_DATA_INTEGRITY_ERROR instead of presenting it as a tenant user.
+ * @summary List an organization's users and invitations for platform support visibility
+ */
+export const ListPlatformOrganizationUsersParams = zod.object({
+  organizationId: zod.coerce.string().uuid(),
+});
+
+export const ListPlatformOrganizationUsersResponse = zod.object({
+  data: zod.object({
+    users: zod.array(
+      zod.object({
+        id: zod.string().uuid(),
+        email: zod.string().email(),
+        role: zod.enum(["OWNER", "EMPLOYEE"]),
+        status: zod
+          .enum(["ACTIVE", "DEACTIVATED"])
+          .describe(
+            "ACTIVE when the account is not soft-deleted, DEACTIVATED otherwise.",
+          ),
+        createdAt: zod.coerce.date(),
+        deactivatedAt: zod.coerce.date().nullable(),
+      }),
+    ),
+    invitations: zod.array(
+      zod.object({
+        id: zod.string().uuid(),
+        email: zod.string().email(),
+        status: zod
+          .enum(["PENDING", "EXPIRED", "ACCEPTED"])
+          .describe(
+            "ACCEPTED when accepted_at is set; otherwise EXPIRED when the expiry has passed, else PENDING. Revoked or replaced invitations are not distinguishable in the stored data (a resend overwrites the same record).",
+          ),
+        createdAt: zod.coerce.date(),
+        expiresAt: zod.coerce.date(),
+        acceptedAt: zod.coerce.date().nullable(),
+      }),
+    ),
+  }),
+});
+
+/**
+ * Support action restricted to PLATFORM_OWNER. Reissues the existing invitation with the same semantics as the tenant flow: the previous token is invalidated, a new seven-day token is created, and only its hash is stored. The new acceptance token is returned once for manual secure delivery.
+ *
+ * Allowed for PENDING and EXPIRED invitations of TRIAL or ACTIVE organizations. ACCEPTED invitations return 409 INVITATION_ALREADY_ACCEPTED; SUSPENDED and CANCELLED organizations return 403 ORGANIZATION_NOT_OPERATIONAL. Internal, deleted and unknown organizations, and invitations of other organizations, are not found.
+ * @summary Resend an employee invitation on behalf of a client organization
+ */
+export const ResendPlatformEmployeeInvitationParams = zod.object({
+  organizationId: zod.coerce.string().uuid(),
+  invitationId: zod.coerce.string().uuid(),
+});
+
+export const ResendPlatformEmployeeInvitationResponse = zod.object({
+  data: zod.object({
+    id: zod.string(),
+    email: zod.string().email(),
+    role: zod.enum(["EMPLOYEE"]),
+    expiresAt: zod.coerce.date(),
+    acceptanceToken: zod
+      .string()
+      .describe(
+        "One-time token for secure manual delivery. It is never stored in plaintext and is not returned by later reads.",
+      ),
+    createdAt: zod.coerce.date(),
+  }),
+});
+
+/**
+ * Support action restricted to PLATFORM_OWNER. The server resolves the organization's single active OWNER, issues the normal one-time reset credential (hash stored, prior tokens invalidated, one-hour expiry) and hands it to the configured delivery channel. No email is accepted from the client, and no token or password is ever returned.
+ *
+ * Allowed for every lifecycle status, including SUSPENDED and CANCELLED; it does not change organization status or restore business access. A deactivated OWNER returns 409 OWNER_DEACTIVATED; a missing or duplicated OWNER returns 500 ORGANIZATION_DATA_INTEGRITY_ERROR.
+ * @summary Send a password recovery link to an organization's owner
+ */
+export const RequestPlatformOwnerPasswordResetParams = zod.object({
+  organizationId: zod.coerce.string().uuid(),
+});
+
+export const RequestPlatformOwnerPasswordResetResponse = zod.void();
+
+/**
+ * Support action restricted to PLATFORM_OWNER. Soft-deletes the EMPLOYEE, revokes all of their refresh sessions and appends an audit entry containing the mandatory reason, in one transaction. Only EMPLOYEE accounts of the selected client organization can be targeted: OWNER and PLATFORM_OWNER accounts return 409 USER_NOT_DEACTIVATABLE, accounts of other organizations return 404, and an already deactivated account returns 409 USER_ALREADY_DEACTIVATED. Allowed for every lifecycle status.
+ * @summary Deactivate an employee account on behalf of a client organization
+ */
+export const DeactivatePlatformEmployeeParams = zod.object({
+  organizationId: zod.coerce.string().uuid(),
+  userId: zod.coerce.string().uuid(),
+});
+
+export const deactivatePlatformEmployeeBodyReasonMax = 500;
+
+export const DeactivatePlatformEmployeeBody = zod.object({
+  reason: zod
+    .string()
+    .min(1)
+    .max(deactivatePlatformEmployeeBodyReasonMax)
+    .describe(
+      "Mandatory operator reason recorded in the audit log. Trimmed; whitespace-only values are rejected.",
+    ),
+});
+
+export const DeactivatePlatformEmployeeResponse = zod.object({
+  data: zod.object({
+    id: zod.string().uuid(),
+    email: zod.string().email(),
+    role: zod.enum(["OWNER", "EMPLOYEE"]),
+    status: zod
+      .enum(["ACTIVE", "DEACTIVATED"])
+      .describe(
+        "ACTIVE when the account is not soft-deleted, DEACTIVATED otherwise.",
+      ),
+    createdAt: zod.coerce.date(),
+    deactivatedAt: zod.coerce.date().nullable(),
   }),
 });

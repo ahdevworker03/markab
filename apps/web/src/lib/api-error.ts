@@ -36,6 +36,8 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   INVALID_OR_EXPIRED_INVITATION: "رابط الدعوة غير صالح أو منتهي الصلاحية.",
   INVALID_OR_EXPIRED_PASSWORD_RESET_TOKEN:
     "رابط إعادة تعيين كلمة المرور غير صالح أو منتهي الصلاحية.",
+  INVALID_ORGANIZATION_STATUS_TRANSITION:
+    "لا يمكن الانتقال إلى هذه الحالة من الحالة الحالية للمؤسسة.",
   INVALID_ORIGIN: "مصدر الطلب غير مسموح به.",
   INVALID_PAYMENT_AMOUNT: "أدخل مبلغ دفعة صحيحًا.",
   INVALID_PAYMENT_METHOD: "طريقة الدفع غير صالحة.",
@@ -52,6 +54,8 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   MAINTENANCE_SCHEDULE_NOT_FOUND: "لم يتم العثور على جدول الصيانة.",
   MALFORMED_JSON: "تعذر قراءة البيانات المرسلة.",
   NOT_FOUND: "لم يتم العثور على المورد المطلوب.",
+  ORGANIZATION_DATA_INTEGRITY_ERROR:
+    "بيانات المؤسسة غير متسقة. تواصل مع فريق التطوير.",
   ORGANIZATION_NOT_FOUND: "لم يتم العثور على المؤسسة.",
   ORGANIZATION_NOT_OPERATIONAL: "المؤسسة غير مفعلة حالياً.",
   OWNER_ROLE_CHANGE_NOT_SUPPORTED: "لا يمكن تغيير دور المالك.",
@@ -63,6 +67,7 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   RENTAL_MISSING_RELATIONS: "تعذر إنشاء العقد لعدم اكتمال بيانات الإيجار.",
   RENTAL_NOT_FOUND: "لم يتم العثور على الإيجار.",
   REQUEST_TIMEOUT: "انتهت مهلة الطلب. حاول مرة أخرى.",
+  STATUS_CHANGE_REASON_REQUIRED: "أدخل سبب تغيير الحالة.",
   SIGNED_CONTRACT_EXISTS: "تم رفع نسخة موقعة من العقد بالفعل.",
   TASK_ALREADY_COMPLETED: "المهمة مكتملة بالفعل.",
   TASK_NOT_FOUND: "لم يتم العثور على المهمة.",

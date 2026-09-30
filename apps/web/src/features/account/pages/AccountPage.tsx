@@ -8,6 +8,10 @@ import { Button } from "@/components/ui/button";
 import { FormField, inputClass } from "@/components/ui/FormField";
 import { InlineFeedback } from "@/components/ui/FeedbackState";
 import { getApiErrorMessage } from "@/lib/api-error";
+import {
+  InvitationLinkNotice,
+  type IssuedInvitation,
+} from "@/components/invitations/InvitationLinkNotice";
 
 export function AccountPage() {
   const { user } = useAuth();
@@ -18,9 +22,9 @@ export function AccountPage() {
   const invite = useCreateEmployeeInvitation();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(""); const [email, setEmail] = useState(""); const [inviteEmail, setInviteEmail] = useState("");
-  const [message, setMessage] = useState<string | null>(null); const [error, setError] = useState<string | null>(null);
+  const [issuedInvitation, setIssuedInvitation] = useState<IssuedInvitation | null>(null); const [message, setMessage] = useState<string | null>(null); const [error, setError] = useState<string | null>(null);
   async function save() { if (!name.trim()) return; setError(null); try { await update.mutateAsync({ data: { name: name.trim(), email: email.trim() || undefined } }); setEditing(false); setMessage("تم تحديث بيانات المؤسسة."); organizationQuery.refetch(); } catch (cause) { setError(getApiErrorMessage(cause).title); } }
-  async function sendInvite() { if (!inviteEmail.trim()) return; setError(null); try { await invite.mutateAsync({ data: { email: inviteEmail.trim() } }); setInviteEmail(""); setMessage("تم إنشاء دعوة الموظف. شارك رابط الدعوة مع الموظف عبر وسيلة تواصل موثوقة."); } catch (cause) { setError(getApiErrorMessage(cause).title); } }
+  async function sendInvite() { if (!inviteEmail.trim()) return; setError(null); setIssuedInvitation(null); try { const response = await invite.mutateAsync({ data: { email: inviteEmail.trim() } }); invite.reset(); setInviteEmail(""); setIssuedInvitation({ email: response.data.email, expiresAt: response.data.expiresAt, acceptanceToken: response.data.acceptanceToken }); } catch (cause) { setError(getApiErrorMessage(cause).title); } }
 
   return (
     <div className="min-h-full">
@@ -49,7 +53,7 @@ export function AccountPage() {
             {isOwner && editing && <div className="space-y-3 border-t pt-3"><FormField label="اسم المؤسسة" htmlFor="organization-name"><input id="organization-name" className={inputClass} value={name} onChange={(event) => setName(event.target.value)} /></FormField><FormField label="بريد المؤسسة" htmlFor="organization-email"><input id="organization-email" type="email" dir="ltr" className={inputClass} value={email} onChange={(event) => setEmail(event.target.value)} /></FormField><div className="flex gap-2"><Button onClick={() => void save()} disabled={update.isPending}>{update.isPending ? "جارٍ الحفظ" : "حفظ"}</Button><Button variant="outline" onClick={() => setEditing(false)}>إلغاء</Button></div></div>}
           </CardContent>
         </Card>
-        {isOwner && <Card><CardHeader><CardTitle className="text-base">دعوة موظف</CardTitle></CardHeader><CardContent className="space-y-3"><p className="text-sm text-muted-foreground">أنشئ دعوة موظف للمؤسسة. لا توجد أدوات إدارية للمنصة هنا.</p><FormField label="بريد الموظف" htmlFor="employee-invite-email"><input id="employee-invite-email" type="email" dir="ltr" className={inputClass} value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} /></FormField><Button onClick={() => void sendInvite()} disabled={!inviteEmail || invite.isPending}>{invite.isPending ? "جارٍ الإنشاء" : "إرسال دعوة"}</Button></CardContent></Card>}
+        {isOwner && <Card><CardHeader><CardTitle className="text-base">دعوة موظف</CardTitle></CardHeader><CardContent className="space-y-3"><p className="text-sm text-muted-foreground">أنشئ دعوة موظف للمؤسسة. لا توجد أدوات إدارية للمنصة هنا.</p><FormField label="بريد الموظف" htmlFor="employee-invite-email"><input id="employee-invite-email" type="email" dir="ltr" className={inputClass} value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} /></FormField><Button onClick={() => void sendInvite()} disabled={!inviteEmail || invite.isPending}>{invite.isPending ? "جارٍ الإنشاء" : "إنشاء رابط دعوة"}</Button>{issuedInvitation && <InvitationLinkNotice invitation={issuedInvitation} onDismiss={() => setIssuedInvitation(null)} />}</CardContent></Card>}
 
         <Card>
           <CardHeader>
