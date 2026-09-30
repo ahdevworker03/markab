@@ -25,7 +25,8 @@ import {
   type IssuedInvitation,
 } from "@/components/invitations/InvitationLinkNotice";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatNumber } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { REASON_MAX_LENGTH } from "../organizationLifecycle";
 import { SupportActionDialog } from "./SupportActionDialog";
 
@@ -40,8 +41,8 @@ const invitationBadge: Record<
 
 function Email({ value }: { value: string }) {
   return (
-    <span dir="ltr" className="block break-all text-right text-sm font-semibold text-foreground">
-      {value}
+    <span className="block text-start text-sm font-semibold text-foreground">
+      <span className="identifier-ltr break-all">{value}</span>
     </span>
   );
 }
@@ -49,14 +50,25 @@ function Email({ value }: { value: string }) {
 function Meta({ label, date }: { label: string; date: string }) {
   return (
     <span className="text-xs text-muted-foreground">
-      {label} <span dir="ltr">{formatDate(date)}</span>
+      {label} <span className="date-token-ltr">{formatDate(date)}</span>
     </span>
   );
 }
 
-function Row({ children }: { children: ReactNode }) {
+function Row({
+  children,
+  emphasized = false,
+}: {
+  children: ReactNode;
+  emphasized?: boolean;
+}) {
   return (
-    <li className="flex flex-col gap-2 border-b border-border py-3 last:border-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+    <li
+      className={cn(
+        "flex flex-col gap-2 border-b border-border py-3 last:border-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4",
+        emphasized && "-mx-3 rounded-lg border-transparent bg-primary/5 px-3",
+      )}
+    >
       {children}
     </li>
   );
@@ -82,9 +94,11 @@ type PendingDialog =
 export function OrganizationUsersSection({
   organizationId,
   organizationStatus,
+  className,
 }: {
   organizationId: string;
   organizationStatus?: OrganizationStatus;
+  className?: string;
 }) {
   const queryClient = useQueryClient();
   const query = useListPlatformOrganizationUsers(organizationId);
@@ -142,7 +156,7 @@ export function OrganizationUsersSection({
       {
         onSuccess: () => {
           closeDialog();
-          setNotice("تم إرسال رابط استعادة كلمة المرور.");
+          setNotice("تم طلب إرسال رابط استعادة كلمة المرور.");
         },
       },
     );
@@ -170,7 +184,7 @@ export function OrganizationUsersSection({
 
   function renderUser(user: PlatformOrganizationUser) {
     return (
-      <Row key={user.id}>
+      <Row key={user.id} emphasized={user.role === "OWNER"}>
         <div className="min-w-0 sm:flex-1">
           <Email value={user.email} />
         </div>
@@ -200,7 +214,7 @@ export function OrganizationUsersSection({
             type="button"
             variant="outline"
             size="sm"
-            className="w-full border-destructive/40 text-destructive sm:w-auto"
+            className="w-full border-transparent bg-destructive/5 text-destructive hover:bg-destructive/10 sm:w-auto sm:bg-transparent sm:hover:bg-destructive/5"
             onClick={() => setDialog({ kind: "deactivate", user })}
           >
             تعطيل الموظف
@@ -250,6 +264,7 @@ export function OrganizationUsersSection({
     <DetailSection
       title="مستخدمو المؤسسة"
       description="حسابات المؤسسة ودعواتها، مع إجراءات دعم محدودة."
+      className={className}
     >
       {query.isPending ? (
         <LoadingState rows={3} className="p-0" />
@@ -269,7 +284,10 @@ export function OrganizationUsersSection({
           )}
           <section aria-labelledby="org-users-heading">
             <h3 id="org-users-heading" className="ui-label mb-1">
-              الحسابات
+              الحسابات{" "}
+              <span className="font-normal text-muted-foreground">
+                ({formatNumber(users.length)})
+              </span>
             </h3>
             <ul>{users.map(renderUser)}</ul>
             {!hasEmployees && (
@@ -280,7 +298,10 @@ export function OrganizationUsersSection({
           </section>
           <section aria-labelledby="org-invitations-heading">
             <h3 id="org-invitations-heading" className="ui-label mb-1">
-              الدعوات
+              الدعوات{" "}
+              <span className="font-normal text-muted-foreground">
+                ({formatNumber(invitations.length)})
+              </span>
             </h3>
             {issued && (
               <InvitationLinkNotice
@@ -310,18 +331,18 @@ export function OrganizationUsersSection({
       <SupportActionDialog
         open={dialog?.kind === "recover"}
         onClose={closeDialog}
-        title="إرسال رابط استعادة كلمة المرور"
-        confirmLabel="إرسال الرابط"
+        title="استعادة كلمة مرور المالك"
+        confirmLabel="طلب إرسال الرابط"
         pending={recover.isPending}
         error={recover.isError ? getApiErrorMessage(recover.error).title : null}
         onConfirm={confirmRecovery}
       >
         <p>
-          سيُرسل رابط استعادة كلمة المرور إلى مالك المؤسسة{" "}
-          <span dir="ltr" className="break-all font-semibold">
+          سيبدأ هذا الإجراء استعادة كلمة المرور لمالك المؤسسة{" "}
+          <span className="identifier-ltr break-all font-semibold">
             {dialog?.user.email}
           </span>{" "}
-          عبر قناة الاستعادة المهيأة. لا تُعرض كلمة المرور الحالية ولا تُغيَّر من هنا.
+          عبر قناة الاستعادة المهيأة. لا يرى مشرف المنصة كلمة المرور ولا يعيّنها.
           عند إكمال الاستعادة تنتهي جلسات المالك الحالية.
         </p>
       </SupportActionDialog>
@@ -338,7 +359,7 @@ export function OrganizationUsersSection({
       >
         <p>
           سيتم تعطيل حساب{" "}
-          <span dir="ltr" className="break-all font-semibold">
+          <span className="identifier-ltr break-all font-semibold">
             {dialog?.user.email}
           </span>{" "}
           ولن يتمكن من تسجيل الدخول بعد الآن، وتنتهي جلساته الحالية. تبقى بياناته

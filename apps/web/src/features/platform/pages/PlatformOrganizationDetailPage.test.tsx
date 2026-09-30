@@ -22,6 +22,11 @@ const idleMutation = { mutate: vi.fn(), reset: vi.fn(), isPending: false, isErro
 
 vi.mock("wouter", () => ({
   useLocation: () => ["/platform/organizations/org-1", vi.fn()],
+  Link: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
 }));
 vi.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({ invalidateQueries }),
@@ -77,15 +82,21 @@ function renderPage() {
   );
 }
 
+const LABELS: Record<string, string> = {
+  TRIAL: "تجريبي",
+  ACTIVE: "نشط",
+  SUSPENDED: "معلّق",
+  CANCELLED: "ملغي",
+};
+
 function optionValues(): string[] {
-  const select = screen.getByLabelText("الحالة الجديدة") as HTMLSelectElement;
-  return Array.from(select.options).map((option) => option.value);
+  return screen
+    .queryAllByRole("radio")
+    .map((radio) => radio.getAttribute("value") ?? "");
 }
 
 function selectStatus(value: string) {
-  fireEvent.change(screen.getByLabelText("الحالة الجديدة"), {
-    target: { value },
-  });
+  fireEvent.click(screen.getByRole("radio", { name: LABELS[value] }));
 }
 
 describe("PlatformOrganizationDetailPage", () => {
@@ -101,15 +112,40 @@ describe("PlatformOrganizationDetailPage", () => {
   });
 
   it.each([
-    ["TRIAL", ["TRIAL", "ACTIVE", "SUSPENDED", "CANCELLED"]],
-    ["ACTIVE", ["ACTIVE", "SUSPENDED", "CANCELLED"]],
-    ["SUSPENDED", ["SUSPENDED", "ACTIVE", "CANCELLED"]],
-    ["CANCELLED", ["CANCELLED", "ACTIVE"]],
-  ])("offers only the current and valid next statuses from %s", (status, expected) => {
+    ["TRIAL", ["ACTIVE", "SUSPENDED", "CANCELLED"]],
+    ["ACTIVE", ["SUSPENDED", "CANCELLED"]],
+    ["SUSPENDED", ["ACTIVE", "CANCELLED"]],
+    ["CANCELLED", ["ACTIVE"]],
+  ])("offers only the valid next statuses from %s and shows the current one", (status, expected) => {
     mockOrganization(status);
     renderPage();
 
     expect(optionValues()).toEqual(expected);
+    expect(screen.getByText("الحالة الحالية")).toBeInTheDocument();
+  });
+
+  it("keeps the identity block together and shows missing fields as unspecified", () => {
+    mockOrganization("ACTIVE");
+    renderPage();
+
+    const heading = screen.getByRole("heading", { name: "مؤسسة الاختبار" });
+    expect(heading.parentElement).toHaveTextContent("نشط");
+    expect(screen.getAllByText("غير محدد").length).toBeGreaterThanOrEqual(3);
+    expect(screen.queryByText("-")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /المؤسسات/ })).toHaveAttribute("href", "/platform");
+  });
+
+  it("offers a way back to the list when the organization is not found", () => {
+    useGetPlatformOrganization.mockReturnValue({
+      isPending: false,
+      isError: true,
+      error: { status: 404 },
+    });
+    renderPage();
+
+    expect(screen.getByText("المؤسسة غير موجودة")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "العودة إلى المؤسسات" })).toHaveAttribute("href", "/platform");
+    expect(screen.queryByRole("button", { name: "إعادة المحاولة" })).not.toBeInTheDocument();
   });
 
   it("disables submission until a different status is chosen", () => {
@@ -267,7 +303,7 @@ describe("PlatformOrganizationDetailPage", () => {
     renderPage();
 
     expect(screen.getByLabelText("جارٍ تحميل البيانات")).toBeInTheDocument();
-    expect(screen.getByLabelText("الحالة الجديدة")).toBeEnabled();
+    expect(screen.getByRole("radio", { name: "معلّق" })).toBeEnabled();
   });
 
   it("invalidates detail and list queries after a successful update", () => {

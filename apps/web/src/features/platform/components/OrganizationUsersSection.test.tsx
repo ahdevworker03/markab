@@ -92,12 +92,12 @@ function ready(users: unknown[], invitations: unknown[]) {
 
 function usersList() {
   return within(
-    screen.getByRole("heading", { name: "الحسابات" }).closest("section")!,
+    screen.getByRole("heading", { name: /الحسابات/ }).closest("section")!,
   );
 }
 function invitationsList() {
   return within(
-    screen.getByRole("heading", { name: "الدعوات" }).closest("section")!,
+    screen.getByRole("heading", { name: /الدعوات/ }).closest("section")!,
   );
 }
 
@@ -179,8 +179,7 @@ describe("OrganizationUsersSection", () => {
     render(<OrganizationUsersSection organizationId="org-1" />);
 
     const email = screen.getByText(LONG_EMAIL);
-    expect(email).toHaveAttribute("dir", "ltr");
-    expect(email).toHaveClass("break-all");
+    expect(email).toHaveClass("identifier-ltr", "break-all");
   });
 
   it("shows a local loading state", () => {
@@ -324,15 +323,15 @@ describe("OrganizationUsersSection", () => {
       fireEvent.click(screen.getByRole("button", { name: "إرسال رابط استعادة كلمة المرور" }));
       const dialog = screen.getByRole("alertdialog");
       expect(within(dialog).getByText(/owner@tenant.example/)).toBeInTheDocument();
-      expect(within(dialog).getByText(/لا تُعرض كلمة المرور الحالية/)).toBeInTheDocument();
+      expect(within(dialog).getByText(/لا يرى مشرف المنصة كلمة المرور/)).toBeInTheDocument();
       expect(within(dialog).getByText(/تنتهي جلسات المالك الحالية/)).toBeInTheDocument();
       expect(within(dialog).queryByRole("textbox")).not.toBeInTheDocument();
       expect(mutate).not.toHaveBeenCalled();
 
-      fireEvent.click(within(dialog).getByRole("button", { name: "إرسال الرابط" }));
+      fireEvent.click(within(dialog).getByRole("button", { name: "طلب إرسال الرابط" }));
 
       expect(mutate).toHaveBeenCalledWith({ organizationId: "org-1" }, expect.any(Object));
-      expect(screen.getByText("تم إرسال رابط استعادة كلمة المرور.")).toBeInTheDocument();
+      expect(screen.getByText("تم طلب إرسال رابط استعادة كلمة المرور.")).toBeInTheDocument();
       expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
     });
 
@@ -347,7 +346,7 @@ describe("OrganizationUsersSection", () => {
 
       const dialog = screen.getByRole("alertdialog");
       expect(within(dialog).getByRole("alert")).toHaveTextContent("تعذر تنفيذ الطلب");
-      expect(within(dialog).getByRole("button", { name: "إرسال الرابط" })).toBeEnabled();
+      expect(within(dialog).getByRole("button", { name: "طلب إرسال الرابط" })).toBeEnabled();
     });
 
     it("requires a reason before deactivating an employee, then refetches", () => {

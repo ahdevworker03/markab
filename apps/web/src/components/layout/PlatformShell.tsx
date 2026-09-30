@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
-import { Building2 } from "lucide-react";
+import { Link } from "wouter";
 import { LogoutButton } from "./LogoutButton";
 
 interface PlatformShellProps {
   children: ReactNode;
 }
 
+/** Minimal workspace frame for Platform Admin: brand, workspace label, sign-out, and a bounded content column. */
 export function PlatformShell({ children }: PlatformShellProps) {
   return (
     <div className="min-h-dvh bg-background">
@@ -15,24 +16,35 @@ export function PlatformShell({ children }: PlatformShellProps) {
       >
         الانتقال إلى المحتوى الرئيسي
       </a>
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Building2 className="size-5" aria-hidden="true" />
+      <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-sm">
+        <div className="mx-auto flex min-h-14 w-full max-w-[1200px] items-center justify-between gap-3 px-4 sm:px-6">
+          <Link
+            href="/platform"
+            aria-label="إدارة المنصة — مَركب"
+            className="flex min-w-0 items-center gap-3 rounded-lg py-2"
+          >
+            <img
+              src="/brand/logos/markab-logo-ar.png"
+              alt=""
+              className="markab-auth-logo-light -my-2 h-10 w-auto shrink-0"
+            />
+            <img
+              src="/brand/logos/markab-logo-monochrome-light.png"
+              alt=""
+              className="markab-auth-logo-dark -my-2 h-10 w-auto shrink-0 object-contain"
+            />
+            <span className="h-5 w-px shrink-0 bg-border" aria-hidden="true" />
+            <span className="truncate text-sm font-bold text-foreground">
+              إدارة المنصة
             </span>
-            <div>
-              <p className="text-sm font-bold text-foreground">إدارة المنصة</p>
-              <p className="text-xs text-muted-foreground">مَركب</p>
-            </div>
-          </div>
-          <LogoutButton />
+          </Link>
+          <LogoutButton className="min-h-11 shrink-0 lg:min-h-9" />
         </div>
       </header>
       <main
         id="platform-main"
         tabIndex={-1}
-        className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-7"
+        className="mx-auto w-full max-w-[1200px] px-4 py-5 outline-none sm:px-6 sm:py-8"
       >
         {children}
       </main>

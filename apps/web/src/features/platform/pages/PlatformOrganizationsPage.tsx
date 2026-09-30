@@ -1,18 +1,26 @@
 import { useState } from "react";
-import { Building2, Search } from "lucide-react";
-import { useLocation } from "wouter";
+import { Building2, ChevronLeft } from "lucide-react";
+import { Link } from "wouter";
 import {
   useListPlatformOrganizations,
   type OrganizationStatus,
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
-import { DataListShell } from "@/components/ui/DataListShell";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState, LoadingState } from "@/components/ui/FeedbackState";
+import { SearchBar } from "@/components/ui/SearchBar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDate, formatNumber } from "@/lib/format";
+import { statusLabels } from "../organizationLifecycle";
 
 const PAGE_SIZE = 20;
 const statuses: readonly OrganizationStatus[] = [
@@ -22,15 +30,10 @@ const statuses: readonly OrganizationStatus[] = [
   "CANCELLED",
 ];
 
-const statusLabels: Record<OrganizationStatus, string> = {
-  TRIAL: "تجريبي",
-  ACTIVE: "نشط",
-  SUSPENDED: "معلّق",
-  CANCELLED: "ملغي",
-};
+const rowGrid =
+  "md:grid md:grid-cols-[minmax(0,1fr)_7rem_7.5rem_1.5rem] md:items-center md:gap-4";
 
 export default function PlatformOrganizationsPage() {
-  const [, setLocation] = useLocation();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<OrganizationStatus | "ALL">("ALL");
   const [page, setPage] = useState(1);
@@ -43,6 +46,7 @@ export default function PlatformOrganizationsPage() {
   });
   const organizations = organizationsQuery.data?.data ?? [];
   const pagination = organizationsQuery.data?.pagination;
+  const filtered = !!debouncedSearch || status !== "ALL";
 
   function changeSearch(value: string) {
     setSearch(value);
@@ -59,50 +63,58 @@ export default function PlatformOrganizationsPage() {
       <header>
         <h1 className="ui-page-title">المؤسسات</h1>
         <p className="ui-secondary-text mt-1">
-          إدارة حالة المؤسسات المشتركة في المنصة.
+          المؤسسات العميلة المشتركة في مَركب وحالة كل منها.
         </p>
       </header>
+
       <section
-        aria-label="بحث وتصفية المؤسسات"
-        className="grid gap-3 rounded-xl border border-card-border bg-card p-4 sm:grid-cols-[minmax(0,1fr)_12rem]"
+        aria-labelledby="organizations-list-heading"
+        className="overflow-hidden rounded-xl border border-card-border bg-card shadow-sm"
       >
-        <label className="relative block">
-          <span className="sr-only">البحث في المؤسسات</span>
-          <Search
-            className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden="true"
-          />
-          <input
+        <div className="flex flex-col gap-3 border-b border-border p-3 sm:p-4 md:flex-row md:items-center">
+          <SearchBar
+            aria-label="البحث في المؤسسات"
+            placeholder="ابحث باسم المؤسسة أو بريدها الإلكتروني"
             value={search}
             onChange={(event) => changeSearch(event.target.value)}
-            placeholder="ابحث باسم المؤسسة أو البريد الإلكتروني"
-            className="h-10 w-full rounded-lg border border-input bg-background pe-3 ps-9 text-sm outline-none focus:ring-2 focus:ring-ring/40"
+            onClear={() => changeSearch("")}
+            className="min-w-0 md:flex-1 [&_input]:min-h-11 md:[&_input]:min-h-10"
           />
-        </label>
-        <label className="text-sm font-medium text-foreground">
-          الحالة
-          <select
+          <Select
+            dir="rtl"
             value={status}
-            onChange={(event) =>
-              changeStatus(event.target.value as OrganizationStatus | "ALL")
+            onValueChange={(value) =>
+              changeStatus(value as OrganizationStatus | "ALL")
             }
-            className="mt-1 block h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
           >
-            <option value="ALL">كل الحالات</option>
-            {statuses.map((item) => (
-              <option key={item} value={item}>
-                {statusLabels[item]}
-              </option>
-            ))}
-          </select>
-        </label>
-      </section>
-      <DataListShell
-        title="قائمة المؤسسات"
-        description={
-          pagination ? `${formatNumber(pagination.total)} مؤسسة` : undefined
-        }
-      >
+            <SelectTrigger
+              aria-label="تصفية حسب الحالة"
+              className="h-11 w-full gap-2 rounded-xl border-transparent bg-muted px-3 text-sm md:h-10 md:w-48"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent dir="rtl">
+              <SelectItem value="ALL">كل الحالات</SelectItem>
+              {statuses.map((item) => (
+                <SelectItem key={item} value={item}>
+                  {statusLabels[item]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-baseline justify-between gap-3 px-4 pb-1 pt-3 sm:px-5">
+          <h2 id="organizations-list-heading" className="ui-section-title">
+            قائمة المؤسسات
+          </h2>
+          {pagination && (
+            <p className="ui-secondary-text" aria-live="polite">
+              {formatNumber(pagination.total)} مؤسسة
+            </p>
+          )}
+        </div>
+
         {organizationsQuery.isPending ? (
           <LoadingState rows={6} />
         ) : organizationsQuery.isError ? (
@@ -114,93 +126,99 @@ export default function PlatformOrganizationsPage() {
         ) : organizations.length === 0 ? (
           <EmptyState
             icon={Building2}
-            title={
-              debouncedSearch || status !== "ALL"
-                ? "لا توجد نتائج مطابقة"
-                : "لا توجد مؤسسات"
+            title={filtered ? "لا توجد نتائج مطابقة" : "لا توجد مؤسسات"}
+            description={
+              filtered
+                ? "عدّل البحث أو التصفية وحاول مرة أخرى."
+                : "ستظهر هنا المؤسسات العميلة عند تسجيلها."
             }
-            description="عدّل البحث أو التصفية وحاول مرة أخرى."
           />
         ) : (
-          <table className="w-full min-w-[42rem] text-sm">
-            <thead className="border-b border-border bg-muted/40 text-start text-xs font-semibold text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3">المؤسسة</th>
-                <th className="px-4 py-3">البريد الإلكتروني</th>
-                <th className="px-4 py-3">الحالة</th>
-                <th className="px-4 py-3">تاريخ الإنشاء</th>
-                <th className="px-4 py-3">
-                  <span className="sr-only">فتح التفاصيل</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            <div
+              aria-hidden="true"
+              className={`hidden border-b border-border bg-muted/40 px-5 py-2 text-xs font-semibold text-muted-foreground ${rowGrid} md:grid`}
+            >
+              <span>المؤسسة</span>
+              <span>الحالة</span>
+              <span>تاريخ الإنشاء</span>
+              <span />
+            </div>
+            <ul>
               {organizations.map((organization) => (
-                <tr
+                <li
                   key={organization.id}
                   className="border-b border-border last:border-0"
                 >
-                  <td className="px-4 py-3 font-semibold text-foreground">
-                    {organization.name}
-                  </td>
-                  <td className="px-4 py-3" dir="ltr">
-                    {organization.email ?? "-"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge
-                      status={organization.status}
-                      label={statusLabels[organization.status]}
+                  <Link
+                    href={`/platform/organizations/${organization.id}`}
+                    className={`group flex min-h-16 flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-3 transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 sm:px-5 ${rowGrid}`}
+                  >
+                    <span className="min-w-0 basis-[calc(100%-2rem)] md:basis-auto">
+                      <span className="line-clamp-2 break-words text-sm font-semibold text-foreground">
+                        {organization.name}
+                      </span>
+                      {organization.email && (
+                        <span className="block text-xs text-muted-foreground">
+                          <span className="identifier-ltr break-all">
+                            {organization.email}
+                          </span>
+                        </span>
+                      )}
+                    </span>
+                    <ChevronLeft
+                      className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-x-0.5 md:order-last"
+                      aria-hidden="true"
                     />
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground" dir="ltr">
-                    {formatDate(organization.createdAt)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setLocation(
-                          `/platform/organizations/${organization.id}`,
-                        )
-                      }
-                    >
-                      عرض
-                    </Button>
-                  </td>
-                </tr>
+                    <span className="flex items-center gap-3 md:contents">
+                      <StatusBadge
+                        status={organization.status}
+                        label={statusLabels[organization.status]}
+                        className="md:justify-self-start"
+                      />
+                      <span className="text-xs text-muted-foreground md:text-sm">
+                        <span className="sr-only">تاريخ الإنشاء: </span>
+                        <span className="date-token-ltr">
+                          {formatDate(organization.createdAt)}
+                        </span>
+                      </span>
+                    </span>
+                  </Link>
+                </li>
               ))}
-            </tbody>
-          </table>
+            </ul>
+          </>
         )}
-      </DataListShell>
-      {pagination && pagination.totalPages > 1 && (
-        <nav
-          aria-label="صفحات المؤسسات"
-          className="flex items-center justify-center gap-3"
-        >
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setPage((current) => current - 1)}
-            disabled={page === 1}
+
+        {pagination && pagination.totalPages > 1 && (
+          <nav
+            aria-label="صفحات المؤسسات"
+            className="flex items-center justify-center gap-3 border-t border-border p-3"
           >
-            السابق
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            صفحة {formatNumber(page)} من {formatNumber(pagination.totalPages)}
-          </span>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setPage((current) => current + 1)}
-            disabled={page === pagination.totalPages}
-          >
-            التالي
-          </Button>
-        </nav>
-      )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((current) => current - 1)}
+              disabled={page === 1}
+            >
+              السابق
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              صفحة {formatNumber(page)} من {formatNumber(pagination.totalPages)}
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((current) => current + 1)}
+              disabled={page === pagination.totalPages}
+            >
+              التالي
+            </Button>
+          </nav>
+        )}
+      </section>
     </div>
   );
 }
