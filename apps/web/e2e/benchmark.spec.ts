@@ -1829,6 +1829,8 @@ test.describe("Slice 5 post-load navigation profile", () => {
       }> = [];
       let sizeTasks: Promise<void>[] = [];
       let startedAt = 0;
+      let browserNavigationStart = 0;
+      let browserUsableAt = 0;
       let usableMs = 0;
       let beforeMetrics:
         { metrics: Array<{ name: string; value: number }> } | undefined;
@@ -1866,9 +1868,13 @@ test.describe("Slice 5 post-load navigation profile", () => {
         const measurement = await runSamples(
           `mobile-post-load-navigation-${route.name}`,
           async (sample) => {
+            browserNavigationStart = await page.evaluate(() =>
+              performance.now(),
+            );
             startedAt = performance.now();
             await navigateToPostLoadRoute(page, route);
             await waitForPostLoadUsable(page, route);
+            browserUsableAt = await page.evaluate(() => performance.now());
             usableMs = performance.now() - startedAt;
             await page.waitForTimeout(50);
             await Promise.all(sizeTasks);
@@ -1926,6 +1932,8 @@ test.describe("Slice 5 post-load navigation profile", () => {
               samples.push({
                 sample,
                 usableMs,
+                browserNavigationStart,
+                browserUsableAt,
                 apiRequestCount: apiRequests.length,
                 apiResponseBytes: apiRequests.reduce(
                   (total, request) => total + request.bytes,
