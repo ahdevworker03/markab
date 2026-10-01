@@ -3,6 +3,7 @@ import {
   useGetMyOrganization,
   useListRentals,
   useListVehicles,
+  getListVehiclesQueryKey,
 } from "@workspace/api-client-react";
 import { usePayments } from "@/features/payments/hooks";
 import { useExpensesList } from "@/features/expenses/hooks";
@@ -19,12 +20,14 @@ import { analyticsReportFreshness } from "@/features/analytics-report-query-opti
  * loaded once and filtered client-side by the selected period.
  */
 export function useReportData() {
-  const paymentsQuery = usePayments(analyticsReportFreshness);
+  const paymentsQuery = usePayments();
   const expensesQuery = useExpensesList(undefined, analyticsReportFreshness);
   const maintenanceQuery = useMaintenance(analyticsReportFreshness);
   const tasksQuery = useTasks(analyticsReportFreshness);
   const rentalsQuery = useListRentals();
-  const vehiclesQuery = useListVehicles();
+  const vehiclesQuery = useListVehicles(undefined, {
+    query: { queryKey: getListVehiclesQueryKey(), ...analyticsReportFreshness },
+  });
   const organizationQuery = useGetMyOrganization();
 
   const payments = paymentsQuery.payments;

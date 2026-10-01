@@ -68,6 +68,7 @@ import {
   getYearlyMaintenanceCostPerVehicle,
 } from "@/features/reports/selectors";
 import {
+  getListVehiclesQueryKey,
   useListCustomers,
   useListVehicles,
   useListRentals,
@@ -576,11 +577,13 @@ export default function AnalyticsPage() {
   const getCustomerById = useCustomerById();
   const maintenanceQuery = useMaintenance(analyticsReportFreshness);
   const maintenance = maintenanceQuery.data?.data ?? [];
-  const realVehiclesQuery = useListVehicles();
+  const realVehiclesQuery = useListVehicles(undefined, {
+    query: { queryKey: getListVehiclesQueryKey(), ...analyticsReportFreshness },
+  });
   const realVehicles = realVehiclesQuery.data?.data ?? [];
   const expensesQuery = useExpenses(undefined, analyticsReportFreshness);
   const expenses = expensesQuery.data?.data ?? [];
-  const paymentsQuery = usePayments(analyticsReportFreshness);
+  const paymentsQuery = usePayments();
   const payments = paymentsQuery.payments;
   const outstandingQuery = useOrgOutstandingBalances();
   const apiRentalsQuery = useListRentals();
