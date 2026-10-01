@@ -73,6 +73,7 @@ import {
   useListRentals,
 } from "@workspace/api-client-react";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { analyticsReportFreshness } from "@/features/analytics-report-query-options";
 import type {
   ExpenseResponse,
   MaintenanceResponse,
@@ -573,13 +574,13 @@ export default function AnalyticsPage() {
   const rentals = useRentals();
   const customers = useCustomers();
   const getCustomerById = useCustomerById();
-  const maintenanceQuery = useMaintenance();
+  const maintenanceQuery = useMaintenance(analyticsReportFreshness);
   const maintenance = maintenanceQuery.data?.data ?? [];
   const realVehiclesQuery = useListVehicles();
   const realVehicles = realVehiclesQuery.data?.data ?? [];
-  const expensesQuery = useExpenses();
+  const expensesQuery = useExpenses(undefined, analyticsReportFreshness);
   const expenses = expensesQuery.data?.data ?? [];
-  const paymentsQuery = usePayments();
+  const paymentsQuery = usePayments(analyticsReportFreshness);
   const payments = paymentsQuery.payments;
   const outstandingQuery = useOrgOutstandingBalances();
   const apiRentalsQuery = useListRentals();

@@ -10,8 +10,21 @@ import {
   getGetExpenseQueryKey,
 } from "@workspace/api-client-react";
 
-export function useExpenses(params?: { vehicleId?: string }) {
-  const query = useListExpenses(params);
+type QueryFreshness = Pick<
+  NonNullable<NonNullable<Parameters<typeof useListExpenses>[1]>["query"]>,
+  "staleTime"
+>;
+
+export function useExpenses(
+  params?: { vehicleId?: string },
+  freshness?: QueryFreshness,
+) {
+  const query = useListExpenses(
+    params,
+    freshness
+      ? { query: { queryKey: getListExpensesQueryKey(params), ...freshness } }
+      : undefined,
+  );
   return query;
 }
 
@@ -58,8 +71,14 @@ export function useExpenseMutations() {
   return { create, update, remove };
 }
 
-export function useExpensesList(vehicleId?: string) {
-  const query = useListExpenses(vehicleId ? { vehicleId } : undefined);
+export function useExpensesList(vehicleId?: string, freshness?: QueryFreshness) {
+  const params = vehicleId ? { vehicleId } : undefined;
+  const query = useListExpenses(
+    params,
+    freshness
+      ? { query: { queryKey: getListExpensesQueryKey(params), ...freshness } }
+      : undefined,
+  );
 
   const expenses = useMemo(() => query.data?.data ?? [], [query.data]);
 

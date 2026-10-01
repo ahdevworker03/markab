@@ -11,8 +11,17 @@ import {
   getGetTaskQueryKey,
 } from "@workspace/api-client-react";
 
-export function useTasks() {
-  const query = useListTasks();
+type QueryFreshness = Pick<
+  NonNullable<NonNullable<Parameters<typeof useListTasks>[0]>["query"]>,
+  "staleTime"
+>;
+
+export function useTasks(freshness?: QueryFreshness) {
+  const query = useListTasks(
+    freshness
+      ? { query: { queryKey: getListTasksQueryKey(), ...freshness } }
+      : undefined,
+  );
   return query;
 }
 

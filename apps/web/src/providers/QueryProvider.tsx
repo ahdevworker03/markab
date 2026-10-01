@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 interface QueryProviderProps {
   children: ReactNode;
@@ -18,5 +18,19 @@ export function QueryProvider({ children }: QueryProviderProps) {
       }),
   );
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  useEffect(() => {
+    if (import.meta.env.MODE !== "benchmark") return;
+
+    (
+      window as Window & { __benchmarkQueryClient?: QueryClient }
+    ).__benchmarkQueryClient = queryClient;
+    return () => {
+      delete (window as Window & { __benchmarkQueryClient?: QueryClient })
+        .__benchmarkQueryClient;
+    };
+  }, [queryClient]);
+
+  return (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
 }

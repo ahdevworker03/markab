@@ -36,7 +36,7 @@ export default defineConfig({
       reuseExistingServer: false,
     },
     {
-      command: "pnpm run build && pnpm run serve",
+      command: "pnpm exec vite build --mode benchmark && pnpm run serve",
       env: {
         ...benchmarkEnvironment,
         PORT: "4174",
