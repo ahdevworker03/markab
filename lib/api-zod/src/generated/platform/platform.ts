@@ -53,6 +53,49 @@ export const ListPlatformOrganizationsResponse = zod.object({
 });
 
 /**
+ * Restricted to PLATFORM_OWNER. In one transaction creates a client organization with the chosen initial status (ACTIVE or TRIAL, default ACTIVE) and its first OWNER account, and records a PLATFORM_ORGANIZATION_CREATED audit entry. The platform owner never chooses a password: the OWNER receives the normal one-time password-reset link through the configured delivery channel to set their own. Delivery happens after the transaction commits and a delivery failure does not roll back the account; use the owner password-reset support action to request a new link. No password or token is accepted or returned.
+ *
+ * The owner email follows the global user-email invariant (409 EMAIL_ALREADY_EXISTS). Unknown properties, including any password, are rejected with 422.
+ * @summary Provision a client organization and its first owner
+ */
+export const createPlatformOrganizationBodyOrganizationNameMax = 200;
+
+export const createPlatformOrganizationBodyInitialStatusDefault = `ACTIVE`;
+
+export const CreatePlatformOrganizationBody = zod.object({
+  organizationName: zod
+    .string()
+    .min(1)
+    .max(createPlatformOrganizationBodyOrganizationNameMax),
+  ownerEmail: zod.string().email(),
+  initialStatus: zod
+    .enum(["ACTIVE", "TRIAL"])
+    .default(createPlatformOrganizationBodyInitialStatusDefault)
+    .describe("Statuses a client organization may be provisioned with."),
+});
+
+export const CreatePlatformOrganizationResponse = zod.object({
+  data: zod.object({
+    organization: zod.object({
+      id: zod.string().uuid(),
+      name: zod.string(),
+      status: zod.enum(["TRIAL", "ACTIVE", "SUSPENDED", "CANCELLED"]),
+      legalName: zod.string().nullable(),
+      phone: zod.string().nullable(),
+      email: zod.string().email().nullable(),
+      address: zod.string().nullable(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+    owner: zod.object({
+      id: zod.string().uuid(),
+      email: zod.string().email(),
+      role: zod.enum(["OWNER"]),
+    }),
+  }),
+});
+
+/**
  * Returns one client organization. Internal and deleted organizations are not found. This endpoint is restricted to PLATFORM_OWNER.
  * @summary Get a client organization for platform administration
  */

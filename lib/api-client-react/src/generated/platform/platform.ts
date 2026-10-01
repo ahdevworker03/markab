@@ -17,10 +17,12 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  CreatePlatformOrganizationRequest,
   DeactivatePlatformEmployeeRequest,
   EmployeeInvitationResponseWrapper,
   ErrorResponse,
   ListPlatformOrganizationsParams,
+  PlatformOrganizationCreatedResponseWrapper,
   PlatformOrganizationListResponse,
   PlatformOrganizationResponseWrapper,
   PlatformOrganizationUserResponseWrapper,
@@ -162,6 +164,98 @@ export function useListPlatformOrganizations<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getCreatePlatformOrganizationUrl = () => {
+  return `/api/platform/organizations`;
+};
+
+/**
+ * Restricted to PLATFORM_OWNER. In one transaction creates a client organization with the chosen initial status (ACTIVE or TRIAL, default ACTIVE) and its first OWNER account, and records a PLATFORM_ORGANIZATION_CREATED audit entry. The platform owner never chooses a password: the OWNER receives the normal one-time password-reset link through the configured delivery channel to set their own. Delivery happens after the transaction commits and a delivery failure does not roll back the account; use the owner password-reset support action to request a new link. No password or token is accepted or returned.
+ *
+ * The owner email follows the global user-email invariant (409 EMAIL_ALREADY_EXISTS). Unknown properties, including any password, are rejected with 422.
+ * @summary Provision a client organization and its first owner
+ */
+export const createPlatformOrganization = async (
+  createPlatformOrganizationRequest: CreatePlatformOrganizationRequest,
+  options?: RequestInit,
+): Promise<PlatformOrganizationCreatedResponseWrapper> => {
+  return customFetch<PlatformOrganizationCreatedResponseWrapper>(
+    getCreatePlatformOrganizationUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(createPlatformOrganizationRequest),
+    },
+  );
+};
+
+export const getCreatePlatformOrganizationMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPlatformOrganization>>,
+    TError,
+    { data: BodyType<CreatePlatformOrganizationRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createPlatformOrganization>>,
+  TError,
+  { data: BodyType<CreatePlatformOrganizationRequest> },
+  TContext
+> => {
+  const mutationKey = ["createPlatformOrganization"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createPlatformOrganization>>,
+    { data: BodyType<CreatePlatformOrganizationRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createPlatformOrganization(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreatePlatformOrganizationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createPlatformOrganization>>
+>;
+export type CreatePlatformOrganizationMutationBody =
+  BodyType<CreatePlatformOrganizationRequest>;
+export type CreatePlatformOrganizationMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Provision a client organization and its first owner
+ */
+export const useCreatePlatformOrganization = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPlatformOrganization>>,
+    TError,
+    { data: BodyType<CreatePlatformOrganizationRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createPlatformOrganization>>,
+  TError,
+  { data: BodyType<CreatePlatformOrganizationRequest> },
+  TContext
+> => {
+  return useMutation(getCreatePlatformOrganizationMutationOptions(options));
+};
 export const getGetPlatformOrganizationUrl = (organizationId: string) => {
   return `/api/platform/organizations/${organizationId}`;
 };

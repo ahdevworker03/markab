@@ -26,23 +26,24 @@
 | 20 | [Organization Identity From Authentication](#organization-identity-from-authentication) |
 | 21 | [GET /api/organizations/me](#get-apiorganizationsme) |
 | 22 | [PATCH /api/organizations/me](#patch-apiorganizationsme) |
-| 23 | [GET /api/platform/organizations/:organizationId/users](#get-apiplatformorganizationsorganizationidusers) |
-| 24 | [POST /api/platform/organizations/:organizationId/invitations/:invitationId/resend](#post-apiplatformorganizationsorganizationidinvitationsinvitationidresend) |
-| 25 | [POST /api/platform/organizations/:organizationId/owner/password-reset](#post-apiplatformorganizationsorganizationidownerpassword-reset) |
-| 26 | [POST /api/platform/organizations/:organizationId/users/:userId/deactivate](#post-apiplatformorganizationsorganizationidusersuseriddeactivate) |
-| 27 | [PATCH /api/platform/organizations/:organizationId/status](#patch-apiplatformorganizationsorganizationidstatus) |
-| 28 | [DELETE /api/organizations/me](#delete-apiorganizationsme) |
-| 29 | [Authorization](#authorization) |
-| 30 | [Pagination](#pagination) |
-| 31 | [Filtering](#filtering) |
-| 32 | [Sorting](#sorting) |
-| 33 | [Searching](#searching) |
-| 34 | [Versioning](#versioning) |
-| 35 | [Offline Synchronization](#offline-synchronization) |
-| 36 | [Security](#security) |
-| 37 | [Consistency](#consistency) |
-| 38 | [Future Expansion](#future-expansion) |
-| 39 | [Guiding Principle](#guiding-principle) |
+| 23 | [POST /api/platform/organizations](#post-apiplatformorganizations) |
+| 24 | [GET /api/platform/organizations/:organizationId/users](#get-apiplatformorganizationsorganizationidusers) |
+| 25 | [POST /api/platform/organizations/:organizationId/invitations/:invitationId/resend](#post-apiplatformorganizationsorganizationidinvitationsinvitationidresend) |
+| 26 | [POST /api/platform/organizations/:organizationId/owner/password-reset](#post-apiplatformorganizationsorganizationidownerpassword-reset) |
+| 27 | [POST /api/platform/organizations/:organizationId/users/:userId/deactivate](#post-apiplatformorganizationsorganizationidusersuseriddeactivate) |
+| 28 | [PATCH /api/platform/organizations/:organizationId/status](#patch-apiplatformorganizationsorganizationidstatus) |
+| 29 | [DELETE /api/organizations/me](#delete-apiorganizationsme) |
+| 30 | [Authorization](#authorization) |
+| 31 | [Pagination](#pagination) |
+| 32 | [Filtering](#filtering) |
+| 33 | [Sorting](#sorting) |
+| 34 | [Searching](#searching) |
+| 35 | [Versioning](#versioning) |
+| 36 | [Offline Synchronization](#offline-synchronization) |
+| 37 | [Security](#security) |
+| 38 | [Consistency](#consistency) |
+| 39 | [Future Expansion](#future-expansion) |
+| 40 | [Guiding Principle](#guiding-principle) |
 
 ## Purpose
 
@@ -443,6 +444,33 @@ Since every authenticated user belongs to exactly one organization, the API deri
   - `403` Insufficient permissions
   - `404` Organization not found
   - `422` Validation failed
+
+## POST /api/platform/organizations
+
+- **Purpose:** Provision a client organization and its first `OWNER`. Markab is
+  B2B: clients are created by the platform owner.
+- **Authorization:** `PLATFORM_OWNER` only; no tenant middleware.
+- **Request body:**
+  ```json
+  { "organizationName": "Cedar Rentals", "ownerEmail": "founder@example.com", "initialStatus": "ACTIVE" }
+  ```
+  `initialStatus` is `ACTIVE` (default) or `TRIAL`; `SUSPENDED`/`CANCELLED` are
+  rejected. Unknown properties — notably any password — are rejected with `422`.
+  The owner email is trimmed, lower-cased, and must be globally unique.
+- **Behavior:** in one transaction the organization, its `OWNER`, a one-time
+  password-setup token (the normal password-reset token; hash stored), and a
+  `PLATFORM_ORGANIZATION_CREATED` audit entry are created. The `OWNER` account
+  starts with an unusable random password hash; the owner sets their own password
+  through the normal reset link, which is delivered after commit. A delivery
+  failure does not roll the account back — use the owner password-reset support
+  action to request a new link (setup links expire after one hour).
+- **Success response:** `201 Created`
+  ```json
+  { "data": { "organization": { "id": "uuid", "name": "Cedar Rentals", "status": "ACTIVE", "...": "..." },
+              "owner": { "id": "uuid", "email": "founder@example.com", "role": "OWNER" } } }
+  ```
+  No password, token, or setup link is returned.
+- **Error responses:** `401`, `403`, `409 EMAIL_ALREADY_EXISTS`, `422`.
 
 ## GET /api/platform/organizations/:organizationId/users
 
