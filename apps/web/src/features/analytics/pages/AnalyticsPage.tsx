@@ -75,6 +75,7 @@ import {
 } from "@workspace/api-client-react";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { analyticsReportFreshness } from "@/features/analytics-report-query-options";
+import { BenchmarkPageProfile } from "@/lib/benchmark-page-profile";
 import type {
   ExpenseResponse,
   MaintenanceResponse,
@@ -658,7 +659,12 @@ export default function AnalyticsPage() {
     ) : null;
 
   return (
-    <div className="min-h-full">
+    <BenchmarkPageProfile
+      route="analytics"
+      summariesReady={!analyticsLoading && !hasAnalyticsError}
+      loadersCleared={!analyticsLoading}
+    >
+      <div className="min-h-full">
       <PageHeader title="التحليلات" showBack />
       <main className="space-y-5 px-4 pb-8 pt-4 sm:px-6 lg:space-y-6 lg:pt-6">
         <div className="flex flex-col justify-between gap-4 border-b border-border pb-4 xl:flex-row xl:items-end">
@@ -1177,6 +1183,7 @@ export default function AnalyticsPage() {
           </section>
         )}
       </main>
-    </div>
+      </div>
+    </BenchmarkPageProfile>
   );
 }
