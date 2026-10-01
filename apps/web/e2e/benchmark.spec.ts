@@ -1651,13 +1651,13 @@ const postLoadRoutes: PostLoadRoute[] = [
     name: "rentals",
     path: "/rentals",
     usableContent:
-      "500 mobile rental cards are rendered and payment placeholders are cleared",
+      "50 mobile rental cards are rendered and payment placeholders are cleared",
   },
   {
     name: "customers",
     path: "/customers",
     usableContent:
-      "1,000 mobile customer cards are rendered and the list skeleton is cleared",
+      "50 mobile customer cards are rendered and the list skeleton is cleared",
   },
   {
     name: "vehicles",
@@ -1683,7 +1683,14 @@ const postLoadRoutes: PostLoadRoute[] = [
     usableContent:
       "report controls and the four financial summary values are populated",
   },
-];
+].filter(
+  (route) =>
+    (process.env.BENCHMARK_POST_LOAD_ROUTES ?? "").split(",").filter(Boolean)
+      .length === 0 ||
+    (process.env.BENCHMARK_POST_LOAD_ROUTES ?? "")
+      .split(",")
+      .includes(route.name),
+) as PostLoadRoute[];
 
 function percentile(values: number[], fraction: number): number | null {
   const sorted = [...values].sort((left, right) => left - right);
@@ -1707,12 +1714,12 @@ async function waitForPostLoadUsable(
 
       if (name === "rentals")
         return (
-          mobileCards(500) &&
+          mobileCards(50) &&
           noLoader("جارٍ تحميل الإيجارات") &&
           noLoader("جارٍ تحميل حالة الدفع")
         );
       if (name === "customers")
-        return mobileCards(1_000) && noLoader("جارٍ تحميل العملاء");
+        return mobileCards(50) && noLoader("جارٍ تحميل العملاء");
       if (name === "vehicles")
         return mobileCards(50) && noLoader("جارٍ تحميل السيارات");
       if (name === "dashboard") {

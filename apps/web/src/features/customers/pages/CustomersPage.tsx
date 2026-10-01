@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useLocation, useSearchParams } from "wouter";
 import { Plus, Users } from "lucide-react";
 import { useCustomersList } from "@/features/customers/api-hooks";
@@ -15,14 +15,18 @@ import { SearchBar } from "@/components/ui/SearchBar";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { formatNumber } from "@/lib/format";
 import { useAuth } from "@/providers/AuthProvider";
 import { useOffline } from "@/features/offline/OfflineProvider";
 import { SearchCompletionMarker } from "@/components/benchmark/SearchCompletionMarker";
+
+const PAGE_SIZE = 50;
 
 export default function CustomersPage() {
   const [, setLocation] = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(() => searchParams.get("search") ?? "");
+  const [page, setPage] = useState(1);
   const { user } = useAuth();
   const { isOffline } = useOffline();
   const isOwner = user?.role === "OWNER";
@@ -32,6 +36,11 @@ export default function CustomersPage() {
     debouncedSearch ? { search: debouncedSearch } : undefined,
   );
   const { customers } = customersQuery;
+  const totalPages = Math.ceil(customers.length / PAGE_SIZE);
+  const visibleCustomers = useMemo(
+    () => customers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [customers, page],
+  );
   const countLabel = `${customers.length} ${customers.length === 1 ? "عميل" : "عملاء"}`;
 
   return (
@@ -60,12 +69,14 @@ export default function CustomersPage() {
             onChange={(event) => {
               const value = event.target.value;
               setSearch(value);
+              setPage(1);
               setSearchParams(value ? { search: value } : {}, {
                 replace: true,
               });
             }}
             onClear={() => {
               setSearch("");
+              setPage(1);
               setSearchParams({}, { replace: true });
             }}
           />
@@ -116,9 +127,37 @@ export default function CustomersPage() {
             className="overflow-hidden p-0 shadow-none"
           >
             <CustomersDataList
-              customers={customers}
+              customers={visibleCustomers}
               onOpen={(customerId) => setLocation(`/customers/${customerId}`)}
             />
+            {totalPages > 1 ? (
+              <nav
+                aria-label="صفحات العملاء"
+                className="flex items-center justify-center gap-3 border-t border-border p-3"
+              >
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((current) => current - 1)}
+                  disabled={page === 1}
+                >
+                  السابق
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  صفحة {formatNumber(page)} من {formatNumber(totalPages)}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((current) => current + 1)}
+                  disabled={page === totalPages}
+                >
+                  التالي
+                </Button>
+              </nav>
+            ) : null}
           </SectionCard>
         )}
         {isBenchmark && isOffline ? (
