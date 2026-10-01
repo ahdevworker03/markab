@@ -11,7 +11,11 @@ import {
   type PlatformOrganizationResponse,
 } from "@workspace/api-client-react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { ErrorState, InlineError, LoadingState } from "@/components/ui/FeedbackState";
+import {
+  ErrorState,
+  InlineError,
+  LoadingState,
+} from "@/components/ui/FeedbackState";
 import { FormField, inputClass } from "@/components/ui/FormField";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -53,6 +57,20 @@ const confirmationCopy: Record<
   CANCELLED: { title: "تأكيد إلغاء المؤسسة", action: "إلغاء المؤسسة" },
 };
 
+/** Short, stable form of a UUID (first 4 … last 4); the full id is shown in the element title. */
+function shortId(id: string): string {
+  return `${id.slice(0, 4)}…${id.slice(-4)}`;
+}
+
+/** Explicit Arabic action wording for each target state, based on where the organization is coming from. */
+function actionLabel(from: OrganizationStatus, to: OrganizationStatus): string {
+  if (to === "SUSPENDED") return "تعليق المؤسسة";
+  if (to === "CANCELLED") return "إلغاء المؤسسة";
+  if (to === "ACTIVE")
+    return from === "TRIAL" ? "تفعيل المؤسسة" : "إعادة تفعيل المؤسسة";
+  return "تغيير الحالة";
+}
+
 const statusEffect: Record<OrganizationStatus, string> = {
   TRIAL: "فترة تجريبية: عمليات المؤسسة متاحة لمستخدميها.",
   ACTIVE: "عمليات المؤسسة متاحة لمستخدميها.",
@@ -93,14 +111,9 @@ function OrganizationInfo({
 }) {
   return (
     <DetailSection title="بيانات المؤسسة" className={className}>
-      <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:gap-x-8">
-        <Field label="الاسم القانوني" className="col-span-2 sm:col-span-1">
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3 md:gap-x-8">
+        <Field label="الاسم القانوني" className="col-span-2 md:col-span-1">
           {organization.legalName}
-        </Field>
-        <Field label="البريد الإلكتروني" className="col-span-2 sm:col-span-1">
-          {organization.email && (
-            <span className="identifier-ltr break-all">{organization.email}</span>
-          )}
         </Field>
         <Field label="رقم الهاتف">
           {organization.phone && (
@@ -108,15 +121,24 @@ function OrganizationInfo({
           )}
         </Field>
         <Field label="تاريخ الإنشاء">
-          <span className="date-token-ltr">{formatDate(organization.createdAt)}</span>
+          <span className="date-token-ltr">
+            {formatDate(organization.createdAt)}
+          </span>
         </Field>
-        <Field label="العنوان" className="col-span-2 sm:col-span-1">
-          {organization.address}
+        <Field label="البريد الإلكتروني" className="col-span-2">
+          {organization.email && (
+            <span className="identifier-ltr break-all">
+              {organization.email}
+            </span>
+          )}
         </Field>
-        <Field label="آخر تحديث" className="col-span-2 sm:col-span-1">
+        <Field label="آخر تحديث" className="col-span-2 md:col-span-1">
           <span className="date-token-ltr">
             {formatDateTime(organization.updatedAt)}
           </span>
+        </Field>
+        <Field label="العنوان" className="col-span-2 md:col-span-1">
+          {organization.address}
         </Field>
         <Field label="معرّف المؤسسة" className="col-span-2">
           <span className="identifier-ltr break-all text-xs font-normal text-muted-foreground">
@@ -155,11 +177,16 @@ export default function PlatformOrganizationDetailPage({ params }: Props) {
   const currentStatus = organization?.status;
   const validNext = currentStatus ? getNextStatuses(currentStatus) : [];
   const nextStatus =
-    selectedStatus && validNext.includes(selectedStatus) ? selectedStatus : null;
+    selectedStatus && validNext.includes(selectedStatus)
+      ? selectedStatus
+      : null;
   const reasonRequired =
-    !!nextStatus && !!currentStatus && isReasonRequired(currentStatus, nextStatus);
+    !!nextStatus &&
+    !!currentStatus &&
+    isReasonRequired(currentStatus, nextStatus);
   const trimmedReason = reason.trim();
-  const canSubmit = !!nextStatus && (!reasonRequired || trimmedReason.length > 0);
+  const canSubmit =
+    !!nextStatus && (!reasonRequired || trimmedReason.length > 0);
   const restrictive = !!nextStatus && isRestrictiveStatus(nextStatus);
 
   function confirmStatusChange() {
@@ -193,7 +220,9 @@ export default function PlatformOrganizationDetailPage({ params }: Props) {
               ? "لم يتم العثور على المؤسسة المطلوبة."
               : getApiErrorMessage(organizationQuery.error).title
           }
-          onRetry={notFound ? undefined : () => void organizationQuery.refetch()}
+          onRetry={
+            notFound ? undefined : () => void organizationQuery.refetch()
+          }
         />
         <div className="flex justify-center">
           <Link
@@ -209,7 +238,7 @@ export default function PlatformOrganizationDetailPage({ params }: Props) {
 
   return (
     <div className="space-y-5">
-      <header className="space-y-2">
+      <header className="space-y-1.5">
         <Link
           href="/platform"
           className="-ms-2 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-primary hover:bg-muted sm:min-h-9"
@@ -218,17 +247,26 @@ export default function PlatformOrganizationDetailPage({ params }: Props) {
           المؤسسات
         </Link>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <h1 className="ui-page-title min-w-0 break-words">{organization.name}</h1>
+          <h1 className="ui-page-title min-w-0 break-words">
+            {organization.name}
+          </h1>
           <StatusBadge
             status={organization.status}
             label={statusLabels[organization.status]}
           />
         </div>
-        {organization.email && (
-          <p className="ui-secondary-text">
-            <span className="identifier-ltr break-all">{organization.email}</span>
-          </p>
-        )}
+        <p className="ui-secondary-text flex flex-wrap items-center gap-x-2 gap-y-0.5">
+          <span className="identifier-ltr tabular-nums" title={organization.id}>
+            {shortId(organization.id)}
+          </span>
+          <span aria-hidden="true">·</span>
+          <span>
+            أُنشئت في{" "}
+            <span className="date-token-ltr">
+              {formatDate(organization.createdAt)}
+            </span>
+          </span>
+        </p>
       </header>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
@@ -242,7 +280,14 @@ export default function PlatformOrganizationDetailPage({ params }: Props) {
           className="xl:sticky xl:top-20 xl:col-start-2 xl:row-span-2 xl:row-start-1"
         >
           <div className="space-y-4">
-            <div>
+            <div
+              className={cn(
+                "rounded-lg border p-3",
+                isRestrictiveStatus(organization.status)
+                  ? "border-destructive/30 bg-destructive/5"
+                  : "border-border bg-muted/40",
+              )}
+            >
               <div className="flex flex-wrap items-center gap-2">
                 <span className="ui-label">الحالة الحالية</span>
                 <StatusBadge
@@ -250,7 +295,7 @@ export default function PlatformOrganizationDetailPage({ params }: Props) {
                   label={statusLabels[organization.status]}
                 />
               </div>
-              <p className="ui-secondary-text mt-1">
+              <p className="ui-secondary-text mt-1.5">
                 {statusEffect[organization.status]}
               </p>
             </div>
@@ -261,6 +306,7 @@ export default function PlatformOrganizationDetailPage({ params }: Props) {
               </p>
               <RadioGroup
                 dir="rtl"
+                className="sm:grid-cols-[repeat(auto-fit,minmax(11rem,1fr))] xl:grid-cols-1"
                 aria-labelledby="status-change-label"
                 value={nextStatus ?? ""}
                 onValueChange={(value) => {
@@ -286,9 +332,13 @@ export default function PlatformOrganizationDetailPage({ params }: Props) {
                       <RadioGroupItem
                         id={`status-${item}`}
                         value={item}
-                        className={danger ? "border-destructive text-destructive" : undefined}
+                        className={
+                          danger
+                            ? "border-destructive text-destructive"
+                            : undefined
+                        }
                       />
-                      {statusLabels[item]}
+                      {actionLabel(organization.status, item)}
                     </Label>
                   );
                 })}
@@ -313,15 +363,27 @@ export default function PlatformOrganizationDetailPage({ params }: Props) {
               </FormField>
             )}
 
-            <Button
-              type="button"
-              variant={restrictive ? "destructive" : "default"}
-              className="w-full sm:w-auto xl:w-full"
-              onClick={() => setConfirmOpen(true)}
-              disabled={!canSubmit}
-            >
-              تغيير الحالة
-            </Button>
+            <div className="space-y-2">
+              <Button
+                type="button"
+                variant={restrictive ? "destructive" : "default"}
+                className="w-full disabled:border-border disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 sm:w-auto xl:w-full"
+                onClick={() => setConfirmOpen(true)}
+                disabled={!canSubmit}
+                aria-describedby={
+                  canSubmit ? undefined : "status-change-helper"
+                }
+              >
+                تغيير الحالة
+              </Button>
+              {!canSubmit && (
+                <p id="status-change-helper" className="ui-secondary-text">
+                  {nextStatus
+                    ? "أدخل سبب التغيير للمتابعة."
+                    : "اختر الإجراء المطلوب لتفعيل الزر."}
+                </p>
+              )}
+            </div>
           </div>
         </DetailSection>
 
@@ -333,7 +395,10 @@ export default function PlatformOrganizationDetailPage({ params }: Props) {
       </div>
 
       <AlertDialog open={confirmOpen} onOpenChange={changeOpen}>
-        <AlertDialogContent dir="rtl" className="max-h-[90dvh] max-w-md overflow-y-auto">
+        <AlertDialogContent
+          dir="rtl"
+          className="max-h-[90dvh] max-w-md overflow-y-auto"
+        >
           <AlertDialogHeader className="text-start sm:text-start">
             <AlertDialogTitle>
               {nextStatus ? confirmationCopy[nextStatus].title : ""}
@@ -354,14 +419,20 @@ export default function PlatformOrganizationDetailPage({ params }: Props) {
             )}
           </AlertDialogHeader>
           {mutation.isError && (
-            <InlineError>{getApiErrorMessage(mutation.error).title}</InlineError>
+            <InlineError>
+              {getApiErrorMessage(mutation.error).title}
+            </InlineError>
           )}
           <AlertDialogFooter className="gap-2 sm:space-x-0">
-            <AlertDialogCancel disabled={mutation.isPending}>رجوع</AlertDialogCancel>
+            <AlertDialogCancel disabled={mutation.isPending}>
+              رجوع
+            </AlertDialogCancel>
             <AlertDialogAction
               asChild
               className={
-                restrictive ? buttonVariants({ variant: "destructive" }) : undefined
+                restrictive
+                  ? buttonVariants({ variant: "destructive" })
+                  : undefined
               }
             >
               <Button
