@@ -40,6 +40,7 @@ async function main(): Promise<void> {
       const sql = `BEGIN READ ONLY; SET LOCAL app.organization_id = '${organizationId}'; EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) ${query}; ROLLBACK;`;
       const { stdout } = await execFileAsync("psql", [
         url,
+        "-q",
         "-t",
         "-A",
         "-c",
