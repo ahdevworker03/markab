@@ -1646,7 +1646,7 @@ type PostLoadRoute = {
   usableContent: string;
 };
 
-const postLoadRoutes: PostLoadRoute[] = [
+const allPostLoadRoutes: PostLoadRoute[] = [
   {
     name: "rentals",
     path: "/rentals",
@@ -1683,14 +1683,19 @@ const postLoadRoutes: PostLoadRoute[] = [
     usableContent:
       "report controls and the four financial summary values are populated",
   },
-].filter(
+];
+
+const postLoadRoutes = allPostLoadRoutes.filter(
   (route) =>
     (process.env.BENCHMARK_POST_LOAD_ROUTES ?? "").split(",").filter(Boolean)
       .length === 0 ||
     (process.env.BENCHMARK_POST_LOAD_ROUTES ?? "")
       .split(",")
       .includes(route.name),
-) as PostLoadRoute[];
+);
+const postLoadRouteByName = new Map(
+  allPostLoadRoutes.map((route) => [route.name, route]),
+);
 
 function percentile(values: number[], fraction: number): number | null {
   const sorted = [...values].sort((left, right) => left - right);
@@ -1822,7 +1827,10 @@ test.describe("Slice 5 post-load navigation profile", () => {
         });
         await loginMobilePage(page);
         await syncAndWaitForFinalPull(page, fullPilotProjectionCounts);
-        await waitForPostLoadUsable(page, postLoadRoutes[3]!);
+        await waitForPostLoadUsable(
+          page,
+          postLoadRouteByName.get("dashboard")!,
+        );
 
         const measurement = await runSamples(
           `mobile-post-load-navigation-${route.name}`,
@@ -1921,13 +1929,19 @@ test.describe("Slice 5 post-load navigation profile", () => {
                   )
                   .click();
                 await page.waitForURL("/customers");
-                await waitForPostLoadUsable(page, postLoadRoutes[1]!);
+                await waitForPostLoadUsable(
+                  page,
+                  postLoadRouteByName.get("customers")!,
+                );
               } else if (new URL(page.url()).pathname !== "/") {
                 await page
                   .locator('nav.fixed[aria-label="التنقل الرئيسي"] a[href="/"]')
                   .click();
                 await page.waitForURL("/");
-                await waitForPostLoadUsable(page, postLoadRoutes[3]!);
+                await waitForPostLoadUsable(
+                  page,
+                  postLoadRouteByName.get("dashboard")!,
+                );
               }
               await session.send("Performance.enable");
               beforeMetrics = await session.send("Performance.getMetrics");
