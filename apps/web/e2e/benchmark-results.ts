@@ -54,7 +54,7 @@ export type BenchmarkResult = {
   command: string;
   datasetCounts: Record<string, number>;
   environment: Record<string, string | number | boolean>;
-  profiles: Record<string, Record<string, string | number | boolean>>;
+  profiles: Record<string, Record<string, string | number | boolean | null>>;
   measurements: Measurement[];
 };
 
