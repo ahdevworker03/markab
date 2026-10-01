@@ -251,6 +251,49 @@ export interface PlatformOrganizationUserResponseWrapper {
   data: PlatformOrganizationUser;
 }
 
+/**
+ * Statuses a client organization may be provisioned with.
+ */
+export type PlatformInitialOrganizationStatus =
+  (typeof PlatformInitialOrganizationStatus)[keyof typeof PlatformInitialOrganizationStatus];
+
+export const PlatformInitialOrganizationStatus = {
+  ACTIVE: "ACTIVE",
+  TRIAL: "TRIAL",
+} as const;
+
+export interface CreatePlatformOrganizationRequest {
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  organizationName: string;
+  ownerEmail: string;
+  initialStatus?: PlatformInitialOrganizationStatus;
+}
+
+export type PlatformProvisionedOwnerRole =
+  (typeof PlatformProvisionedOwnerRole)[keyof typeof PlatformProvisionedOwnerRole];
+
+export const PlatformProvisionedOwnerRole = {
+  OWNER: "OWNER",
+} as const;
+
+export interface PlatformProvisionedOwner {
+  id: string;
+  email: string;
+  role: PlatformProvisionedOwnerRole;
+}
+
+export interface PlatformOrganizationCreatedResponse {
+  organization: PlatformOrganizationResponse;
+  owner: PlatformProvisionedOwner;
+}
+
+export interface PlatformOrganizationCreatedResponseWrapper {
+  data: PlatformOrganizationCreatedResponse;
+}
+
 export interface PlatformOrganizationPagination {
   page: number;
   pageSize: number;

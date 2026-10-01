@@ -14,16 +14,12 @@ import {
   type TxClient,
 } from "../../database";
 import { AppError } from "../../shared";
+import {
+  createOrganizationWithOwner,
+  emailAlreadyExistsError,
+} from "./account-provisioning";
 import type { AuthTokens, AccessTokenPayload } from "./auth.types";
 import type { UserRole } from "../users/user.types";
-
-function emailAlreadyExistsError(): AppError {
-  return new AppError(
-    409,
-    "EMAIL_ALREADY_EXISTS",
-    "A user with this email already exists.",
-  );
-}
 
 async function registerOrganization(
   email: string,
@@ -45,32 +41,13 @@ async function registerOrganization(
 
   try {
     user = await transaction(async (tx) => {
-      const existingUser = await tx.user.findUnique({
-        where: { email },
-        select: { id: true },
+      const { owner } = await createOrganizationWithOwner(tx, {
+        organizationName,
+        ownerEmail: email,
+        passwordHash,
       });
 
-      if (existingUser) {
-        throw emailAlreadyExistsError();
-      }
-
-      const organization = await tx.organization.create({
-        data: { name: organizationName },
-      });
-
-      return tx.user.create({
-        data: {
-          email,
-          password_hash: passwordHash,
-          role: "OWNER",
-          organization_id: organization.id,
-        },
-        select: {
-          id: true,
-          organization_id: true,
-          role: true,
-        },
-      });
+      return owner;
     });
   } catch (err) {
     if (isUniqueConstraintError(err)) {

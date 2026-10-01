@@ -105,6 +105,7 @@ The platform is designed exclusively for internal business users. Customers do n
 User creation follows these current rules:
 
 - `POST /api/auth/register` creates a new organization and its first `OWNER` user.
+- `POST /api/platform/organizations` lets a `PLATFORM_OWNER` provision a client organization (status `ACTIVE` or `TRIAL`) and its first `OWNER`. The platform owner never chooses a password: the `OWNER` is emailed the normal one-time password-reset link to set their own, and the creation is audited as `PLATFORM_ORGANIZATION_CREATED`.
 - `POST /api/users` lets an authenticated `OWNER` create an `EMPLOYEE` user in the same organization.
 - `POST /api/users/invitations` lets an authenticated `OWNER` create or resend a seven-day, `EMPLOYEE`-only invitation for its organization. The one-time acceptance token is returned only to the owner for secure manual delivery; only its hash is stored.
 - `POST /api/auth/invitations/accept` consumes a valid invitation once, lets the recipient set a password, and creates the `EMPLOYEE` in the invited organization. Resending invalidates the previous token.
