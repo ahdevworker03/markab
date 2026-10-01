@@ -10,7 +10,9 @@ type ProfileEvent = {
     | "summaries-ready"
     | "loaders-cleared"
     | "fallback"
-    | "lazy-resolved";
+    | "lazy-resolved"
+    | "protected-shell"
+    | "suspense-entry";
   at: number;
   actualDuration?: number;
   baseDuration?: number;

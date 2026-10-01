@@ -111,7 +111,9 @@ const ExpenseDetailPage = lazy(() =>
     default: ExpenseDetailPage,
   })),
 );
-const markBenchmarkRoute = (type: "fallback" | "lazy-resolved") => {
+const markBenchmarkRoute = (
+  type: "fallback" | "lazy-resolved" | "protected-shell" | "suspense-entry",
+) => {
   if (
     import.meta.env.MODE === "benchmark" &&
     ["/analytics", "/reports"].includes(window.location.pathname)
@@ -123,6 +125,11 @@ const markBenchmarkRoute = (type: "fallback" | "lazy-resolved") => {
     });
   }
 };
+
+function BenchmarkRouteMark({ type }: { type: "suspense-entry" }) {
+  markBenchmarkRoute(type);
+  return null;
+}
 
 const AnalyticsPage = lazy(() =>
   import("@/features/analytics").then(({ AnalyticsPage }) => {
@@ -216,12 +223,14 @@ function Router() {
 }
 
 function ProtectedShell() {
+  markBenchmarkRoute("protected-shell");
   return (
     <ProtectedRoute>
       <OfflineProvider>
         <OrganizationStatusGate>
           <AppShell>
             <Suspense fallback={<RouteLoading />}>
+              <BenchmarkRouteMark type="suspense-entry" />
               <Router />
             </Suspense>
           </AppShell>
