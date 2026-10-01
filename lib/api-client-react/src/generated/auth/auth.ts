@@ -23,7 +23,6 @@ import type {
   CurrentUserResponseWrapper,
   ErrorResponse,
   LoginRequest,
-  RegisterRequest,
   RequestPasswordResetRequest,
 } from "../api.schemas";
 
@@ -54,92 +53,6 @@ const withQueryKey = <T extends object, K>(
   return result;
 };
 
-export const getRegisterOrganizationUrl = () => {
-  return `/api/auth/register`;
-};
-
-/**
- * Registers an organization with an OWNER user, returns a short-lived access token, and sets the refresh token in an HttpOnly cookie.
- * @summary Register a new organization and its first user
- */
-export const registerOrganization = async (
-  registerRequest: RegisterRequest,
-  options?: RequestInit,
-): Promise<AccessTokenResponse> => {
-  return customFetch<AccessTokenResponse>(getRegisterOrganizationUrl(), {
-    ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(registerRequest),
-  });
-};
-
-export const getRegisterOrganizationMutationOptions = <
-  TError = ErrorType<ErrorResponse>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof registerOrganization>>,
-    TError,
-    { data: BodyType<RegisterRequest> },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof registerOrganization>>,
-  TError,
-  { data: BodyType<RegisterRequest> },
-  TContext
-> => {
-  const mutationKey = ["registerOrganization"];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof registerOrganization>>,
-    { data: BodyType<RegisterRequest> }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return registerOrganization(data, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type RegisterOrganizationMutationResult = NonNullable<
-  Awaited<ReturnType<typeof registerOrganization>>
->;
-export type RegisterOrganizationMutationBody = BodyType<RegisterRequest>;
-export type RegisterOrganizationMutationError = ErrorType<ErrorResponse>;
-
-/**
- * @summary Register a new organization and its first user
- */
-export const useRegisterOrganization = <
-  TError = ErrorType<ErrorResponse>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof registerOrganization>>,
-    TError,
-    { data: BodyType<RegisterRequest> },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationResult<
-  Awaited<ReturnType<typeof registerOrganization>>,
-  TError,
-  { data: BodyType<RegisterRequest> },
-  TContext
-> => {
-  return useMutation(getRegisterOrganizationMutationOptions(options));
-};
 export const getLoginUrl = () => {
   return `/api/auth/login`;
 };

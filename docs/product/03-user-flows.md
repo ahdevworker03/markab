@@ -111,6 +111,11 @@ Allow authorized users to securely access their organization's workspace.
 
 - Invalid credentials are rejected.
 - Inactive users cannot log in.
+- Users who forgot their password, and new organization owners setting their first password, use the password-recovery link.
+
+### Account Creation
+
+There is no public sign-up or company registration. The platform operator creates the client organization and its first `OWNER` in Platform Admin; the `OWNER` receives a one-time link to set their own password, then invites employees from their organization.
 
 ---
 

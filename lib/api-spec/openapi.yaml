@@ -138,38 +138,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
-  /auth/register:
-    post:
-      operationId: registerOrganization
-      tags: [auth]
-      summary: Register a new organization and its first user
-      description: Registers an organization with an OWNER user, returns a short-lived access token, and sets the refresh token in an HttpOnly cookie.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RegisterRequest"
-      responses:
-        "201":
-          description: Organization registered
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AccessTokenResponse"
-        "409":
-          description: Email already exists
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "422":
-          description: Validation failed
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
   /auth/login:
     post:
       operationId: login
@@ -4420,23 +4388,6 @@ components:
           type: string
       required:
         - status
-
-    RegisterRequest:
-      type: object
-      properties:
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-          minLength: 8
-        organizationName:
-          type: string
-          minLength: 1
-      required:
-        - email
-        - password
-        - organizationName
 
     RequestPasswordResetRequest:
       type: object

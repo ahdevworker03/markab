@@ -135,7 +135,7 @@ describe("request boundary", () => {
 
   it("returns MALFORMED_JSON for malformed JSON", async () => {
     const response = await request(app)
-      .post("/api/auth/register")
+      .post("/api/auth/login")
       .set("Content-Type", "application/json")
       .send('{"email":');
 
@@ -145,7 +145,7 @@ describe("request boundary", () => {
 
   it("returns PAYLOAD_TOO_LARGE for oversized JSON", async () => {
     const response = await request(app)
-      .post("/api/auth/register")
+      .post("/api/auth/login")
       .send({ value: "x".repeat(110 * 1024) });
 
     expect(response.status).toBe(413);
@@ -154,7 +154,7 @@ describe("request boundary", () => {
 
   it("returns UNSUPPORTED_MEDIA_TYPE for a non-JSON request body", async () => {
     const response = await request(app)
-      .post("/api/auth/register")
+      .post("/api/auth/login")
       .set("Content-Type", "text/plain")
       .send("email=boundary@example.com");
 

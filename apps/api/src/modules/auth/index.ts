@@ -3,7 +3,6 @@ export {
   verifyPassword,
   generateAccessToken,
   verifyAccessToken,
-  registerOrganization,
   login,
   getCurrentUser,
   issueTokens,

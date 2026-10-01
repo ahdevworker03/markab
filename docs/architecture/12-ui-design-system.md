@@ -237,7 +237,7 @@ Lead with:
 - Keep the primary submit action stable and obvious. Disable duplicate submissions and show submitting state.
 - Use full pages or sheets for complex workflows; avoid modals for large, multi-section forms.
 - Confirmation is required for destructive, status-changing, or financially significant actions. The confirmation states the consequence and action target.
-- For supported Version 2 flows, reuse this pattern for registration, password reset, invitation acceptance, organization profile, document-expiry editing, recurring task settings, and maintenance schedule management.
+- For supported Version 2 flows, reuse this pattern for password reset, invitation acceptance, organization profile, document-expiry editing, recurring task settings, and maintenance schedule management.
 - Recurring task controls stay simple: interval plus day/week/month unit, with never, date, or occurrence-count end conditions. Do not expose cron, weekday rules, or other complex recurrence syntax.
 - Task create/edit forms place `اسم المهمة`, `تاريخ الاستحقاق`, `ملاحظات`, then recurrence controls in that order. The title is required primary identity; notes are optional supplementary content.
 
@@ -250,7 +250,7 @@ Lead with:
 
 ### 8.6 Account and Auth Flows
 
-- Public flows include login, registration, password-reset request/confirmation, and invitation acceptance when implemented against existing contracts.
+- Public flows include login, password-reset request/confirmation, and invitation acceptance when implemented against existing contracts.
 - Auth screens are focused, low-distraction forms with clear validation, loading, recovery, and redirect behavior.
 - Owner account/company screens expose organization profile and employee invitation workflows without exposing platform controls.
 - Suspended/cancelled state is an account-level explanation with permitted recovery/support actions; it is not a generic application error.

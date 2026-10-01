@@ -10,54 +10,11 @@ import {
 import {
   prisma,
   transaction,
-  isUniqueConstraintError,
   type TxClient,
 } from "../../database";
 import { AppError } from "../../shared";
-import {
-  createOrganizationWithOwner,
-  emailAlreadyExistsError,
-} from "./account-provisioning";
 import type { AuthTokens, AccessTokenPayload } from "./auth.types";
 import type { UserRole } from "../users/user.types";
-
-async function registerOrganization(
-  email: string,
-  password: string,
-  organizationName: string,
-): Promise<AuthTokens> {
-  const existingUser = await prisma.user.findUnique({
-    where: { email },
-    select: { id: true },
-  });
-
-  if (existingUser) {
-    throw emailAlreadyExistsError();
-  }
-
-  const passwordHash = await hashPassword(password);
-
-  let user: { id: string; organization_id: string; role: UserRole };
-
-  try {
-    user = await transaction(async (tx) => {
-      const { owner } = await createOrganizationWithOwner(tx, {
-        organizationName,
-        ownerEmail: email,
-        passwordHash,
-      });
-
-      return owner;
-    });
-  } catch (err) {
-    if (isUniqueConstraintError(err)) {
-      throw emailAlreadyExistsError();
-    }
-    throw err;
-  }
-
-  return issueTokens(user.id, user.organization_id, user.role);
-}
 
 async function login(email: string, password: string): Promise<AuthTokens> {
   const user = await prisma.user.findUnique({
@@ -232,7 +189,6 @@ export {
   verifyPassword,
   generateAccessToken,
   verifyAccessToken,
-  registerOrganization,
   login,
   getCurrentUser,
   issueTokens,

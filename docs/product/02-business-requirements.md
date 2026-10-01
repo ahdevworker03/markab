@@ -52,7 +52,9 @@ The platform must support multiple independent businesses using the same SaaS ap
 
 ### Requirements
 
-- Create and manage business accounts.
+- Business accounts are created and managed by the platform operator (`PLATFORM_OWNER`). Markab is a B2B SaaS with operator-managed onboarding: businesses do not self-register or create their own company accounts.
+- The operator creates each client organization together with its first `OWNER`, choosing an initial status of `ACTIVE` (the normal production default) or `TRIAL`. `TRIAL` currently gives the same operational access as `ACTIVE`; trial expiry, subscriptions, and billing are not part of the current scope.
+- The organization `OWNER` sets their own password through a one-time link and then manages the organization's `EMPLOYEE` users.
 - Store company information.
 - Support multiple users per organization.
 - Isolate each organization's data.

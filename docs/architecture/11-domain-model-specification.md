@@ -96,8 +96,8 @@ This document describes the currently implemented PostgreSQL/Prisma model. Imple
 
 | Enum                      | Values                                                                         | Notes                                                                                                                                                                                              |
 | ------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `OrganizationStatus`      | `TRIAL`, `ACTIVE`, `SUSPENDED`, `CANCELLED`                                    | New registrations default to `TRIAL`. `TRIAL` and `ACTIVE` permit tenant operations; `SUSPENDED` and `CANCELLED` block tenant business APIs. Authentication/account-status visibility is separate. |
-| `Role` (user role)        | `PLATFORM_OWNER`, `OWNER`, `EMPLOYEE`                                          | No public `MANAGER` or `CLIENT` role exists. Normal registration creates `OWNER`, never `PLATFORM_OWNER`.                                                                                          |
+| `OrganizationStatus`      | `TRIAL`, `ACTIVE`, `SUSPENDED`, `CANCELLED`                                    | Client organizations are created only by `PLATFORM_OWNER` with an initial status of `ACTIVE` (normal production default) or `TRIAL`; the persistence default stays `TRIAL` but provisioning sets the status explicitly. `TRIAL` and `ACTIVE` permit the same tenant operations; `SUSPENDED` and `CANCELLED` block tenant business APIs. Authentication/account-status visibility is separate. |
+| `Role` (user role)        | `PLATFORM_OWNER`, `OWNER`, `EMPLOYEE`                                          | No public `MANAGER` or `CLIENT` role exists. Tenant provisioning creates the first `OWNER` only, never `PLATFORM_OWNER`; there is no public registration.                                                                                          |
 | `VehicleStatus`           | `AVAILABLE`, `RESERVED`, `RENTED`, `MAINTENANCE`, `OUT_OF_SERVICE`, `ARCHIVED` | Default `AVAILABLE`; availability is derived from status and active rentals, not separately stored.                                                                                                |
 | `Transmission`            | `MANUAL`, `AUTOMATIC`                                                          | Vehicle transmission.                                                                                                                                                                              |
 | `FuelType`                | `PETROL`, `DIESEL`, `ELECTRIC`, `HYBRID`                                       | Vehicle fuel type.                                                                                                                                                                                 |
@@ -123,7 +123,7 @@ This document describes the currently implemented PostgreSQL/Prisma model. Imple
 | ----------------------------------------------------------------- | -------------------: | -----------: | -------: | -------------------------------------------------------------------- |
 | `id`                                                              |                 UUID |          Yes | `uuid()` | Primary key.                                                         |
 | `name`                                                            |               String |          Yes |        - | Operating business name.                                             |
-| `status`                                                          | `OrganizationStatus` |          Yes |  `TRIAL` | Tenant lifecycle.                                                    |
+| `status`                                                          | `OrganizationStatus` |          Yes |  `TRIAL` | Tenant lifecycle. Database default only; provisioning sets `ACTIVE` or `TRIAL` explicitly (default `ACTIVE`). |
 | `legal_name`, `phone`, `email`, `address`, `contract_footer_text` |               String |           No |   `null` | Optional business identity/profile fields for contracts and reports. |
 | `created_at`, `updated_at`, `deleted_at`                          |             DateTime | Yes, Yes, No |   shared | `deleted_at` soft-deletes the organization.                          |
 
@@ -148,7 +148,7 @@ This document describes the currently implemented PostgreSQL/Prisma model. Imple
 
 **Constraints and indexes:** `@unique(email)`; `@@index([organization_id])`; `@@index([deleted_at])`.
 
-**Validation/API notes:** Email must be valid; creation passwords require at least 8 characters; role must be valid. Registration creates an organization and an `OWNER`. Employee invitations create only `EMPLOYEE` users. User list/get is available to authenticated tenant users; management operations are owner-only under the implemented role policy.
+**Validation/API notes:** Email must be valid; creation passwords require at least 8 characters; role must be valid. There is no public registration: `PLATFORM_OWNER` creates an organization and its first `OWNER` through `POST /api/platform/organizations`, and the `OWNER` sets their own password through a one-time link. Employee invitations create only `EMPLOYEE` users. User list/get is available to authenticated tenant users; management operations are owner-only under the implemented role policy.
 
 ### 5.3 RefreshToken
 

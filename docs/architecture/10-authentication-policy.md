@@ -127,8 +127,8 @@ Authorization uses Role-Based Access Control (RBAC).
 
 Current supported roles:
 
-- `PLATFORM_OWNER` — reserved for future secure platform administration; it has no tenant-route grant by default.
-- `OWNER` — rental-business owner with owner-only tenant permissions.
+- `PLATFORM_OWNER` — SaaS operator created by the production bootstrap command. It provisions client organizations and their first `OWNER`, and performs platform administration; it has no tenant-route grant.
+- `OWNER` — rental-business owner with owner-only tenant permissions. Created only when the platform owner provisions the organization; there is no public registration.
 - `EMPLOYEE` — rental-business staff with the current limited permissions.
   Permissions are determined by the user's assigned role. The backend is responsible for enforcing all authorization rules.
 

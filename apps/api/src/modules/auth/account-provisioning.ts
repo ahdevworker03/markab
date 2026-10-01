@@ -13,8 +13,8 @@ export function emailAlreadyExistsError(): AppError {
 
 /**
  * Creates a client organization and its first OWNER inside the caller's transaction.
- * Single source of the "organization + first owner" invariant for public registration and
- * platform provisioning; it never creates EMPLOYEE or PLATFORM_OWNER accounts and never sets
+ * Single source of the "organization + first owner" invariant, used only by platform
+ * provisioning (there is no public registration); it never creates EMPLOYEE or PLATFORM_OWNER accounts and never sets
  * an internal key, so the result is always an ordinary client tenant.
  */
 export async function createOrganizationWithOwner(

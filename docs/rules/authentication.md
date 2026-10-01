@@ -30,7 +30,7 @@ MANAGER
 CLIENT
 ```
 
-Normal tenant registration creates an `OWNER`, not a `PLATFORM_OWNER`.
+Tenant provisioning (`POST /api/platform/organizations`, `PLATFORM_OWNER` only) creates the first `OWNER`, never a `PLATFORM_OWNER`. There is no public registration.
 
 ## Tokens
 

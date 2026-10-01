@@ -326,16 +326,17 @@ describe("platform organization provisioning", () => {
     });
   });
 
-  describe("public registration remains unchanged", () => {
-    it("still creates a TRIAL organization with the chosen password", async () => {
+  describe("platform provisioning is the only tenant-creation path", () => {
+    it("does not let an unauthenticated caller create a tenant through the removed public route", async () => {
+      const before = await prisma.organization.count();
+
       const response = await request(app)
         .post("/api/auth/register")
         .send({ email: "self@signup.example", password: "Self-Signup-123", organizationName: "Self Signup" });
 
-      expect(response.status).toBe(201);
-      await expect(
-        prisma.organization.findFirstOrThrow({ where: { name: "Self Signup" } }),
-      ).resolves.toMatchObject({ status: "TRIAL", internalKey: null });
+      expect(response.status).toBe(401);
+      await expect(prisma.organization.count()).resolves.toBe(before);
+      await expect(prisma.user.count({ where: { email: "self@signup.example" } })).resolves.toBe(0);
     });
   });
 });

@@ -23,18 +23,17 @@
 | 17 | [Login Flow](#login-flow) |
 | 18 | [Logout Flow](#logout-flow) |
 | 19 | [Authentication API](#authentication-api) |
-| 20 | [Registration](#registration) |
-| 21 | [Login](#login) |
-| 22 | [Refresh](#refresh) |
-| 23 | [Logout](#logout) |
-| 24 | [Password Reset](#password-reset) |
-| 25 | [Current User](#current-user) |
-| 26 | [Protected Resources](#protected-resources) |
-| 27 | [Offline Authentication](#offline-authentication) |
-| 28 | [Security Principles](#security-principles) |
-| 29 | [Future Expansion](#future-expansion) |
-| 30 | [Approved SaaS Role Model](#approved-saas-role-model) |
-| 31 | [Guiding Principle](#guiding-principle) |
+| 20 | [Login](#login) |
+| 21 | [Refresh](#refresh) |
+| 22 | [Logout](#logout) |
+| 23 | [Password Reset](#password-reset) |
+| 24 | [Current User](#current-user) |
+| 25 | [Protected Resources](#protected-resources) |
+| 26 | [Offline Authentication](#offline-authentication) |
+| 27 | [Security Principles](#security-principles) |
+| 28 | [Future Expansion](#future-expansion) |
+| 29 | [Approved SaaS Role Model](#approved-saas-role-model) |
+| 30 | [Guiding Principle](#guiding-principle) |
 
 ## Purpose
 
@@ -98,26 +97,25 @@ The platform is designed exclusively for internal business users. Customers do n
 
 | Role             | Current behavior                                                                                                                                               |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PLATFORM_OWNER` | SaaS/platform owner. This role is reserved for a future secure bootstrap or platform-admin process; it is not granted tenant-route access by the current API.  |
-| `OWNER`          | Rental-business owner. The first user of an organization; creates, updates, and deletes tenant employees. Current business mutations are generally owner-only. |
+| `PLATFORM_OWNER` | SaaS/platform owner. Created only by the production bootstrap command; provisions client organizations and performs platform administration, but is not granted tenant-route access by the API.  |
+| `OWNER`          | Rental-business owner. The first user of an organization, created when the platform owner provisions it; creates, updates, and deletes tenant employees. Current business mutations are generally owner-only. |
 | `EMPLOYEE`       | Staff user under an `OWNER`. It can authenticate and use authenticated read endpoints; it has no separate mutation grant today.                                |
 
 User creation follows these current rules:
 
-- `POST /api/auth/register` creates a new organization and its first `OWNER` user.
-- `POST /api/platform/organizations` lets a `PLATFORM_OWNER` provision a client organization (status `ACTIVE` or `TRIAL`) and its first `OWNER`. The platform owner never chooses a password: the `OWNER` is emailed the normal one-time password-reset link to set their own, and the creation is audited as `PLATFORM_ORGANIZATION_CREATED`.
+- `POST /api/platform/organizations` is the only way to create a client organization: a `PLATFORM_OWNER` provisions it (status `ACTIVE`, the normal default, or `TRIAL`, which currently has the same operational access) together with its first `OWNER`. There is no public registration or self-service company sign-up. The platform owner never chooses a password: the `OWNER` is emailed the normal one-time password-reset link to set their own, and the creation is audited as `PLATFORM_ORGANIZATION_CREATED`.
 - `POST /api/users` lets an authenticated `OWNER` create an `EMPLOYEE` user in the same organization.
 - `POST /api/users/invitations` lets an authenticated `OWNER` create or resend a seven-day, `EMPLOYEE`-only invitation for its organization. The one-time acceptance token is returned only to the owner for secure manual delivery; only its hash is stored.
 - `POST /api/auth/invitations/accept` consumes a valid invitation once, lets the recipient set a password, and creates the `EMPLOYEE` in the invited organization. Resending invalidates the previous token.
 - There is no API path to create or promote another `OWNER`.
-- `PLATFORM_OWNER` creation is not available through registration or tenant user-management endpoints.
+- `PLATFORM_OWNER` creation is not available through tenant provisioning or tenant user-management endpoints.
 - The current database seed creates no users.
 
 ## Manual QA Accounts
 
 When `owner@test.com` is confirmed as an `OWNER`, create QA employee accounts through `POST /api/users` with that owner's access token. This preserves tenant ownership and password hashing.
 
-Do not create QA users through direct SQL unless repairing broken data. Do not register `owner@test.com` again: email is globally unique, and registration creates a separate organization when the email is unused.
+Do not create QA users through direct SQL unless repairing broken data. Do not provision `owner@test.com` again: email is globally unique.
 
 ---
 
@@ -310,12 +308,6 @@ Future requests require authentication again.
 # Authentication API
 
 Authentication is exposed through the `/api/auth/*` endpoint group.
-
-## Registration
-
-`POST /api/auth/register`
-
-Registers a new organization and its first user (OWNER role). On success, access and refresh tokens are issued and returned to the client.
 
 ## Login
 
