@@ -494,6 +494,17 @@ offline-to-online measurement remains required against production-like staging
 in Step 65 or 66 before the reconnect gate can be marked PASS. No production
 sync optimization is justified by these local measurements.
 
+### Step 64 reconnect validation disposition (2026-10-01)
+
+**Status: DEFERRED PENDING STAGING.** The local Chromium/CDP reconnect result
+was P50/P95/max **15,889.6 / 16,563.1 / 16,942.7 ms**, failing the <=10-second
+gate. This is invalid evidence for a product optimization: approximately 14.5
+seconds occurs before push transmission during connectivity restoration. The
+online application-sync control passed at **531.4 / 563.5 / 597.9 ms**. No
+reconnect product optimization is justified. The final gate requires the
+existing queued-Customer-create scenario against production-like staging with a
+real network interruption and restoration; staging is currently unavailable.
+
 ### Step 64 Slice 2 — local-search gate and interaction evidence (2026-09-29)
 
 **A. Authoritative IndexedDB/local-search gate (<=300 ms).** The browser uses
@@ -701,3 +712,20 @@ report/analytics fetches, media behavior, representative query-plan and resource
 measurements, and real connectivity-restoration validation blocked by local
 Chromium emulation. No additional slice was implemented. The one-second
 navigation gate and production-like staging release evidence remain open.
+
+### Step 64 API/DB/resource evidence (2026-10-01)
+
+**Status: COMPLETE.** Guarded local measurements used the approved two-tenant
+`markab_benchmark` dataset and five warmups plus 30 recorded samples. Customer,
+vehicle, rental, maintenance, expense, task, outstanding-summary, and detail
+reads, both search paths, and Customer creation all passed their applicable API
+P95 gates. The ten-user mixed workload passed with a 0% error rate.
+
+The ten-user resource sample recorded API CPU at **19.2%**, API RSS at
+**264,048 KB**, and **11** active/peak database connections. PostgreSQL CPU/RSS
+were unavailable because the local host did not expose matching database backend
+OS processes to `ps`; this is an observability limitation, not saturation
+evidence. Read-only `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)` evidence is stored
+in `apps/web/test-results/benchmark/query-plans.json`; the Customer search used
+`Customer_organization_id_idx`, and no plan justified an index or query change.
+No backend or database optimization is justified by this evidence.
