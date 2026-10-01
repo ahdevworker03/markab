@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { PaymentSection } from "./PaymentSection";
 import { ApiError, type PaymentResponse } from "@workspace/api-client-react";
+import { renderAtFixedDate as render, withFixedDate } from "@/test/render-at-fixed-date";
 
 vi.mock("@/features/payments/hooks", () => ({
   useRentalPayments: vi.fn(),
@@ -165,7 +166,9 @@ describe("PaymentSection", () => {
 
     render(<PaymentSection rentalId="r1" />);
 
-    fireEvent.click(screen.getByRole("button", { name: /تسجيل دفعة/ }));
+    withFixedDate(() =>
+      fireEvent.click(screen.getByRole("button", { name: /تسجيل دفعة/ })),
+    );
 
     fireEvent.change(screen.getByLabelText(/المبلغ/), {
       target: { value: "50" },
@@ -235,7 +238,9 @@ describe("PaymentSection", () => {
 
     render(<PaymentSection rentalId="r1" />);
 
-    fireEvent.click(screen.getByRole("button", { name: /تسجيل دفعة/ }));
+    withFixedDate(() =>
+      fireEvent.click(screen.getByRole("button", { name: /تسجيل دفعة/ })),
+    );
     fireEvent.change(screen.getByLabelText(/المبلغ/), {
       target: { value: "50" },
     });

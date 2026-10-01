@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { ApiError } from "@workspace/api-client-react";
+import { renderAtFixedDate as render } from "@/test/render-at-fixed-date";
 
 import AddTaskPage from "./AddTaskPage";
 
@@ -406,8 +407,8 @@ describe("AddTaskPage", () => {
   });
 
   it("redirects to tasks after the success delay", async () => {
-    vi.useFakeTimers();
     render(<AddTaskPage />);
+    vi.useFakeTimers();
     enterDueDate();
     submit();
 
@@ -425,8 +426,8 @@ describe("AddTaskPage", () => {
   });
 
   it("cancels a pending redirect when unmounted", async () => {
-    vi.useFakeTimers();
     const view = render(<AddTaskPage />);
+    vi.useFakeTimers();
     enterDueDate();
     submit();
 
@@ -440,8 +441,8 @@ describe("AddTaskPage", () => {
   });
 
   it("keeps one pending redirect when submissions race", async () => {
-    vi.useFakeTimers();
     render(<AddTaskPage />);
+    vi.useFakeTimers();
     enterDueDate();
     submit();
     submit();
