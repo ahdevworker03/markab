@@ -111,15 +111,34 @@ const ExpenseDetailPage = lazy(() =>
     default: ExpenseDetailPage,
   })),
 );
+const markBenchmarkRoute = (type: "fallback" | "lazy-resolved") => {
+  if (
+    import.meta.env.MODE === "benchmark" &&
+    ["/analytics", "/reports"].includes(window.location.pathname)
+  ) {
+    (window.__benchmarkPageProfile ??= []).push({
+      route: window.location.pathname.slice(1),
+      type,
+      at: performance.now(),
+    });
+  }
+};
+
 const AnalyticsPage = lazy(() =>
-  import("@/features/analytics").then(({ AnalyticsPage }) => ({
-    default: AnalyticsPage,
-  })),
+  import("@/features/analytics").then(({ AnalyticsPage }) => {
+    markBenchmarkRoute("lazy-resolved");
+    return {
+      default: AnalyticsPage,
+    };
+  }),
 );
 const ReportsPage = lazy(() =>
-  import("@/features/reports").then(({ ReportsPage }) => ({
-    default: ReportsPage,
-  })),
+  import("@/features/reports").then(({ ReportsPage }) => {
+    markBenchmarkRoute("lazy-resolved");
+    return {
+      default: ReportsPage,
+    };
+  }),
 );
 const TasksPage = lazy(() =>
   import("@/features/tasks").then(({ TasksPage }) => ({ default: TasksPage })),
@@ -156,6 +175,7 @@ const PlatformOrganizationsPage = lazy(() =>
 );
 
 function RouteLoading() {
+  markBenchmarkRoute("fallback");
   return (
     <div
       className="flex min-h-dvh items-center justify-center"

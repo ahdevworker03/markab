@@ -4,7 +4,13 @@ type Phase = "mount" | "update" | "nested-update";
 
 type ProfileEvent = {
   route: string;
-  type: "mount" | "commit" | "summaries-ready" | "loaders-cleared";
+  type:
+    | "mount"
+    | "commit"
+    | "summaries-ready"
+    | "loaders-cleared"
+    | "fallback"
+    | "lazy-resolved";
   at: number;
   actualDuration?: number;
   baseDuration?: number;
