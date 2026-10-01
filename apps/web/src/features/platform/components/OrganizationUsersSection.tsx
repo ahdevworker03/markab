@@ -82,7 +82,9 @@ function RoleMarker({ role }: { role: PlatformOrganizationUser["role"] }) {
       </span>
     );
   }
-  return <span className="text-xs font-medium text-muted-foreground">موظف</span>;
+  return (
+    <span className="text-xs font-medium text-muted-foreground">موظف</span>
+  );
 }
 
 type PendingDialog =
@@ -185,25 +187,27 @@ export function OrganizationUsersSection({
   function renderUser(user: PlatformOrganizationUser) {
     return (
       <Row key={user.id} emphasized={user.role === "OWNER"}>
-        <div className="min-w-0 sm:flex-1">
+        <div className="min-w-0 space-y-1.5 sm:flex-1">
           <Email value={user.email} />
-        </div>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 sm:shrink-0 sm:justify-end">
-          <RoleMarker role={user.role} />
-          {user.status === "ACTIVE" ? (
-            <StatusBadge status="ACTIVE" label="نشط" />
-          ) : (
-            <StatusBadge status="ARCHIVED" label="غير نشط" />
-          )}
-          <Meta label="أُنشئ في" date={user.createdAt} />
-          {user.deactivatedAt && <Meta label="عُطّل في" date={user.deactivatedAt} />}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <RoleMarker role={user.role} />
+            {user.status === "ACTIVE" ? (
+              <StatusBadge status="ACTIVE" label="نشط" />
+            ) : (
+              <StatusBadge status="ARCHIVED" label="غير نشط" />
+            )}
+            <Meta label="أُنشئ في" date={user.createdAt} />
+            {user.deactivatedAt && (
+              <Meta label="عُطّل في" date={user.deactivatedAt} />
+            )}
+          </div>
         </div>
         {user.role === "OWNER" && user.status === "ACTIVE" && (
           <Button
             type="button"
             variant="outline"
             size="sm"
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto sm:shrink-0"
             onClick={() => setDialog({ kind: "recover", user })}
           >
             إرسال رابط استعادة كلمة المرور
@@ -214,7 +218,7 @@ export function OrganizationUsersSection({
             type="button"
             variant="outline"
             size="sm"
-            className="w-full border-transparent bg-destructive/5 text-destructive hover:bg-destructive/10 sm:w-auto sm:bg-transparent sm:hover:bg-destructive/5"
+            className="w-full border-transparent bg-destructive/5 text-destructive hover:bg-destructive/10 sm:w-auto sm:shrink-0 sm:bg-transparent sm:hover:bg-destructive/5"
             onClick={() => setDialog({ kind: "deactivate", user })}
           >
             تعطيل الموظف
@@ -229,27 +233,29 @@ export function OrganizationUsersSection({
     const resendable = invitation.status !== "ACCEPTED";
     return (
       <Row key={invitation.id}>
-        <div className="min-w-0 sm:flex-1">
+        <div className="min-w-0 space-y-1.5 sm:flex-1">
           <Email value={invitation.email} />
-        </div>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 sm:shrink-0 sm:justify-end">
-          <StatusBadge status={badge.status} label={badge.label} />
-          <Meta label="أُنشئت في" date={invitation.createdAt} />
-          {invitation.status === "ACCEPTED" && invitation.acceptedAt ? (
-            <Meta label="قُبلت في" date={invitation.acceptedAt} />
-          ) : (
-            <Meta
-              label={invitation.status === "EXPIRED" ? "انتهت في" : "تنتهي في"}
-              date={invitation.expiresAt}
-            />
-          )}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <StatusBadge status={badge.status} label={badge.label} />
+            <Meta label="أُنشئت في" date={invitation.createdAt} />
+            {invitation.status === "ACCEPTED" && invitation.acceptedAt ? (
+              <Meta label="قُبلت في" date={invitation.acceptedAt} />
+            ) : (
+              <Meta
+                label={
+                  invitation.status === "EXPIRED" ? "انتهت في" : "تنتهي في"
+                }
+                date={invitation.expiresAt}
+              />
+            )}
+          </div>
         </div>
         {resendable && (
           <Button
             type="button"
             variant="outline"
             size="sm"
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto sm:shrink-0"
             disabled={invitationsBlocked || resend.isPending}
             onClick={() => resendInvitation(invitation)}
           >
@@ -315,11 +321,12 @@ export function OrganizationUsersSection({
                 {getApiErrorMessage(resend.error).title}
               </InlineFeedback>
             )}
-            {invitationsBlocked && invitations.some((i) => i.status !== "ACCEPTED") && (
-              <p className="ui-secondary-text py-1">
-                لا يمكن إعادة إرسال الدعوات لمؤسسة معلّقة أو ملغاة.
-              </p>
-            )}
+            {invitationsBlocked &&
+              invitations.some((i) => i.status !== "ACCEPTED") && (
+                <p className="ui-secondary-text py-1">
+                  لا يمكن إعادة إرسال الدعوات لمؤسسة معلّقة أو ملغاة.
+                </p>
+              )}
             {invitations.length === 0 ? (
               <p className="ui-secondary-text pt-1">لا توجد دعوات حالية.</p>
             ) : (
@@ -342,8 +349,8 @@ export function OrganizationUsersSection({
           <span className="identifier-ltr break-all font-semibold">
             {dialog?.user.email}
           </span>{" "}
-          عبر قناة الاستعادة المهيأة. لا يرى مشرف المنصة كلمة المرور ولا يعيّنها.
-          عند إكمال الاستعادة تنتهي جلسات المالك الحالية.
+          عبر قناة الاستعادة المهيأة. لا يرى مشرف المنصة كلمة المرور ولا
+          يعيّنها. عند إكمال الاستعادة تنتهي جلسات المالك الحالية.
         </p>
       </SupportActionDialog>
       <SupportActionDialog
@@ -354,7 +361,9 @@ export function OrganizationUsersSection({
         destructive
         confirmDisabled={!reason.trim()}
         pending={deactivate.isPending}
-        error={deactivate.isError ? getApiErrorMessage(deactivate.error).title : null}
+        error={
+          deactivate.isError ? getApiErrorMessage(deactivate.error).title : null
+        }
         onConfirm={confirmDeactivation}
       >
         <p>
@@ -362,8 +371,8 @@ export function OrganizationUsersSection({
           <span className="identifier-ltr break-all font-semibold">
             {dialog?.user.email}
           </span>{" "}
-          ولن يتمكن من تسجيل الدخول بعد الآن، وتنتهي جلساته الحالية. تبقى بياناته
-          السابقة محفوظة.
+          ولن يتمكن من تسجيل الدخول بعد الآن، وتنتهي جلساته الحالية. تبقى
+          بياناته السابقة محفوظة.
         </p>
         <FormField
           label="سبب التعطيل"
@@ -384,4 +393,3 @@ export function OrganizationUsersSection({
     </DetailSection>
   );
 }
-

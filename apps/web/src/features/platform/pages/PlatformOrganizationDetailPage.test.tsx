@@ -18,11 +18,23 @@ const {
   useUpdateOrganizationStatus: vi.fn(),
 }));
 
-const idleMutation = { mutate: vi.fn(), reset: vi.fn(), isPending: false, isError: false };
+const idleMutation = {
+  mutate: vi.fn(),
+  reset: vi.fn(),
+  isPending: false,
+  isError: false,
+};
 
 vi.mock("wouter", () => ({
   useLocation: () => ["/platform/organizations/org-1", vi.fn()],
-  Link: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
+  Link: ({
+    href,
+    children,
+    ...rest
+  }: {
+    href: string;
+    children: React.ReactNode;
+  }) => (
     <a href={href} {...rest}>
       {children}
     </a>
@@ -82,13 +94,6 @@ function renderPage() {
   );
 }
 
-const LABELS: Record<string, string> = {
-  TRIAL: "تجريبي",
-  ACTIVE: "نشط",
-  SUSPENDED: "معلّق",
-  CANCELLED: "ملغي",
-};
-
 function optionValues(): string[] {
   return screen
     .queryAllByRole("radio")
@@ -96,7 +101,11 @@ function optionValues(): string[] {
 }
 
 function selectStatus(value: string) {
-  fireEvent.click(screen.getByRole("radio", { name: LABELS[value] }));
+  const radio = screen
+    .getAllByRole("radio")
+    .find((item) => item.getAttribute("value") === value);
+  if (!radio) throw new Error(`No lifecycle option for ${value}`);
+  fireEvent.click(radio);
 }
 
 describe("PlatformOrganizationDetailPage", () => {
@@ -116,12 +125,105 @@ describe("PlatformOrganizationDetailPage", () => {
     ["ACTIVE", ["SUSPENDED", "CANCELLED"]],
     ["SUSPENDED", ["ACTIVE", "CANCELLED"]],
     ["CANCELLED", ["ACTIVE"]],
-  ])("offers only the valid next statuses from %s and shows the current one", (status, expected) => {
-    mockOrganization(status);
+  ])(
+    "offers only the valid next statuses from %s and shows the current one",
+    (status, expected) => {
+      mockOrganization(status);
+      renderPage();
+
+      expect(optionValues()).toEqual(expected);
+      expect(screen.getByText("الحالة الحالية")).toBeInTheDocument();
+    },
+  );
+
+  it("shows the short LTR identifier and creation date in the header, never an email", () => {
+    mockOrganization("ACTIVE");
+    useGetPlatformOrganization.mockReturnValue({
+      ...useGetPlatformOrganization(),
+      data: {
+        data: {
+          id: "7f2a1c3e-8b4d-4e6f-9a0b-5c7d2e1f91c4",
+          name: "مؤسسة الاختبار",
+          status: "ACTIVE",
+          legalName: null,
+          phone: null,
+          email: "contact@company.example",
+          address: null,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+        },
+      },
+    });
     renderPage();
 
-    expect(optionValues()).toEqual(expected);
-    expect(screen.getByText("الحالة الحالية")).toBeInTheDocument();
+    const header = screen
+      .getByRole("heading", { name: "مؤسسة الاختبار" })
+      .closest("header")!;
+    const identifier = within(header).getByText("7f2a…91c4");
+    expect(identifier).toHaveClass("identifier-ltr");
+    expect(identifier).toHaveAttribute(
+      "title",
+      "7f2a1c3e-8b4d-4e6f-9a0b-5c7d2e1f91c4",
+    );
+    expect(header).toHaveTextContent("01/01/2026");
+    expect(header).not.toHaveTextContent("contact@company.example");
+    expect(screen.getByText("contact@company.example")).toBeInTheDocument();
+  });
+
+  it.each([
+    ["TRIAL", "ACTIVE", "تفعيل المؤسسة"],
+    ["SUSPENDED", "ACTIVE", "إعادة تفعيل المؤسسة"],
+    ["CANCELLED", "ACTIVE", "إعادة تفعيل المؤسسة"],
+    ["ACTIVE", "SUSPENDED", "تعليق المؤسسة"],
+    ["TRIAL", "CANCELLED", "إلغاء المؤسسة"],
+  ])("labels the %s -> %s option explicitly as %s", (from, to, label) => {
+    mockOrganization(from);
+    renderPage();
+
+    const radio = screen
+      .getAllByRole("radio")
+      .find((item) => item.getAttribute("value") === to)!;
+    expect(radio).toHaveAccessibleName(label);
+  });
+
+  it("explains why the change button is disabled and clears the hint when it is enabled", () => {
+    mockOrganization("ACTIVE");
+    renderPage();
+
+    const button = screen.getByRole("button", { name: "تغيير الحالة" });
+    expect(button).toBeDisabled();
+    expect(button).toHaveAccessibleDescription(
+      "اختر الإجراء المطلوب لتفعيل الزر.",
+    );
+    expect(button).toHaveClass("disabled:bg-muted");
+
+    selectStatus("SUSPENDED");
+    expect(button).toHaveAccessibleDescription("أدخل سبب التغيير للمتابعة.");
+
+    fireEvent.change(screen.getByLabelText(/سبب التغيير/), {
+      target: { value: "سبب" },
+    });
+    expect(button).toBeEnabled();
+    expect(screen.queryByText(/للمتابعة|لتفعيل الزر/)).not.toBeInTheDocument();
+  });
+
+  it("highlights the current-state panel for restrictive statuses only", () => {
+    mockOrganization("SUSPENDED");
+    const { unmount } = render(
+      <PlatformOrganizationDetailPage params={{ organizationId: "org-1" }} />,
+    );
+    const restrictive = screen
+      .getByText("الحالة الحالية")
+      .closest("div")!.parentElement!;
+    expect(restrictive).toHaveClass("bg-destructive/5");
+    unmount();
+
+    mockOrganization("ACTIVE");
+    renderPage();
+    const normal = screen
+      .getByText("الحالة الحالية")
+      .closest("div")!.parentElement!;
+    expect(normal).not.toHaveClass("bg-destructive/5");
   });
 
   it("keeps the identity block together and shows missing fields as unspecified", () => {
@@ -132,7 +234,10 @@ describe("PlatformOrganizationDetailPage", () => {
     expect(heading.parentElement).toHaveTextContent("نشط");
     expect(screen.getAllByText("غير محدد").length).toBeGreaterThanOrEqual(3);
     expect(screen.queryByText("-")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /المؤسسات/ })).toHaveAttribute("href", "/platform");
+    expect(screen.getByRole("link", { name: /المؤسسات/ })).toHaveAttribute(
+      "href",
+      "/platform",
+    );
   });
 
   it("offers a way back to the list when the organization is not found", () => {
@@ -144,8 +249,12 @@ describe("PlatformOrganizationDetailPage", () => {
     renderPage();
 
     expect(screen.getByText("المؤسسة غير موجودة")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "العودة إلى المؤسسات" })).toHaveAttribute("href", "/platform");
-    expect(screen.queryByRole("button", { name: "إعادة المحاولة" })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "العودة إلى المؤسسات" }),
+    ).toHaveAttribute("href", "/platform");
+    expect(
+      screen.queryByRole("button", { name: "إعادة المحاولة" }),
+    ).not.toBeInTheDocument();
   });
 
   it("disables submission until a different status is chosen", () => {
@@ -178,7 +287,9 @@ describe("PlatformOrganizationDetailPage", () => {
     expect(mutate).not.toHaveBeenCalled();
     const dialog = screen.getByRole("alertdialog");
     expect(within(dialog).getByText("فواتير غير مسددة")).toBeInTheDocument();
-    fireEvent.click(within(dialog).getByRole("button", { name: "تعليق المؤسسة" }));
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "تعليق المؤسسة" }),
+    );
 
     expect(mutate).toHaveBeenCalledWith({
       organizationId: "org-1",
@@ -225,9 +336,12 @@ describe("PlatformOrganizationDetailPage", () => {
     renderPage();
     selectStatus("ACTIVE");
     fireEvent.click(screen.getByRole("button", { name: "تغيير الحالة" }));
-    const confirm = within(screen.getByRole("alertdialog")).getByRole("button", {
-      name: "تأكيد التفعيل",
-    });
+    const confirm = within(screen.getByRole("alertdialog")).getByRole(
+      "button",
+      {
+        name: "تأكيد التفعيل",
+      },
+    );
     expect(confirm).not.toHaveClass("bg-destructive");
   });
 
@@ -253,9 +367,9 @@ describe("PlatformOrganizationDetailPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "تغيير الحالة" }));
 
     const dialog = screen.getByRole("alertdialog");
-    expect(
-      within(dialog).getByRole("alert"),
-    ).toHaveTextContent("ليس لديك صلاحية لتنفيذ هذا الإجراء.");
+    expect(within(dialog).getByRole("alert")).toHaveTextContent(
+      "ليس لديك صلاحية لتنفيذ هذا الإجراء.",
+    );
     expect(screen.getAllByRole("alert")).toHaveLength(1);
     expect(
       within(dialog).getByRole("button", { name: "إلغاء المؤسسة" }),
@@ -272,7 +386,9 @@ describe("PlatformOrganizationDetailPage", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "تغيير الحالة" }));
     fireEvent.click(
-      within(screen.getByRole("alertdialog")).getByRole("button", { name: "رجوع" }),
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: "رجوع",
+      }),
     );
 
     expect(reset).toHaveBeenCalled();
@@ -288,8 +404,12 @@ describe("PlatformOrganizationDetailPage", () => {
     });
     renderPage();
 
-    expect(screen.getByRole("alert")).toHaveTextContent("تعذر تحميل مستخدمي المؤسسة");
-    expect(screen.getByRole("heading", { name: "مؤسسة الاختبار" })).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "تعذر تحميل مستخدمي المؤسسة",
+    );
+    expect(
+      screen.getByRole("heading", { name: "مؤسسة الاختبار" }),
+    ).toBeInTheDocument();
     selectStatus("SUSPENDED");
     fireEvent.change(screen.getByLabelText(/سبب التغيير/), {
       target: { value: "سبب" },
@@ -299,11 +419,14 @@ describe("PlatformOrganizationDetailPage", () => {
 
   it("keeps the organization usable while the users are loading", () => {
     mockOrganization("ACTIVE");
-    useListPlatformOrganizationUsers.mockReturnValue({ isPending: true, isError: false });
+    useListPlatformOrganizationUsers.mockReturnValue({
+      isPending: true,
+      isError: false,
+    });
     renderPage();
 
     expect(screen.getByLabelText("جارٍ تحميل البيانات")).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "معلّق" })).toBeEnabled();
+    expect(screen.getAllByRole("radio")[0]).toBeEnabled();
   });
 
   it("invalidates detail and list queries after a successful update", () => {
