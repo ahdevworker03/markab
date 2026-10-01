@@ -20,7 +20,23 @@ export type Measurement = {
   p50Ms: number | null;
   p95Ms: number | null;
   maxMs: number | null;
+  samples?: Array<{
+    status: number | null;
+    error: string | null;
+    responseBytes: number | null;
+  }>;
 };
+
+type SampleEvidence = NonNullable<Measurement["samples"]>[number];
+
+export class BenchmarkHttpError extends Error {
+  constructor(
+    message: string,
+    readonly evidence: SampleEvidence,
+  ) {
+    super(message);
+  }
+}
 
 export function assertTargetSyncWithinBudget(measurement: Measurement): void {
   if (measurement.errorCount > 0 || measurement.maxMs === null) {
@@ -55,6 +71,11 @@ type SampleOptions = {
   beforeSample?: (sample: number) => Promise<void>;
   afterSample?: (sample: number) => Promise<void>;
   durationMs?: (sample: number) => Promise<number>;
+  evidence?: (sample: number) => {
+    status: number | null;
+    error: string | null;
+    responseBytes: number | null;
+  };
 };
 
 export async function runSamples(
@@ -72,6 +93,7 @@ export async function runSamples(
   }
 
   const durations: number[] = [];
+  const samples: NonNullable<Measurement["samples"]> = [];
   let errorCount = 0;
   for (let sample = 1; sample <= options.samples; sample += 1) {
     await options.beforeSample?.(sample);
@@ -87,11 +109,29 @@ export async function runSamples(
       )
         throw new Error("Invalid benchmark duration");
       succeeded = true;
-    } catch {
+    } catch (error) {
       errorCount += 1;
+      samples.push({
+        status:
+          error instanceof BenchmarkHttpError ? error.evidence.status : null,
+        error: error instanceof Error ? error.message : "unknown-error",
+        responseBytes:
+          error instanceof BenchmarkHttpError
+            ? error.evidence.responseBytes
+            : null,
+      });
     } finally {
       const wallDuration = performance.now() - startedAt;
-      if (succeeded) durations.push(localDuration ?? wallDuration);
+      if (succeeded) {
+        durations.push(localDuration ?? wallDuration);
+        samples.push(
+          options.evidence?.(sample) ?? {
+            status: null,
+            error: null,
+            responseBytes: null,
+          },
+        );
+      }
       await options.afterSample?.(sample);
     }
   }
@@ -112,6 +152,7 @@ export async function runSamples(
     p50Ms: percentile(0.5),
     p95Ms: percentile(0.95),
     maxMs: durations.at(-1) ?? null,
+    samples: options.evidence ? samples : undefined,
   };
 }
 

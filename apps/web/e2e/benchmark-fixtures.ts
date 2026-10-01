@@ -1,6 +1,7 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { resolve } from "node:path";
+import { BenchmarkHttpError } from "./benchmark-results";
 import type { BenchmarkSeedProfile } from "../../../lib/db/src/benchmark-target";
 import type {
   Browser,
@@ -87,6 +88,35 @@ export async function requestJson(
   if (!response.ok())
     throw new Error(`${method} ${path} failed with ${response.status()}.`);
   return response.json();
+}
+
+export async function requestJsonEvidence(
+  request: APIRequestContext,
+  token: string,
+  path: string,
+  method: "GET" | "POST" = "GET",
+  data?: unknown,
+): Promise<{ body: unknown; status: number; responseBytes: number }> {
+  const response = await request.fetch(`${apiOrigin}/api${path}`, {
+    method,
+    data,
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const responseBody = await response.body();
+  if (!response.ok())
+    throw new BenchmarkHttpError(
+      `${method} ${path} failed with ${response.status()}.`,
+      {
+        status: response.status(),
+        error: `${method} ${path} failed with ${response.status()}.`,
+        responseBytes: responseBody.byteLength,
+      },
+    );
+  return {
+    body: JSON.parse(responseBody.toString()) as unknown,
+    status: response.status(),
+    responseBytes: responseBody.byteLength,
+  };
 }
 
 export async function resetBenchmark(
