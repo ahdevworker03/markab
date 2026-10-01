@@ -1,9 +1,14 @@
 import { useMemo } from "react";
-import { useGetMyOrganization, useListRentals, useListVehicles } from "@workspace/api-client-react";
+import {
+  useGetMyOrganization,
+  useListRentals,
+  useListVehicles,
+} from "@workspace/api-client-react";
 import { usePayments } from "@/features/payments/hooks";
 import { useExpensesList } from "@/features/expenses/hooks";
 import { useMaintenance } from "@/features/maintenance/hooks";
 import { useTasks } from "@/features/tasks/hooks";
+import { analyticsReportFreshness } from "@/features/analytics-report-query-options";
 
 /**
  * Wires all the data hooks needed for the Reports page into a single hook.
@@ -14,10 +19,10 @@ import { useTasks } from "@/features/tasks/hooks";
  * loaded once and filtered client-side by the selected period.
  */
 export function useReportData() {
-  const paymentsQuery = usePayments();
-  const expensesQuery = useExpensesList();
-  const maintenanceQuery = useMaintenance();
-  const tasksQuery = useTasks();
+  const paymentsQuery = usePayments(analyticsReportFreshness);
+  const expensesQuery = useExpensesList(undefined, analyticsReportFreshness);
+  const maintenanceQuery = useMaintenance(analyticsReportFreshness);
+  const tasksQuery = useTasks(analyticsReportFreshness);
   const rentalsQuery = useListRentals();
   const vehiclesQuery = useListVehicles();
   const organizationQuery = useGetMyOrganization();
@@ -28,15 +33,15 @@ export function useReportData() {
     () => maintenanceQuery.data?.data ?? [],
     [maintenanceQuery.data],
   );
-  const tasks = useMemo(
-    () => tasksQuery.data?.data ?? [],
-    [tasksQuery.data],
-  );
+  const tasks = useMemo(() => tasksQuery.data?.data ?? [], [tasksQuery.data]);
   const rentals = useMemo(
     () => rentalsQuery.data?.data ?? [],
     [rentalsQuery.data],
   );
-  const vehicles = useMemo(() => vehiclesQuery.data?.data ?? [], [vehiclesQuery.data]);
+  const vehicles = useMemo(
+    () => vehiclesQuery.data?.data ?? [],
+    [vehiclesQuery.data],
+  );
 
   const isLoading =
     paymentsQuery.isLoading ||

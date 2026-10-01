@@ -10,6 +10,11 @@ import {
   getListPaymentsQueryKey,
 } from "@workspace/api-client-react";
 
+type QueryFreshness = Pick<
+  NonNullable<NonNullable<Parameters<typeof useListPayments>[0]>["query"]>,
+  "staleTime"
+>;
+
 export function useRentalPayments(rentalId: string) {
   const query = useListRentalPayments(rentalId);
 
@@ -47,8 +52,12 @@ export function usePaymentMutations(rentalId: string) {
 }
 
 /** All recorded payments in the current organization (API-backed). */
-export function usePayments() {
-  const query = useListPayments();
+export function usePayments(freshness?: QueryFreshness) {
+  const query = useListPayments(
+    freshness
+      ? { query: { queryKey: getListPaymentsQueryKey(), ...freshness } }
+      : undefined,
+  );
   const payments = useMemo(() => query.data?.data ?? [], [query.data]);
   return { ...query, payments };
 }

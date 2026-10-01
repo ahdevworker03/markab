@@ -20,8 +20,18 @@ import {
   getListMaintenanceSchedulesQueryKey,
 } from "@workspace/api-client-react";
 
-export function useMaintenance() {
-  const query = useListMaintenance();
+type QueryFreshness = Pick<
+  NonNullable<NonNullable<Parameters<typeof useListMaintenance>[1]>["query"]>,
+  "staleTime"
+>;
+
+export function useMaintenance(freshness?: QueryFreshness) {
+  const query = useListMaintenance(
+    undefined,
+    freshness
+      ? { query: { queryKey: getListMaintenanceQueryKey(), ...freshness } }
+      : undefined,
+  );
   return query;
 }
 
