@@ -12,7 +12,9 @@ type ProfileEvent = {
     | "fallback"
     | "lazy-resolved"
     | "protected-shell"
-    | "suspense-entry";
+    | "suspense-entry"
+    | "route-selected"
+    | "target-function-entry";
   at: number;
   actualDuration?: number;
   baseDuration?: number;
@@ -28,6 +30,10 @@ function record(event: ProfileEvent) {
   if (import.meta.env.MODE === "benchmark") {
     (window.__benchmarkPageProfile ??= []).push(event);
   }
+}
+
+export function markBenchmarkPage(route: string, type: ProfileEvent["type"]) {
+  record({ route, type, at: performance.now() });
 }
 
 export function BenchmarkPageProfile({
