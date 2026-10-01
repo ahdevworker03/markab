@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Route, Switch, Router as WouterRouter } from "wouter";
+import { Route, Switch, Router as WouterRouter, useLocation } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppShell } from "@/components/layout/AppShell";
@@ -196,11 +196,10 @@ function RouteLoading() {
 }
 
 function Router() {
-  if (
-    window.location.pathname === "/analytics" ||
-    window.location.pathname === "/reports"
-  ) {
-    markBenchmarkPage(window.location.pathname.slice(1), "route-selected");
+  const [location] = useLocation();
+  if (location === "/analytics" || location === "/reports") {
+    markBenchmarkPage(location.slice(1), "location-changed");
+    markBenchmarkPage(location.slice(1), "route-selected");
   }
   return (
     <Switch>

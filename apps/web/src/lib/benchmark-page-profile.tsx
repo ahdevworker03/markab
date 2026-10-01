@@ -14,7 +14,8 @@ type ProfileEvent = {
     | "protected-shell"
     | "suspense-entry"
     | "route-selected"
-    | "target-function-entry";
+    | "target-function-entry"
+    | "location-changed";
   at: number;
   actualDuration?: number;
   baseDuration?: number;

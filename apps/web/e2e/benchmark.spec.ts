@@ -80,8 +80,34 @@ async function loginMobilePage(
   await page
     .locator("#login-password")
     .fill(process.env.BENCHMARK_PASSWORD ?? "");
+  const loginResponse = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === "/api/auth/login",
+  );
   await page.getByRole("button", { name: "دخول" }).click();
-  await page.waitForURL("/", { timeout: 30_000 });
+  const response = await loginResponse;
+  console.log(
+    "BENCHMARK_LOGIN",
+    JSON.stringify({
+      status: response.status(),
+      url: new URL(response.url()).pathname,
+      afterResponseUrl: page.url(),
+    }),
+  );
+  try {
+    await page.waitForURL("/", { timeout: 30_000 });
+  } catch (error) {
+    console.log(
+      "BENCHMARK_LOGIN_TIMEOUT",
+      JSON.stringify({
+        url: page.url(),
+        dashboard:
+          (await page
+            .locator('section[aria-label="نظرة تشغيلية سريعة"]')
+            .count()) > 0,
+      }),
+    );
+    throw error;
+  }
 }
 
 async function syncAndWaitForFinalPull(
@@ -1904,6 +1930,8 @@ test.describe("Slice 5 post-load navigation profile", () => {
       let startedAt = 0;
       let browserNavigationStart = 0;
       let browserUsableAt = 0;
+      let drawerOpenStart = 0;
+      let drawerTargetReady = 0;
       let usableMs = 0;
       let beforeMetrics:
         { metrics: Array<{ name: string; value: number }> } | undefined;
@@ -1941,11 +1969,58 @@ test.describe("Slice 5 post-load navigation profile", () => {
         const measurement = await runSamples(
           `mobile-post-load-navigation-${route.name}`,
           async (sample) => {
-            browserNavigationStart = await page.evaluate(() =>
-              performance.now(),
-            );
-            startedAt = performance.now();
-            await navigateToPostLoadRoute(page, route);
+            if (route.path === "/analytics" || route.path === "/reports") {
+              drawerOpenStart = await page.evaluate(() => performance.now());
+              await page
+                .getByRole("button", { name: "المزيد من وحدات النظام" })
+                .click();
+              const target = page.locator(
+                `nav[aria-label="كل وحدات النظام"] a[href="${route.path}"]`,
+              );
+              await target.waitFor({ state: "visible" });
+              await target.evaluate(async (element) => {
+                const box = () => {
+                  const rect = element.getBoundingClientRect();
+                  return {
+                    x: rect.x,
+                    y: rect.y,
+                    width: rect.width,
+                    height: rect.height,
+                  };
+                };
+                const timeout = performance.now() + 5_000;
+                let previous = box();
+                while (performance.now() < timeout) {
+                  await new Promise(requestAnimationFrame);
+                  const current = box();
+                  const stable =
+                    Math.abs(previous.x - current.x) <= 0.5 &&
+                    Math.abs(previous.y - current.y) <= 0.5 &&
+                    Math.abs(previous.width - current.width) <= 0.5 &&
+                    Math.abs(previous.height - current.height) <= 0.5;
+                  if (stable) return;
+                  previous = current;
+                }
+                throw new Error(
+                  "Drawer target did not stabilize within 5000ms",
+                );
+              });
+              drawerTargetReady = await page.evaluate(() => performance.now());
+              requests = [];
+              sizeTasks = [];
+              browserNavigationStart = await page.evaluate(() =>
+                performance.now(),
+              );
+              startedAt = performance.now();
+              await target.click();
+              await page.waitForURL(route.path);
+            } else {
+              browserNavigationStart = await page.evaluate(() =>
+                performance.now(),
+              );
+              startedAt = performance.now();
+              await navigateToPostLoadRoute(page, route);
+            }
             await waitForPostLoadUsable(page, route);
             browserUsableAt = await page.evaluate(() => performance.now());
             usableMs = performance.now() - startedAt;
@@ -2007,6 +2082,8 @@ test.describe("Slice 5 post-load navigation profile", () => {
                 usableMs,
                 browserNavigationStart,
                 browserUsableAt,
+                drawerOpenStart,
+                drawerTargetReady,
                 apiRequestCount: apiRequests.length,
                 apiResponseBytes: apiRequests.reduce(
                   (total, request) => total + request.bytes,
