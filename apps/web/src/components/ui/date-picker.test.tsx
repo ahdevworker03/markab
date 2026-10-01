@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { renderAtFixedDate as render } from "@/test/render-at-fixed-date";
 import { DatePicker } from "./date-picker";
 
 describe("DatePicker", () => {
