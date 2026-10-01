@@ -6,6 +6,7 @@ import {
   createMobileProfile,
   login,
   requestJson,
+  requestJsonEvidence,
   resetBenchmark,
   setMobileNetworkOffline,
   syncChangeCount,
@@ -374,17 +375,25 @@ test.describe("benchmark API", () => {
     await resetBenchmark();
     try {
       const token = await login(request);
+      let summaryEvidence: NonNullable<Measurement["samples"]>[number];
       const measurement = await runSamples(
         "outstanding-balances-summary",
         async () => {
-          const response = (await requestJson(
+          const response = await requestJsonEvidence(
             request,
             token,
             "/payments/outstanding-balances",
-          )) as { data: { balances: unknown[] } };
-          expect(response.data.balances).toHaveLength(500);
+          );
+          summaryEvidence = {
+            status: response.status,
+            error: null,
+            responseBytes: response.responseBytes,
+          };
+          expect(
+            (response.body as { data: { balances: unknown[] } }).data.balances,
+          ).toHaveLength(500);
         },
-        sampling,
+        { ...sampling, evidence: () => summaryEvidence },
       );
       expect(measurement.errorCount).toBe(0);
       recordMeasurements([measurement], {
@@ -414,41 +423,67 @@ test.describe("benchmark API", () => {
     for (const [name, path] of [
       ["customers-list", "/customers"],
       ["vehicles-list", "/vehicles"],
+      ["rentals-list", "/rentals"],
+      ["maintenance-list", "/maintenance"],
+      ["expenses-list", "/expenses"],
+      ["tasks-list", "/tasks"],
       ["customer-detail", `/customers/${customers.data[0]!.id}`],
       ["vehicle-detail", `/vehicles/${vehicles.data[0]!.id}`],
     ] as const) {
+      let evidence: NonNullable<Measurement["samples"]>[number] = {
+        status: null,
+        error: null,
+        responseBytes: null,
+      };
       reads.push(
         await runSamples(
           name,
           async () => {
-            await requestJson(request, token, path);
+            const response = await requestJsonEvidence(request, token, path);
+            evidence = {
+              status: response.status,
+              error: null,
+              responseBytes: response.responseBytes,
+            };
           },
-          sampling,
+          { ...sampling, evidence: () => evidence },
         ),
       );
     }
+    let customerSearchEvidence: NonNullable<Measurement["samples"]>[number];
+    let vehicleSearchEvidence: NonNullable<Measurement["samples"]>[number];
     reads.push(
       await runSamples(
         "customers-search",
         async (sample) => {
-          await requestJson(
+          const response = await requestJsonEvidence(
             request,
             token,
             `/customers?search=Customer1${sample % 2 ? "" : "0"}`,
           );
+          customerSearchEvidence = {
+            status: response.status,
+            error: null,
+            responseBytes: response.responseBytes,
+          };
         },
-        sampling,
+        { ...sampling, evidence: () => customerSearchEvidence },
       ),
       await runSamples(
         "vehicles-search",
         async (sample) => {
-          await requestJson(
+          const response = await requestJsonEvidence(
             request,
             token,
             `/vehicles?search=Pilot%20${Math.abs(sample % 10) + 1}`,
           );
+          vehicleSearchEvidence = {
+            status: response.status,
+            error: null,
+            responseBytes: response.responseBytes,
+          };
         },
-        sampling,
+        { ...sampling, evidence: () => vehicleSearchEvidence },
       ),
       await runSamples(
         "payment-summary-fanout",
@@ -475,20 +510,32 @@ test.describe("benchmark API", () => {
     await resetBenchmark();
     try {
       const token = await login(request);
+      let createEvidence: NonNullable<Measurement["samples"]>[number];
       const measurement = await runSamples(
         "customer-create",
         async (sample) => {
-          await requestJson(request, token, "/customers", "POST", {
-            first_name: "Benchmark",
-            last_name: `Mutation${sample}`,
-            phone: `+961711${String(sample + 10).padStart(5, "0")}`,
-            address: "Benchmark Street",
-            national_id: `MUT-${sample}`,
-            license_number: `MUT-${sample}`,
-            license_expiry_date: "2030-01-01",
-          });
+          const response = await requestJsonEvidence(
+            request,
+            token,
+            "/customers",
+            "POST",
+            {
+              first_name: "Benchmark",
+              last_name: `Mutation${sample}`,
+              phone: `+961711${String(sample + 10).padStart(5, "0")}`,
+              address: "Benchmark Street",
+              national_id: `MUT-${sample}`,
+              license_number: `MUT-${sample}`,
+              license_expiry_date: "2030-01-01",
+            },
+          );
+          createEvidence = {
+            status: response.status,
+            error: null,
+            responseBytes: response.responseBytes,
+          };
         },
-        sampling,
+        { ...sampling, evidence: () => createEvidence },
       );
       recordMeasurements([measurement]);
     } finally {
