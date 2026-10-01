@@ -115,7 +115,14 @@ Allow authorized users to securely access their organization's workspace.
 
 ### Account Creation
 
-There is no public sign-up or company registration. The platform operator creates the client organization and its first `OWNER` in Platform Admin; the `OWNER` receives a one-time link to set their own password, then invites employees from their organization.
+There is no public sign-up or company registration. The platform operator creates the client organization and its first `OWNER` in Platform Admin:
+
+1. The operator opens the organizations list and selects `إضافة مؤسسة`.
+2. The operator enters the organization name and the owner's email, and chooses the initial status: `نشط` (default) or `تجريبي` (currently the same operational access as `نشط`).
+3. The system creates the organization and its `OWNER`, requests a one-time password-setup link for the owner, and opens the new organization's detail page. The confirmation says the link was requested, not that it was delivered.
+4. The `OWNER` sets their own password from the link and then invites employees from their organization. If the link does not arrive or expires, the operator requests a new one from the organization's users section.
+
+A duplicate owner email is rejected with a message on the email field.
 
 ---
 

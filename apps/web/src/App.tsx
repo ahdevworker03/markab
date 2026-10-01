@@ -139,6 +139,11 @@ const AccountPage = lazy(() =>
     default: AccountPage,
   })),
 );
+const PlatformCreateOrganizationPage = lazy(() =>
+  import("@/features/platform").then(({ PlatformCreateOrganizationPage }) => ({
+    default: PlatformCreateOrganizationPage,
+  })),
+);
 const PlatformOrganizationDetailPage = lazy(() =>
   import("@/features/platform").then(({ PlatformOrganizationDetailPage }) => ({
     default: PlatformOrganizationDetailPage,
@@ -222,6 +227,16 @@ function App() {
                   component={AcceptInvitationPage}
                 />
 
+                {/* Must precede the :organizationId route so "new" is not read as an id. */}
+                <Route path="/platform/organizations/new">
+                  <PlatformRoute>
+                    <Suspense fallback={<RouteLoading />}>
+                      <PlatformShell>
+                        <PlatformCreateOrganizationPage />
+                      </PlatformShell>
+                    </Suspense>
+                  </PlatformRoute>
+                </Route>
                 <Route path="/platform/organizations/:organizationId">
                   {(params) => (
                     <PlatformRoute>

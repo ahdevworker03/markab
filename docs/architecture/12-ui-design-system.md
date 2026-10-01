@@ -237,7 +237,7 @@ Lead with:
 - Keep the primary submit action stable and obvious. Disable duplicate submissions and show submitting state.
 - Use full pages or sheets for complex workflows; avoid modals for large, multi-section forms.
 - Confirmation is required for destructive, status-changing, or financially significant actions. The confirmation states the consequence and action target.
-- For supported Version 2 flows, reuse this pattern for password reset, invitation acceptance, organization profile, document-expiry editing, recurring task settings, and maintenance schedule management.
+- For supported Version 2 flows, reuse this pattern for platform organization creation, password reset, invitation acceptance, organization profile, document-expiry editing, recurring task settings, and maintenance schedule management.
 - Recurring task controls stay simple: interval plus day/week/month unit, with never, date, or occurrence-count end conditions. Do not expose cron, weekday rules, or other complex recurrence syntax.
 - Task create/edit forms place `اسم المهمة`, `تاريخ الاستحقاق`, `ملاحظات`, then recurrence controls in that order. The title is required primary identity; notes are optional supplementary content.
 
@@ -349,7 +349,7 @@ Lead with:
 ## 14. Platform Admin Boundary
 
 - Tenant-facing screens serve organization owners and employees. Platform-only lifecycle controls and audit information must not appear in normal tenant navigation or settings.
-- The tenant rebuild may reserve a clean `PLATFORM_OWNER` entry point if authorization requires it, but a simple Platform Admin Dashboard belongs to Milestone 6.
+- Platform Admin is a separate, minimal workspace at `/platform` with its own shell. It currently offers the organizations list, organization detail (lifecycle status, users and invitations, approved support actions), and `إضافة مؤسسة` (`/platform/organizations/new`): a full-page form following the Forms pattern with only organization name, owner email, and initial status (`نشط` default, `تجريبي`). It collects no password, plan, billing, or trial-duration data.
 - A limited audit-log view may be planned separately for platform-owner scope. It is not part of the tenant-facing design-system implementation.
 - Do not use this boundary to add billing, support, impersonation, or other unapproved administrative products.
 

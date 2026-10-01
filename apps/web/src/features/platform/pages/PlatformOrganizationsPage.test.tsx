@@ -78,6 +78,21 @@ describe("PlatformOrganizationsPage", () => {
     expect(screen.getByText("3 مؤسسة")).toBeInTheDocument();
   });
 
+  it("offers an Add Organization primary action that opens the create page", () => {
+    ready();
+    render(<PlatformOrganizationsPage />);
+
+    const action = screen.getByRole("link", { name: "إضافة مؤسسة" });
+    expect(action).toHaveAttribute("href", "/platform/organizations/new");
+  });
+
+  it("keeps the Add Organization action available when there are no organizations", () => {
+    ready([]);
+    render(<PlatformOrganizationsPage />);
+
+    expect(screen.getByRole("link", { name: "إضافة مؤسسة" })).toBeInTheDocument();
+  });
+
   it("omits the email line when there is none and never renders a placeholder dash", () => {
     ready();
     render(<PlatformOrganizationsPage />);
