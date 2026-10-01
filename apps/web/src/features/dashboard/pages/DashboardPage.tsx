@@ -16,7 +16,11 @@ import {
   TrendingUp,
   Wrench,
 } from "lucide-react";
-import { useListCustomers, useListRentals, useListVehicles } from "@workspace/api-client-react";
+import {
+  useListCustomers,
+  useListRentals,
+  useListVehicles,
+} from "@workspace/api-client-react";
 import type {
   CustomerResponse,
   ExpenseResponse,
@@ -46,7 +50,10 @@ import {
 } from "@/features/payments/hooks";
 import { useTasks } from "@/features/tasks/hooks";
 import { getPendingTaskCount, isTaskOverdue } from "@/features/tasks/selectors";
-import { deriveDashboardData, getDaysFromCurrentDay } from "@/features/dashboard/selectors";
+import {
+  deriveDashboardData,
+  getDaysFromCurrentDay,
+} from "@/features/dashboard/selectors";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { MAINTENANCE_TYPES } from "@/lib/labels";
@@ -76,7 +83,6 @@ function getMetricState(
   if (isError) return "error";
   return "ready";
 }
-
 
 function DashboardAction({
   label,
@@ -166,7 +172,9 @@ function ActiveRentalRow({
   customerName: string | undefined;
   onClick: () => void;
 }) {
-  const due = dueLabelFor(getDaysFromCurrentDay(rental.expectedReturnDate, new Date()));
+  const due = dueLabelFor(
+    getDaysFromCurrentDay(rental.expectedReturnDate, new Date()),
+  );
   const badgeStatus = due.tone === "danger" ? "overdue" : "ACTIVE";
 
   return (
@@ -183,7 +191,8 @@ function ActiveRentalRow({
           {customerName ?? "عميل غير معروف"}
         </span>
         <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-          {vehicle ? `${vehicle.make} ${vehicle.model}` : "سيارة غير معروفة"} · {formatDate(rental.expectedReturnDate)}
+          {vehicle ? `${vehicle.make} ${vehicle.model}` : "سيارة غير معروفة"} ·{" "}
+          {formatDate(rental.expectedReturnDate)}
         </span>
       </span>
       <span className="flex shrink-0 flex-col items-end gap-1">
@@ -215,10 +224,15 @@ function RecentActivityRow({
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-foreground">تم إنهاء عقد</p>
         <p className="mt-0.5 truncate text-xs text-muted-foreground">
-          {vehicle ? `${vehicle.make} ${vehicle.model}` : "سيارة غير معروفة"} · {customerName ?? "عميل غير معروف"}
+          {vehicle ? `${vehicle.make} ${vehicle.model}` : "سيارة غير معروفة"} ·{" "}
+          {customerName ?? "عميل غير معروف"}
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
-          {relativeTimeLabel(Math.abs(getDaysFromCurrentDay(rental.actualReturnDate, new Date())))}
+          {relativeTimeLabel(
+            Math.abs(
+              getDaysFromCurrentDay(rental.actualReturnDate, new Date()),
+            ),
+          )}
         </p>
       </div>
       <span className="number-ltr shrink-0 text-sm font-semibold text-foreground">
@@ -239,7 +253,8 @@ export default function DashboardPage() {
   const rentalsQuery = useListRentals();
   const customersQuery = useListCustomers();
 
-  const maintenance = (maintenanceQuery.data?.data ?? []) as MaintenanceResponse[];
+  const maintenance = (maintenanceQuery.data?.data ??
+    []) as MaintenanceResponse[];
   const expenses = (expensesQuery.data?.data ?? []) as ExpenseResponse[];
   const payments = paymentsQuery.payments;
   const tasks = (tasksQuery.data?.data ?? []) as TaskResponse[];
@@ -254,18 +269,27 @@ export default function DashboardPage() {
     [vehicles],
   );
   const customerNameById = useMemo(
-    () => new Map(customers.map((customer) => [customer.id, `${customer.firstName} ${customer.lastName}`])),
+    () =>
+      new Map(
+        customers.map((customer) => [
+          customer.id,
+          `${customer.firstName} ${customer.lastName}`,
+        ]),
+      ),
     [customers],
   );
 
-  const dashboard = deriveDashboardData({
-    vehicles,
-    rentals,
-    maintenance,
-    expenses,
-    payments,
-    outstandingBalance: outstandingQuery.totalOutstanding,
-  }, new Date());
+  const dashboard = deriveDashboardData(
+    {
+      vehicles,
+      rentals,
+      maintenance,
+      expenses,
+      payments,
+      outstandingBalance: outstandingQuery.totalOutstanding,
+    },
+    new Date(),
+  );
 
   const financeLoading =
     paymentsQuery.isLoading ||
@@ -294,7 +318,9 @@ export default function DashboardPage() {
     Boolean(rentalsQuery.error),
   );
   const rentalRowsState = getMetricState(
-    rentalsQuery.isLoading || vehiclesQuery.isLoading || customersQuery.isLoading,
+    rentalsQuery.isLoading ||
+      vehiclesQuery.isLoading ||
+      customersQuery.isLoading,
     Boolean(rentalsQuery.error ?? vehiclesQuery.error ?? customersQuery.error),
   );
   const operationalError =
@@ -305,13 +331,13 @@ export default function DashboardPage() {
     outstandingQuery.error;
   const isRefreshing = Boolean(
     (vehiclesQuery.isFetching && vehiclesQuery.data) ||
-      (rentalsQuery.isFetching && rentalsQuery.data) ||
-      (customersQuery.isFetching && customersQuery.data) ||
-      (maintenanceQuery.isFetching && maintenanceQuery.data) ||
-      (expensesQuery.isFetching && expensesQuery.data) ||
-      (paymentsQuery.isFetching && paymentsQuery.data) ||
-      (tasksQuery.isFetching && tasksQuery.data) ||
-      (outstandingQuery.isFetching && outstandingQuery.totalOutstanding !== null),
+    (rentalsQuery.isFetching && rentalsQuery.data) ||
+    (customersQuery.isFetching && customersQuery.data) ||
+    (maintenanceQuery.isFetching && maintenanceQuery.data) ||
+    (expensesQuery.isFetching && expensesQuery.data) ||
+    (paymentsQuery.isFetching && paymentsQuery.data) ||
+    (tasksQuery.isFetching && tasksQuery.data) ||
+    (outstandingQuery.isFetching && outstandingQuery.totalOutstanding !== null),
   );
   const hasOperationalAlerts =
     dashboard.overdueReturns.length > 0 ||
@@ -369,302 +395,501 @@ export default function DashboardPage() {
         )}
 
         <div className="grid items-start gap-4 lg:grid-cols-2 xl:grid-cols-12 xl:gap-5">
-        <section aria-label="التنبيهات التشغيلية" className="order-1 self-start lg:col-span-2 xl:order-2 xl:col-span-4">
-          <SectionCard
-            title="ما يحتاج إلى متابعة"
-            description="تنبيهات تشغيلية مرتبة حسب الأولوية"
-            action={
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setLocation("/rentals")}
-              >
-                الإيجارات
-                <ChevronLeft className="size-4" aria-hidden="true" />
-              </Button>
-            }
-            className="overflow-hidden"
+          <section
+            aria-label="التنبيهات التشغيلية"
+            className="order-1 self-start lg:col-span-2 xl:order-2 xl:col-span-4"
           >
-            {operationalError ? (
-              <ErrorState
-                title="تعذر تحميل التنبيهات التشغيلية"
-                description={getApiErrorMessage(operationalError).title}
-                onRetry={() => {
-                  void Promise.all([
-                    rentalsQuery.refetch(),
-                    vehiclesQuery.refetch(),
-                    maintenanceQuery.refetch(),
-                    tasksQuery.refetch(),
-                    outstandingQuery.refetch(),
-                  ]);
-                }}
-                className="py-8"
-              />
-            ) : hasOperationalAlerts ? (
-              <div className="-mx-4 -my-4 divide-y divide-border sm:-mx-5">
-                {dashboard.overdueReturns.slice(0, 2).map((rental) => (
-                  <DashboardAlertRow
-                    key={`overdue-return-${rental.id}`}
-                    icon={AlertTriangle}
-                    tone="danger"
-                    title="إيجار متأخر عن الإرجاع"
-                    description={`استحق في ${formatDate(rental.expectedReturnDate)}`}
-                    onClick={() => setLocation(`/rentals/${rental.id}`)}
-                  />
-                ))}
-                {dashboard.returningToday.slice(0, 2).map((rental) => (
-                  <DashboardAlertRow
-                    key={`return-today-${rental.id}`}
-                    icon={Clock3}
-                    tone="warning"
-                    title="إرجاع سيارة مستحق اليوم"
-                    description={`موعد الإرجاع ${formatDate(rental.expectedReturnDate)}`}
-                    onClick={() => setLocation(`/rentals/${rental.id}`)}
-                  />
-                ))}
-                {dashboard.endingSoonRentals.slice(0, 2).map((rental) => (
-                  <DashboardAlertRow
-                    key={`return-soon-${rental.id}`}
-                    icon={Clock3}
-                    tone="info"
-                    title="إرجاع سيارة قريب"
-                    description={`موعد الإرجاع ${formatDate(rental.expectedReturnDate)}`}
-                    onClick={() => setLocation(`/rentals/${rental.id}`)}
-                  />
-                ))}
-                {fleetState === "ready" &&
-                  dashboard.vehiclesUnderMaintenance > 0 && (
+            <SectionCard
+              title="ما يحتاج إلى متابعة"
+              description="تنبيهات تشغيلية مرتبة حسب الأولوية"
+              action={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setLocation("/rentals")}
+                >
+                  الإيجارات
+                  <ChevronLeft className="size-4" aria-hidden="true" />
+                </Button>
+              }
+              className="overflow-hidden"
+            >
+              {operationalError ? (
+                <ErrorState
+                  title="تعذر تحميل التنبيهات التشغيلية"
+                  description={getApiErrorMessage(operationalError).title}
+                  onRetry={() => {
+                    void Promise.all([
+                      rentalsQuery.refetch(),
+                      vehiclesQuery.refetch(),
+                      maintenanceQuery.refetch(),
+                      tasksQuery.refetch(),
+                      outstandingQuery.refetch(),
+                    ]);
+                  }}
+                  className="py-8"
+                />
+              ) : hasOperationalAlerts ? (
+                <div className="-mx-4 -my-4 divide-y divide-border sm:-mx-5">
+                  {dashboard.overdueReturns.slice(0, 2).map((rental) => (
                     <DashboardAlertRow
-                      icon={Wrench}
+                      key={`overdue-return-${rental.id}`}
+                      icon={AlertTriangle}
+                      tone="danger"
+                      title="إيجار متأخر عن الإرجاع"
+                      description={`استحق في ${formatDate(rental.expectedReturnDate)}`}
+                      onClick={() => setLocation(`/rentals/${rental.id}`)}
+                    />
+                  ))}
+                  {dashboard.returningToday.slice(0, 2).map((rental) => (
+                    <DashboardAlertRow
+                      key={`return-today-${rental.id}`}
+                      icon={Clock3}
                       tone="warning"
-                      title={`${dashboard.vehiclesUnderMaintenance} سيارات في الصيانة`}
-                      description="راجع حالة السيارات والمواعيد المرتبطة"
-                      onClick={() => setLocation("/maintenance")}
+                      title="إرجاع سيارة مستحق اليوم"
+                      description={`موعد الإرجاع ${formatDate(rental.expectedReturnDate)}`}
+                      onClick={() => setLocation(`/rentals/${rental.id}`)}
+                    />
+                  ))}
+                  {dashboard.endingSoonRentals.slice(0, 2).map((rental) => (
+                    <DashboardAlertRow
+                      key={`return-soon-${rental.id}`}
+                      icon={Clock3}
+                      tone="info"
+                      title="إرجاع سيارة قريب"
+                      description={`موعد الإرجاع ${formatDate(rental.expectedReturnDate)}`}
+                      onClick={() => setLocation(`/rentals/${rental.id}`)}
+                    />
+                  ))}
+                  {fleetState === "ready" &&
+                    dashboard.vehiclesUnderMaintenance > 0 && (
+                      <DashboardAlertRow
+                        icon={Wrench}
+                        tone="warning"
+                        title={`${dashboard.vehiclesUnderMaintenance} سيارات في الصيانة`}
+                        description="راجع حالة السيارات والمواعيد المرتبطة"
+                        onClick={() => setLocation("/maintenance")}
+                      />
+                    )}
+                  {maintenanceState === "ready" &&
+                    dashboard.overdueMaintenance.slice(0, 2).map((record) => {
+                      const vehicle = vehicleById.get(record.vehicleId);
+                      const maintenanceType =
+                        MAINTENANCE_TYPES[record.type]?.label ?? record.type;
+                      return (
+                        <DashboardAlertRow
+                          key={`maintenance-${record.id}`}
+                          icon={Wrench}
+                          tone="danger"
+                          title={`صيانة متأخرة: ${maintenanceType}`}
+                          description={
+                            vehicle
+                              ? `${vehicle.make} ${vehicle.model}`
+                              : `استحقت في ${formatDate(record.maintenanceDate)}`
+                          }
+                          onClick={() => setLocation("/maintenance")}
+                        />
+                      );
+                    })}
+                  {tasksState === "ready" && overdueTasks > 0 && (
+                    <DashboardAlertRow
+                      icon={ClipboardList}
+                      tone="danger"
+                      title={`${overdueTasks} مهام متأخرة`}
+                      description="تحتاج إلى الإكمال أو إعادة الجدولة"
+                      onClick={() => setLocation("/tasks")}
                     />
                   )}
-                {maintenanceState === "ready" &&
-                  dashboard.overdueMaintenance.slice(0, 2).map((record) => {
+                  {financeState === "ready" &&
+                    (dashboard.pendingBalance ?? 0) > 0 && (
+                      <DashboardAlertRow
+                        icon={FileWarning}
+                        tone="warning"
+                        title="أرصدة مستحقة التحصيل"
+                        description={formatCurrency(
+                          dashboard.pendingBalance ?? 0,
+                        )}
+                        onClick={() => setLocation("/rentals")}
+                      />
+                    )}
+                </div>
+              ) : (
+                <InlineFeedback variant="success" icon={CheckCircle2}>
+                  لا توجد تنبيهات تشغيلية عاجلة حالياً.
+                </InlineFeedback>
+              )}
+            </SectionCard>
+          </section>
+
+          <div className="order-3 grid gap-4 md:grid-cols-2 lg:col-span-2 xl:contents">
+            <SectionCard
+              title="الملخص المالي"
+              description={`${dashboard.period.label} — بناءً على الدفعات والمصروفات المسجلة`}
+              action={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setLocation("/analytics")}
+                >
+                  التحليلات
+                  <ChevronLeft className="size-4" aria-hidden="true" />
+                </Button>
+              }
+              className="xl:order-1 xl:col-span-4"
+            >
+              {financeState === "error" ? (
+                <ErrorState
+                  title="تعذر تحميل الملخص المالي"
+                  description={
+                    financeErrorMessage ?? "حاول إعادة تحميل البيانات المالية."
+                  }
+                  className="py-8"
+                />
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <FinancialValue
+                    label="الإيرادات"
+                    value={formatCurrency(dashboard.revenue)}
+                    state={financeState}
+                    tone="info"
+                    icon={HandCoins}
+                  />
+                  <FinancialValue
+                    label="المصروفات"
+                    value={formatCurrency(dashboard.expenses)}
+                    state={financeState}
+                    tone="danger"
+                    icon={CircleDollarSign}
+                  />
+                  <FinancialValue
+                    label="صافي الربح"
+                    value={formatCurrency(dashboard.netProfit)}
+                    state={financeState}
+                    tone={dashboard.netProfit < 0 ? "danger" : "positive"}
+                    icon={
+                      dashboard.netProfit < dashboard.previousNetProfit
+                        ? TrendingDown
+                        : TrendingUp
+                    }
+                  />
+                  <FinancialValue
+                    label="الأرصدة المستحقة"
+                    value={formatCurrency(dashboard.pendingBalance ?? 0)}
+                    state={financeState}
+                    tone="warning"
+                    icon={FileWarning}
+                  />
+                </div>
+              )}
+            </SectionCard>
+
+            <SectionCard
+              title="حالة السيارات"
+              description="توفر السيارات وحالتها الحالية"
+              action={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setLocation("/vehicles")}
+                >
+                  عرض السيارات
+                  <ChevronLeft className="size-4" aria-hidden="true" />
+                </Button>
+              }
+              className="xl:order-3 xl:col-span-4"
+            >
+              {fleetState === "error" ? (
+                <ErrorState
+                  title="تعذر تحميل حالة السيارات"
+                  description={getApiErrorMessage(vehiclesQuery.error).title}
+                  onRetry={() => void vehiclesQuery.refetch()}
+                  className="py-8"
+                />
+              ) : (
+                <>
+                  <div
+                    className={cn(
+                      "grid gap-2.5",
+                      dashboard.outOfServiceCount > 0
+                        ? "grid-cols-2 xl:grid-cols-4"
+                        : "grid-cols-3",
+                    )}
+                  >
+                    <FleetStatus
+                      label="متاحة"
+                      value={dashboard.availableCount}
+                      status="AVAILABLE"
+                      state={fleetState}
+                    />
+                    <FleetStatus
+                      label="مؤجرة"
+                      value={dashboard.rentedCount}
+                      status="RENTED"
+                      state={fleetState}
+                    />
+                    <FleetStatus
+                      label="في الصيانة"
+                      value={dashboard.vehiclesUnderMaintenance}
+                      status="MAINTENANCE"
+                      state={fleetState}
+                    />
+                    {fleetState === "ready" &&
+                      dashboard.outOfServiceCount > 0 && (
+                        <FleetStatus
+                          label="خارج الخدمة"
+                          value={dashboard.outOfServiceCount}
+                          status="OUT_OF_SERVICE"
+                        />
+                      )}
+                  </div>
+                  <div className="mt-4 border-t border-border pt-3">
+                    <button
+                      type="button"
+                      onClick={() => setLocation("/maintenance")}
+                      className="flex w-full items-center justify-between text-start"
+                    >
+                      <span>
+                        <span className="block text-sm font-semibold text-foreground">
+                          سجلات الصيانة
+                        </span>
+                        <span className="mt-1 block text-xs text-muted-foreground">
+                          المواعيد والسجل التشغيلي
+                        </span>
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <span className="number-ltr text-lg font-bold text-status-warning">
+                          {maintenanceState === "ready"
+                            ? dashboard.maintenanceCount
+                            : "—"}
+                        </span>
+                        <ChevronLeft
+                          className="size-4 text-muted-foreground"
+                          aria-hidden="true"
+                        />
+                      </span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </SectionCard>
+          </div>
+
+          <section
+            aria-label="نظرة تشغيلية سريعة"
+            className="order-4 grid grid-cols-2 gap-3 lg:col-span-2 xl:order-4 xl:col-span-full xl:grid-cols-4 xl:gap-4"
+          >
+            <DashboardMetricCard
+              label="الإيجارات النشطة"
+              value={String(dashboard.activeRentals.length)}
+              context="عقود قيد التنفيذ"
+              icon={Car}
+              tone="info"
+              state={rentalsState}
+              errorMessage={
+                rentalsQuery.error
+                  ? getApiErrorMessage(rentalsQuery.error).title
+                  : undefined
+              }
+              onClick={() => setLocation("/rentals")}
+            />
+            <DashboardMetricCard
+              label="الإرجاعات القريبة"
+              value={String(dashboard.priorityReturns.length)}
+              context={
+                dashboard.returningToday.length > 0
+                  ? `${dashboard.returningToday.length} مستحقة اليوم`
+                  : "خلال اليومين المقبلين"
+              }
+              icon={Clock3}
+              tone={dashboard.overdueReturns.length > 0 ? "danger" : "warning"}
+              state={rentalsState}
+              errorMessage={
+                rentalsQuery.error
+                  ? getApiErrorMessage(rentalsQuery.error).title
+                  : undefined
+              }
+              onClick={() => setLocation("/rentals")}
+            />
+            <DashboardMetricCard
+              label="السيارات المتاحة"
+              value={String(dashboard.availableCount)}
+              context="جاهزة للتأجير"
+              icon={Car}
+              tone="positive"
+              state={fleetState}
+              errorMessage={
+                vehiclesQuery.error
+                  ? getApiErrorMessage(vehiclesQuery.error).title
+                  : undefined
+              }
+              onClick={() => setLocation("/vehicles?filter=available")}
+            />
+            <DashboardMetricCard
+              label="المهام المفتوحة"
+              value={String(pendingTasks)}
+              context={
+                overdueTasks > 0 ? `${overdueTasks} متأخرة` : "تحتاج إلى متابعة"
+              }
+              icon={ClipboardList}
+              tone={overdueTasks > 0 ? "danger" : "warning"}
+              state={tasksState}
+              errorMessage={
+                tasksQuery.error
+                  ? getApiErrorMessage(tasksQuery.error).title
+                  : undefined
+              }
+              onClick={() => setLocation("/tasks")}
+            />
+          </section>
+
+          <div className="order-2 grid gap-4 lg:col-span-2 xl:order-5 xl:col-span-full xl:grid-cols-12 xl:gap-5">
+            <SectionCard
+              title="الإيجارات النشطة"
+              description={`${dashboard.activeRentals.length} عقود قيد التنفيذ`}
+              action={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setLocation("/rentals")}
+                >
+                  عرض الكل
+                  <ChevronLeft className="size-4" aria-hidden="true" />
+                </Button>
+              }
+              className="overflow-hidden xl:col-span-7"
+            >
+              {rentalRowsState === "loading" ? (
+                <LoadingState rows={3} className="-m-1 p-1" />
+              ) : rentalRowsState === "error" ? (
+                <ErrorState
+                  title="تعذر تحميل الإيجارات النشطة"
+                  description={
+                    getApiErrorMessage(
+                      rentalsQuery.error ??
+                        vehiclesQuery.error ??
+                        customersQuery.error,
+                    ).title
+                  }
+                  onRetry={() => {
+                    void Promise.all([
+                      rentalsQuery.refetch(),
+                      vehiclesQuery.refetch(),
+                      customersQuery.refetch(),
+                    ]);
+                  }}
+                  className="py-8"
+                />
+              ) : dashboard.activeRentals.length === 0 ? (
+                <InlineFeedback variant="info" icon={CheckCircle2}>
+                  لا توجد إيجارات نشطة حالياً.
+                </InlineFeedback>
+              ) : (
+                <div className="-mx-4 -my-4 divide-y divide-border sm:-mx-5">
+                  {dashboard.activeRentals.slice(0, 4).map((rental) => (
+                    <ActiveRentalRow
+                      key={rental.id}
+                      rental={rental}
+                      vehicle={vehicleById.get(rental.vehicleId)}
+                      customerName={customerNameById.get(rental.customerId)}
+                      onClick={() => setLocation(`/rentals/${rental.id}`)}
+                    />
+                  ))}
+                </div>
+              )}
+            </SectionCard>
+
+            <SectionCard
+              title="المهام والصيانة"
+              description="التذكيرات القادمة والمتأخرة"
+              action={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setLocation("/tasks")}
+                >
+                  المهام
+                  <ChevronLeft className="size-4" aria-hidden="true" />
+                </Button>
+              }
+              className="overflow-hidden xl:col-span-5"
+            >
+              {tasksState === "loading" || maintenanceState === "loading" ? (
+                <LoadingState rows={3} className="-m-1 p-1" />
+              ) : tasksState === "error" || maintenanceState === "error" ? (
+                <ErrorState
+                  title="تعذر تحميل التذكيرات"
+                  description={
+                    getApiErrorMessage(
+                      tasksQuery.error ?? maintenanceQuery.error,
+                    ).title
+                  }
+                  onRetry={() => {
+                    void Promise.all([
+                      tasksQuery.refetch(),
+                      maintenanceQuery.refetch(),
+                    ]);
+                  }}
+                  className="py-8"
+                />
+              ) : dashboard.upcomingMaintenance.length === 0 &&
+                pendingTasks === 0 ? (
+                <InlineFeedback variant="info" icon={CheckCircle2}>
+                  لا توجد مهام أو مواعيد صيانة قريبة.
+                </InlineFeedback>
+              ) : (
+                <div className="-mx-4 -my-4 divide-y divide-border sm:-mx-5">
+                  {dashboard.upcomingMaintenance.slice(0, 2).map((record) => {
                     const vehicle = vehicleById.get(record.vehicleId);
-                    const maintenanceType =
+                    const label =
                       MAINTENANCE_TYPES[record.type]?.label ?? record.type;
                     return (
                       <DashboardAlertRow
-                        key={`maintenance-${record.id}`}
+                        key={record.id}
                         icon={Wrench}
-                        tone="danger"
-                        title={`صيانة متأخرة: ${maintenanceType}`}
+                        tone={
+                          dueLabelFor(
+                            getDaysFromCurrentDay(
+                              record.maintenanceDate,
+                              new Date(),
+                            ),
+                          ).tone
+                        }
+                        title={`موعد ${label}`}
                         description={
                           vehicle
-                            ? `${vehicle.make} ${vehicle.model}`
-                            : `استحقت في ${formatDate(record.maintenanceDate)}`
+                            ? `${vehicle.make} ${vehicle.model} · ${formatDate(record.maintenanceDate)}`
+                            : formatDate(record.maintenanceDate)
                         }
                         onClick={() => setLocation("/maintenance")}
                       />
                     );
                   })}
-                {tasksState === "ready" && overdueTasks > 0 && (
-                  <DashboardAlertRow
-                    icon={ClipboardList}
-                    tone="danger"
-                    title={`${overdueTasks} مهام متأخرة`}
-                    description="تحتاج إلى الإكمال أو إعادة الجدولة"
-                    onClick={() => setLocation("/tasks")}
-                  />
-                )}
-                {financeState === "ready" && (dashboard.pendingBalance ?? 0) > 0 && (
-                  <DashboardAlertRow
-                    icon={FileWarning}
-                    tone="warning"
-                    title="أرصدة مستحقة التحصيل"
-                    description={formatCurrency(dashboard.pendingBalance ?? 0)}
-                    onClick={() => setLocation("/rentals")}
-                  />
-                )}
-              </div>
-            ) : (
-              <InlineFeedback variant="success" icon={CheckCircle2}>
-                لا توجد تنبيهات تشغيلية عاجلة حالياً.
-              </InlineFeedback>
-            )}
-          </SectionCard>
-        </section>
-
-        <div className="order-3 grid gap-4 md:grid-cols-2 lg:col-span-2 xl:contents">
-          <SectionCard
-            title="الملخص المالي"
-            description={`${dashboard.period.label} — بناءً على الدفعات والمصروفات المسجلة`}
-            action={
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setLocation("/analytics")}
-              >
-                التحليلات
-                <ChevronLeft className="size-4" aria-hidden="true" />
-              </Button>
-            }
-            className="xl:order-1 xl:col-span-4"
-          >
-            {financeState === "error" ? (
-              <ErrorState
-                title="تعذر تحميل الملخص المالي"
-                description={
-                  financeErrorMessage ?? "حاول إعادة تحميل البيانات المالية."
-                }
-                className="py-8"
-              />
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
-                <FinancialValue
-                  label="الإيرادات"
-                  value={formatCurrency(dashboard.revenue)}
-                  state={financeState}
-                  tone="info"
-                  icon={HandCoins}
-                />
-                <FinancialValue
-                  label="المصروفات"
-                  value={formatCurrency(dashboard.expenses)}
-                  state={financeState}
-                  tone="danger"
-                  icon={CircleDollarSign}
-                />
-                <FinancialValue
-                  label="صافي الربح"
-                  value={formatCurrency(dashboard.netProfit)}
-                  state={financeState}
-                  tone={
-                    dashboard.netProfit < 0
-                      ? "danger"
-                      : "positive"
-                  }
-                  icon={
-                    dashboard.netProfit < dashboard.previousNetProfit
-                      ? TrendingDown
-                      : TrendingUp
-                  }
-                />
-                <FinancialValue
-                  label="الأرصدة المستحقة"
-                  value={formatCurrency(dashboard.pendingBalance ?? 0)}
-                  state={financeState}
-                  tone="warning"
-                  icon={FileWarning}
-                />
-              </div>
-            )}
-          </SectionCard>
+                  {pendingTasks > 0 && (
+                    <DashboardAlertRow
+                      icon={ClipboardList}
+                      tone={overdueTasks > 0 ? "danger" : "warning"}
+                      title={`${pendingTasks} مهام قيد الانتظار`}
+                      description={
+                        overdueTasks > 0
+                          ? `${overdueTasks} مهام متأخرة`
+                          : "راجع المهام المستحقة"
+                      }
+                      onClick={() => setLocation("/tasks")}
+                    />
+                  )}
+                </div>
+              )}
+            </SectionCard>
+          </div>
 
           <SectionCard
-            title="حالة السيارات"
-            description="توفر السيارات وحالتها الحالية"
-            action={
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setLocation("/vehicles")}
-              >
-                عرض السيارات
-                <ChevronLeft className="size-4" aria-hidden="true" />
-              </Button>
-            }
-            className="xl:order-3 xl:col-span-4"
-          >
-            {fleetState === "error" ? (
-              <ErrorState
-                title="تعذر تحميل حالة السيارات"
-                description={getApiErrorMessage(vehiclesQuery.error).title}
-                onRetry={() => void vehiclesQuery.refetch()}
-                className="py-8"
-              />
-            ) : <>
-              <div className={cn(
-                "grid gap-2.5",
-                dashboard.outOfServiceCount > 0 ? "grid-cols-2 xl:grid-cols-4" : "grid-cols-3",
-              )}>
-                <FleetStatus
-                  label="متاحة"
-                  value={dashboard.availableCount}
-                  status="AVAILABLE"
-                  state={fleetState}
-                />
-                <FleetStatus label="مؤجرة" value={dashboard.rentedCount} status="RENTED" state={fleetState} />
-                <FleetStatus label="في الصيانة" value={dashboard.vehiclesUnderMaintenance} status="MAINTENANCE" state={fleetState} />
-                {fleetState === "ready" && dashboard.outOfServiceCount > 0 && (
-                  <FleetStatus label="خارج الخدمة" value={dashboard.outOfServiceCount} status="OUT_OF_SERVICE" />
-                )}
-              </div>
-              <div className="mt-4 border-t border-border pt-3">
-                <button type="button" onClick={() => setLocation("/maintenance")} className="flex w-full items-center justify-between text-start">
-                  <span>
-                    <span className="block text-sm font-semibold text-foreground">سجلات الصيانة</span>
-                    <span className="mt-1 block text-xs text-muted-foreground">المواعيد والسجل التشغيلي</span>
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <span className="number-ltr text-lg font-bold text-status-warning">
-                      {maintenanceState === "ready" ? dashboard.maintenanceCount : "—"}
-                    </span>
-                    <ChevronLeft className="size-4 text-muted-foreground" aria-hidden="true" />
-                  </span>
-                </button>
-              </div>
-            </>}
-          </SectionCard>
-        </div>
-
-        <section
-          aria-label="نظرة تشغيلية سريعة"
-          className="order-4 grid grid-cols-2 gap-3 lg:col-span-2 xl:order-4 xl:col-span-full xl:grid-cols-4 xl:gap-4"
-        >
-          <DashboardMetricCard
-            label="الإيجارات النشطة"
-            value={String(dashboard.activeRentals.length)}
-            context="عقود قيد التنفيذ"
-            icon={Car}
-            tone="info"
-            state={rentalsState}
-            errorMessage={rentalsQuery.error ? getApiErrorMessage(rentalsQuery.error).title : undefined}
-            onClick={() => setLocation("/rentals")}
-          />
-          <DashboardMetricCard
-            label="الإرجاعات القريبة"
-            value={String(dashboard.priorityReturns.length)}
-            context={dashboard.returningToday.length > 0 ? `${dashboard.returningToday.length} مستحقة اليوم` : "خلال اليومين المقبلين"}
-            icon={Clock3}
-            tone={dashboard.overdueReturns.length > 0 ? "danger" : "warning"}
-            state={rentalsState}
-            errorMessage={rentalsQuery.error ? getApiErrorMessage(rentalsQuery.error).title : undefined}
-            onClick={() => setLocation("/rentals")}
-          />
-          <DashboardMetricCard
-            label="السيارات المتاحة"
-            value={String(dashboard.availableCount)}
-            context="جاهزة للتأجير"
-            icon={Car}
-            tone="positive"
-            state={fleetState}
-            errorMessage={vehiclesQuery.error ? getApiErrorMessage(vehiclesQuery.error).title : undefined}
-            onClick={() => setLocation("/vehicles?filter=available")}
-          />
-          <DashboardMetricCard
-            label="المهام المفتوحة"
-            value={String(pendingTasks)}
-            context={overdueTasks > 0 ? `${overdueTasks} متأخرة` : "تحتاج إلى متابعة"}
-            icon={ClipboardList}
-            tone={overdueTasks > 0 ? "danger" : "warning"}
-            state={tasksState}
-            errorMessage={tasksQuery.error ? getApiErrorMessage(tasksQuery.error).title : undefined}
-            onClick={() => setLocation("/tasks")}
-          />
-        </section>
-
-        <div className="order-2 grid gap-4 lg:col-span-2 xl:order-5 xl:col-span-full xl:grid-cols-12 xl:gap-5">
-          <SectionCard
-            title="الإيجارات النشطة"
-            description={`${dashboard.activeRentals.length} عقود قيد التنفيذ`}
+            title="النشاط الأخير"
+            description="آخر العقود التي تم إنهاؤها"
             action={
               <Button
                 type="button"
@@ -672,163 +897,50 @@ export default function DashboardPage() {
                 size="sm"
                 onClick={() => setLocation("/rentals")}
               >
-                عرض الكل
+                سجل الإيجارات
                 <ChevronLeft className="size-4" aria-hidden="true" />
               </Button>
             }
-            className="overflow-hidden xl:col-span-7"
+            className="order-5 overflow-hidden lg:col-span-2 xl:order-6 xl:col-span-full"
           >
             {rentalRowsState === "loading" ? (
               <LoadingState rows={3} className="-m-1 p-1" />
             ) : rentalRowsState === "error" ? (
               <ErrorState
-                title="تعذر تحميل الإيجارات النشطة"
-                description={getApiErrorMessage(rentalsQuery.error ?? vehiclesQuery.error ?? customersQuery.error).title}
+                title="تعذر تحميل النشاط الأخير"
+                description={
+                  getApiErrorMessage(
+                    rentalsQuery.error ??
+                      vehiclesQuery.error ??
+                      customersQuery.error,
+                  ).title
+                }
                 onRetry={() => {
-                  void Promise.all([rentalsQuery.refetch(), vehiclesQuery.refetch(), customersQuery.refetch()]);
+                  void Promise.all([
+                    rentalsQuery.refetch(),
+                    vehiclesQuery.refetch(),
+                    customersQuery.refetch(),
+                  ]);
                 }}
                 className="py-8"
               />
-            ) : dashboard.activeRentals.length === 0 ? (
-              <InlineFeedback variant="info" icon={CheckCircle2}>
-                لا توجد إيجارات نشطة حالياً.
+            ) : dashboard.recentActivity.length === 0 ? (
+              <InlineFeedback variant="info" icon={Clock3}>
+                لا يوجد نشاط حديث لعرضه.
               </InlineFeedback>
             ) : (
               <div className="-mx-4 -my-4 divide-y divide-border sm:-mx-5">
-                {dashboard.activeRentals.slice(0, 4).map((rental) => (
-                  <ActiveRentalRow
+                {dashboard.recentActivity.map((rental) => (
+                  <RecentActivityRow
                     key={rental.id}
                     rental={rental}
                     vehicle={vehicleById.get(rental.vehicleId)}
                     customerName={customerNameById.get(rental.customerId)}
-                    onClick={() => setLocation(`/rentals/${rental.id}`)}
                   />
                 ))}
               </div>
             )}
           </SectionCard>
-
-          <SectionCard
-            title="المهام والصيانة"
-            description="التذكيرات القادمة والمتأخرة"
-            action={
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setLocation("/tasks")}
-              >
-                المهام
-                <ChevronLeft className="size-4" aria-hidden="true" />
-              </Button>
-            }
-            className="overflow-hidden xl:col-span-5"
-          >
-            {tasksState === "loading" || maintenanceState === "loading" ? (
-              <LoadingState rows={3} className="-m-1 p-1" />
-            ) : tasksState === "error" || maintenanceState === "error" ? (
-              <ErrorState
-                title="تعذر تحميل التذكيرات"
-                description={
-                  getApiErrorMessage(tasksQuery.error ?? maintenanceQuery.error)
-                    .title
-                }
-                onRetry={() => {
-                  void Promise.all([
-                    tasksQuery.refetch(),
-                    maintenanceQuery.refetch(),
-                  ]);
-                }}
-                className="py-8"
-              />
-            ) : dashboard.upcomingMaintenance.length === 0 &&
-              pendingTasks === 0 ? (
-              <InlineFeedback variant="info" icon={CheckCircle2}>
-                لا توجد مهام أو مواعيد صيانة قريبة.
-              </InlineFeedback>
-            ) : (
-              <div className="-mx-4 -my-4 divide-y divide-border sm:-mx-5">
-                {dashboard.upcomingMaintenance.slice(0, 2).map((record) => {
-                  const vehicle = vehicleById.get(record.vehicleId);
-                  const label =
-                    MAINTENANCE_TYPES[record.type]?.label ?? record.type;
-                  return (
-                    <DashboardAlertRow
-                      key={record.id}
-                      icon={Wrench}
-                      tone={
-                        dueLabelFor(getDaysFromCurrentDay(record.maintenanceDate, new Date())).tone
-                      }
-                      title={`موعد ${label}`}
-                      description={
-                        vehicle
-                          ? `${vehicle.make} ${vehicle.model} · ${formatDate(record.maintenanceDate)}`
-                          : formatDate(record.maintenanceDate)
-                      }
-                      onClick={() => setLocation("/maintenance")}
-                    />
-                  );
-                })}
-                {pendingTasks > 0 && (
-                  <DashboardAlertRow
-                    icon={ClipboardList}
-                    tone={overdueTasks > 0 ? "danger" : "warning"}
-                    title={`${pendingTasks} مهام قيد الانتظار`}
-                    description={
-                      overdueTasks > 0
-                        ? `${overdueTasks} مهام متأخرة`
-                        : "راجع المهام المستحقة"
-                    }
-                    onClick={() => setLocation("/tasks")}
-                  />
-                )}
-              </div>
-            )}
-          </SectionCard>
-        </div>
-
-        <SectionCard
-          title="النشاط الأخير"
-          description="آخر العقود التي تم إنهاؤها"
-          action={
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setLocation("/rentals")}
-            >
-              سجل الإيجارات
-              <ChevronLeft className="size-4" aria-hidden="true" />
-            </Button>
-          }
-          className="order-5 overflow-hidden lg:col-span-2 xl:order-6 xl:col-span-full"
-        >
-          {rentalRowsState === "loading" ? (
-            <LoadingState rows={3} className="-m-1 p-1" />
-          ) : rentalRowsState === "error" ? (
-            <ErrorState
-              title="تعذر تحميل النشاط الأخير"
-              description={getApiErrorMessage(rentalsQuery.error ?? vehiclesQuery.error ?? customersQuery.error).title}
-              onRetry={() => {
-                void Promise.all([rentalsQuery.refetch(), vehiclesQuery.refetch(), customersQuery.refetch()]);
-              }}
-              className="py-8"
-            />
-          ) : dashboard.recentActivity.length === 0 ? (
-            <InlineFeedback variant="info" icon={Clock3}>لا يوجد نشاط حديث لعرضه.</InlineFeedback>
-          ) : (
-            <div className="-mx-4 -my-4 divide-y divide-border sm:-mx-5">
-              {dashboard.recentActivity.map((rental) => (
-                <RecentActivityRow
-                    key={rental.id}
-                    rental={rental}
-                    vehicle={vehicleById.get(rental.vehicleId)}
-                    customerName={customerNameById.get(rental.customerId)}
-                />
-              ))}
-            </div>
-          )}
-        </SectionCard>
         </div>
       </div>
     </div>

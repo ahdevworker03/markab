@@ -369,96 +369,6 @@ test.afterAll(async () => {
   });
 });
 
-test("records QueryCache metadata for a true post-load remount", async ({
-  browser,
-}) => {
-  const routes = [
-    postLoadRouteByName.get("analytics")!,
-    postLoadRouteByName.get("reports")!,
-  ];
-  const diagnostics: Record<string, unknown> = {};
-
-  for (const route of routes) {
-    const { context, page } = await createMobileProfile(browser);
-    const requests: string[] = [];
-    const endpoints = [
-      "/api/maintenance",
-      "/api/expenses",
-      "/api/tasks",
-      "/api/vehicles",
-    ];
-    const snapshot = (label: string) =>
-      page.evaluate(
-        ({ label, endpoints }) => {
-          const client = (window as Window & { __benchmarkQueryClient?: any })
-            .__benchmarkQueryClient;
-          const queries = client?.getQueryCache().getAll() ?? [];
-          return {
-            label,
-            now: Date.now(),
-            queries: queries.map((query: any) => ({
-              queryKey: query.queryKey,
-              queryHash: query.queryHash,
-              dataUpdatedAt: query.state.dataUpdatedAt,
-              ageMs: query.state.dataUpdatedAt
-                ? Date.now() - query.state.dataUpdatedAt
-                : null,
-              isInvalidated: query.state.isInvalidated,
-              status: query.state.status,
-              fetchStatus: query.state.fetchStatus,
-              observerCount: query.getObserversCount(),
-                  staleTimes: (query.observers ?? []).map(
-                    (observer: any) => observer.options.staleTime ?? 0,
-                  ),
-            })),
-          };
-        },
-        { label, endpoints },
-      );
-
-    try {
-      await loginMobilePage(page);
-      await syncAndWaitForFinalPull(page, fullPilotProjectionCounts);
-      await navigateToPostLoadRoute(page, route);
-      await waitForPostLoadUsable(page, route);
-      const afterFirstLoad = await snapshot("after-first-load");
-      await navigateToPostLoadRoute(
-        page,
-        postLoadRouteByName.get("dashboard")!,
-      );
-      await waitForPostLoadUsable(page, postLoadRouteByName.get("dashboard")!);
-      const beforeRemount = await snapshot("before-remount");
-      page.on("request", (request) => {
-        const path = new URL(request.url()).pathname;
-        if (endpoints.includes(path)) requests.push(path);
-      });
-      await navigateToPostLoadRoute(page, route);
-      const afterObserverMount = await snapshot("after-observer-mount");
-      await waitForPostLoadUsable(page, route);
-      diagnostics[route.name] = {
-        afterFirstLoad,
-        beforeRemount,
-        afterObserverMount,
-        afterUsable: await snapshot("after-usable"),
-        remountRequests: Object.fromEntries(
-          endpoints.map((endpoint) => [
-            endpoint,
-            requests.filter((path) => path === endpoint).length,
-          ]),
-        ),
-      };
-    } finally {
-      await context.close();
-    }
-  }
-
-  await mkdir(resolve("test-results", "benchmark"), { recursive: true });
-  await writeFile(
-    resolve("test-results", "benchmark", "slice5-query-cache-diagnostics.json"),
-    JSON.stringify(diagnostics, null, 2),
-  );
-});
-
 test.describe("benchmark API", () => {
   test("measures bounded outstanding summary", async ({ request }) => {
     await resetBenchmark();
@@ -1872,6 +1782,37 @@ async function navigateToPostLoadRoute(
   await page.waitForURL(route.path);
 }
 
+async function waitForDashboardQueryQuiescence(page: Page): Promise<void> {
+  await page.waitForFunction(() => {
+    const client = (
+      window as Window & {
+        __benchmarkQueryClient?: {
+          getQueryCache(): {
+            getAll(): Array<{
+              queryKey: unknown;
+              state: { fetchStatus: string };
+            }>;
+          };
+        };
+      }
+    ).__benchmarkQueryClient;
+    if (!client) return false;
+    const dashboardKeys = new Set([
+      "/api/maintenance",
+      "/api/expenses",
+      "/api/tasks",
+      "/api/vehicles",
+    ]);
+    return client
+      .getQueryCache()
+      .getAll()
+      .filter((query) =>
+        dashboardKeys.has(String((query.queryKey as string[])[0])),
+      )
+      .every((query) => query.state.fetchStatus === "idle");
+  });
+}
+
 test.describe("Slice 5 post-load navigation profile", () => {
   test("profiles usable content, route chunks, requests, and DOM volume", async ({
     browser,
@@ -2033,6 +1974,7 @@ test.describe("Slice 5 post-load navigation profile", () => {
                   postLoadRouteByName.get("dashboard")!,
                 );
               }
+              await waitForDashboardQueryQuiescence(page);
               await session.send("Performance.enable");
               beforeMetrics = await session.send("Performance.getMetrics");
               await page.evaluate(() => {
