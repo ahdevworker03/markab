@@ -23,11 +23,15 @@ const statusOptions: ReadonlyArray<{
   label: string;
   hint: string;
 }> = [
-  { value: "ACTIVE", label: "نشط", hint: "الخيار المعتاد للعملاء المعتمدين." },
+  {
+    value: "ACTIVE",
+    label: "نشط",
+    hint: "الخيار الافتراضي للعملاء الجاهزين للاستخدام.",
+  },
   {
     value: "TRIAL",
     label: "تجريبي",
-    hint: "له حالياً نفس صلاحيات التشغيل، دون مدة تجريبية محددة.",
+    hint: "نفس صلاحيات التشغيل حاليًا، دون مدة تجريبية محددة.",
   },
 ];
 
@@ -87,7 +91,8 @@ export default function PlatformCreateOrganizationPage() {
       if (errorCode(error) === "EMAIL_ALREADY_EXISTS") {
         setErrors((current) => ({
           ...current,
-          ownerEmail: "هذا البريد الإلكتروني مرتبط بحساب موجود بالفعل. استخدم بريداً آخر.",
+          ownerEmail:
+            "هذا البريد الإلكتروني مرتبط بحساب موجود بالفعل. استخدم بريداً آخر.",
         }));
         return;
       }
@@ -96,8 +101,8 @@ export default function PlatformCreateOrganizationPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <header className="space-y-2">
+    <div className="max-w-2xl space-y-4 sm:space-y-5">
+      <header className="space-y-1.5">
         <Link
           href="/platform"
           className="-ms-2 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-primary hover:bg-muted sm:min-h-9"
@@ -106,15 +111,15 @@ export default function PlatformCreateOrganizationPage() {
           المؤسسات
         </Link>
         <h1 className="ui-page-title">إضافة مؤسسة</h1>
-        <p className="ui-secondary-text max-w-xl">
-          أنشئ مؤسسة عميلة وحساب مالكها الأول. يحدّد المالك كلمة مروره بنفسه عبر
-          رابط يُطلب إرساله إلى بريده.
+        <p className="ui-secondary-text">
+          أنشئ حساب مؤسسة جديدًا وأضف المالك الأول. سيُطلب إرسال رابط لإعداد
+          كلمة المرور إلى بريده الإلكتروني.
         </p>
       </header>
 
-      <form onSubmit={handleSubmit} noValidate className="max-w-xl">
-        <SectionCard title="بيانات المؤسسة">
-          <div className="space-y-5">
+      <form onSubmit={handleSubmit} noValidate>
+        <SectionCard title="بيانات المؤسسة" className="[&_h2]:text-lg">
+          <div className="space-y-4">
             {formError && (
               <InlineError className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
                 {formError}
@@ -133,9 +138,13 @@ export default function PlatformCreateOrganizationPage() {
                 onChange={(event) => {
                   setOrganizationName(event.target.value);
                   if (errors.organizationName)
-                    setErrors((current) => ({ ...current, organizationName: undefined }));
+                    setErrors((current) => ({
+                      ...current,
+                      organizationName: undefined,
+                    }));
                 }}
                 maxLength={NAME_MAX_LENGTH}
+                placeholder="مثال: شركة الأرز لتأجير السيارات"
                 autoComplete="off"
                 aria-invalid={!!errors.organizationName}
                 disabled={submitting}
@@ -158,8 +167,12 @@ export default function PlatformCreateOrganizationPage() {
                 onChange={(event) => {
                   setOwnerEmail(event.target.value);
                   if (errors.ownerEmail)
-                    setErrors((current) => ({ ...current, ownerEmail: undefined }));
+                    setErrors((current) => ({
+                      ...current,
+                      ownerEmail: undefined,
+                    }));
                 }}
+                placeholder="owner@example.com"
                 autoComplete="off"
                 aria-invalid={!!errors.ownerEmail}
                 disabled={submitting}
@@ -167,7 +180,7 @@ export default function PlatformCreateOrganizationPage() {
               />
             </FormField>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <p id="initial-status-label" className="ui-label font-semibold">
                 الحالة الأولية <span className="ms-1 text-destructive">*</span>
               </p>
@@ -185,9 +198,9 @@ export default function PlatformCreateOrganizationPage() {
                     key={option.value}
                     htmlFor={`initial-status-${option.value}`}
                     className={cn(
-                      "flex min-h-11 cursor-pointer items-start gap-3 rounded-lg border border-border px-3 py-3 transition-colors hover:bg-muted/50",
+                      "flex min-h-11 cursor-pointer items-start gap-2.5 rounded-lg border border-border px-3 py-2.5 transition-colors hover:bg-muted/50",
                       initialStatus === option.value &&
-                        "border-primary/50 bg-primary/5",
+                        "border-primary/70 bg-card ring-1 ring-primary/20",
                     )}
                   >
                     <RadioGroupItem
@@ -195,9 +208,11 @@ export default function PlatformCreateOrganizationPage() {
                       value={option.value}
                       className="mt-0.5"
                     />
-                    <span className="space-y-0.5">
-                      <span className="block text-sm font-semibold">{option.label}</span>
-                      <span className="block text-xs font-normal text-muted-foreground">
+                    <span className="space-y-px">
+                      <span className="block text-sm font-semibold leading-5">
+                        {option.label}
+                      </span>
+                      <span className="block text-xs font-normal leading-4 text-muted-foreground">
                         {option.hint}
                       </span>
                     </span>
@@ -206,8 +221,12 @@ export default function PlatformCreateOrganizationPage() {
               </RadioGroup>
             </div>
 
-            <div className="flex flex-col gap-2 border-t border-border pt-5 sm:flex-row">
-              <Button type="submit" disabled={submitting} className="sm:min-w-40">
+            <div className="flex flex-col gap-2 border-t border-border pt-4 sm:flex-row">
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="sm:min-w-40"
+              >
                 {submitting ? "جارٍ الإنشاء" : "إنشاء المؤسسة"}
               </Button>
               <Link
