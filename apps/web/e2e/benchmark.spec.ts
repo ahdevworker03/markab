@@ -17,6 +17,7 @@ import {
   writeResultArtifact,
   type Measurement,
 } from "./benchmark-results";
+import { captureLocalResources } from "./benchmark-resources";
 
 const sampling = { warmups: 5, samples: 30 };
 const command = "pnpm --filter @workspace/web run benchmark";
@@ -26,7 +27,10 @@ const environment = {
   webOrigin: "http://127.0.0.1:4174",
 };
 const collectedMeasurements: Measurement[] = [];
-const profiles: Record<string, Record<string, string | number | boolean>> = {
+const profiles: Record<
+  string,
+  Record<string, string | number | boolean | null>
+> = {
   api: { name: "api" },
 };
 type ProjectionCounts = {
@@ -177,7 +181,7 @@ async function syncAndWaitForFinalPull(
 
 function recordMeasurements(
   measurements: Measurement[],
-  profile: Record<string, string | number | boolean> = { name: "api" },
+  profile: Record<string, string | number | boolean | null> = { name: "api" },
 ): void {
   profiles[String(profile.name)] = profile;
   collectedMeasurements.push(...measurements);
@@ -554,36 +558,58 @@ test.describe("benchmark API", () => {
       }),
     );
     try {
+      let peakConnections = 0;
+      let resourceSnapshot = await captureLocalResources();
       const measurement = await runSamples(
         "concurrent-ten-user-mixed-request-group",
         async (sample) => {
-          await Promise.all(
-            users.map(({ request, token }, index) =>
-              index === 0
-                ? requestJson(request, token, "/customers", "POST", {
-                    first_name: "Benchmark",
-                    last_name: `Concurrent${sample}`,
-                    phone: `+961712${String(sample + 10).padStart(5, "0")}`,
-                    address: "Benchmark Street",
-                    national_id: `CON-${sample}-${index}`,
-                    license_number: `CON-${sample}-${index}`,
-                    license_expiry_date: "2030-01-01",
-                  })
-                : requestJson(
-                    request,
-                    token,
-                    index % 2
-                      ? "/customers?search=Customer1"
-                      : "/vehicles?search=Pilot",
-                  ),
-            ),
-          );
+          const monitor = setInterval(() => {
+            void captureLocalResources().then((snapshot) => {
+              peakConnections = Math.max(
+                peakConnections,
+                snapshot.activeConnections,
+              );
+              resourceSnapshot = snapshot;
+            });
+          }, 100);
+          try {
+            await Promise.all(
+              users.map(({ request, token }, index) =>
+                index === 0
+                  ? requestJson(request, token, "/customers", "POST", {
+                      first_name: "Benchmark",
+                      last_name: `Concurrent${sample}`,
+                      phone: `+961712${String(sample + 10).padStart(5, "0")}`,
+                      address: "Benchmark Street",
+                      national_id: `CON-${sample}-${index}`,
+                      license_number: `CON-${sample}-${index}`,
+                      license_expiry_date: "2030-01-01",
+                    })
+                  : requestJson(
+                      request,
+                      token,
+                      index % 2
+                        ? "/customers?search=Customer1"
+                        : "/vehicles?search=Pilot",
+                    ),
+              ),
+            );
+          } finally {
+            clearInterval(monitor);
+            resourceSnapshot = await captureLocalResources();
+            peakConnections = Math.max(
+              peakConnections,
+              resourceSnapshot.activeConnections,
+            );
+          }
         },
         sampling,
       );
       recordMeasurements([measurement], {
         name: "api-concurrent",
         virtualUsers: 10,
+        ...resourceSnapshot,
+        peakDbConnections: peakConnections,
       });
     } finally {
       await Promise.all(users.map(({ request }) => request.dispose()));
