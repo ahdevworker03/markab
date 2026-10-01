@@ -33,6 +33,11 @@ const statuses: readonly OrganizationStatus[] = [
 const rowGrid =
   "md:grid md:grid-cols-[minmax(0,1fr)_7rem_7.5rem_1.5rem] md:items-center md:gap-4";
 
+/** Short, stable form of a UUID for telling same-named organizations apart; the full id is in the title. */
+function shortId(id: string): string {
+  return `${id.slice(0, 4)}…${id.slice(-4)}`;
+}
+
 export default function PlatformOrganizationsPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<OrganizationStatus | "ALL">("ALL");
@@ -59,8 +64,8 @@ export default function PlatformOrganizationsPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <header className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+    <div className="space-y-4">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="min-w-0">
           <h1 className="ui-page-title">المؤسسات</h1>
           <p className="ui-secondary-text mt-1">
@@ -69,7 +74,7 @@ export default function PlatformOrganizationsPage() {
         </div>
         <Link
           href="/platform/organizations/new"
-          className={`${buttonVariants()} w-full gap-2 sm:w-auto`}
+          className={`${buttonVariants()} w-full shrink-0 gap-2 sm:w-auto`}
         >
           <Plus className="size-4" aria-hidden="true" />
           إضافة مؤسسة
@@ -80,14 +85,14 @@ export default function PlatformOrganizationsPage() {
         aria-labelledby="organizations-list-heading"
         className="overflow-hidden rounded-xl border border-card-border bg-card shadow-sm"
       >
-        <div className="flex flex-col gap-3 border-b border-border p-3 sm:p-4 md:flex-row md:items-center">
+        <div className="grid gap-3 border-b border-border p-3 sm:p-4 md:grid-cols-[minmax(0,3fr)_minmax(0,1fr)] md:items-center">
           <SearchBar
             aria-label="البحث في المؤسسات"
             placeholder="ابحث باسم المؤسسة أو بريدها الإلكتروني"
             value={search}
             onChange={(event) => changeSearch(event.target.value)}
             onClear={() => changeSearch("")}
-            className="min-w-0 md:flex-1 [&_input]:min-h-11 md:[&_input]:min-h-10"
+            className="min-w-0 [&_input]:min-h-11 md:[&_input]:min-h-10"
           />
           <Select
             dir="rtl"
@@ -98,7 +103,7 @@ export default function PlatformOrganizationsPage() {
           >
             <SelectTrigger
               aria-label="تصفية حسب الحالة"
-              className="h-11 w-full gap-2 rounded-xl border-transparent bg-muted px-3 text-sm md:h-10 md:w-48"
+              className="h-11 w-full gap-2 rounded-xl border-transparent bg-muted px-3 text-sm md:h-10"
             >
               <SelectValue />
             </SelectTrigger>
@@ -118,7 +123,10 @@ export default function PlatformOrganizationsPage() {
             قائمة المؤسسات
           </h2>
           {pagination && (
-            <p className="ui-secondary-text" aria-live="polite">
+            <p
+              className="text-xs tabular-nums text-muted-foreground"
+              aria-live="polite"
+            >
               {formatNumber(pagination.total)} مؤسسة
             </p>
           )}
@@ -161,22 +169,23 @@ export default function PlatformOrganizationsPage() {
                 >
                   <Link
                     href={`/platform/organizations/${organization.id}`}
-                    className={`group flex min-h-16 flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-3 transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 sm:px-5 ${rowGrid}`}
+                    className={`group flex min-h-16 flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-3 transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:px-5 ${rowGrid}`}
                   >
                     <span className="min-w-0 basis-[calc(100%-2rem)] md:basis-auto">
-                      <span className="line-clamp-2 break-words text-sm font-semibold text-foreground">
+                      <span className="line-clamp-2 break-words text-sm font-semibold leading-snug text-foreground md:text-base">
                         {organization.name}
                       </span>
-                      {organization.email && (
-                        <span className="block text-xs text-muted-foreground">
-                          <span className="identifier-ltr break-all">
-                            {organization.email}
-                          </span>
+                      <span className="mt-0.5 block text-xs text-muted-foreground">
+                        <span
+                          className="identifier-ltr tabular-nums"
+                          title={organization.id}
+                        >
+                          {shortId(organization.id)}
                         </span>
-                      )}
+                      </span>
                     </span>
                     <ChevronLeft
-                      className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-x-0.5 md:order-last"
+                      className="size-5 shrink-0 text-muted-foreground transition group-hover:-translate-x-0.5 group-hover:text-foreground group-focus-visible:-translate-x-0.5 group-focus-visible:text-foreground md:order-last"
                       aria-hidden="true"
                     />
                     <span className="flex items-center gap-3 md:contents">
