@@ -76,6 +76,7 @@ import {
 import { getApiErrorMessage } from "@/lib/api-error";
 import { analyticsReportFreshness } from "@/features/analytics-report-query-options";
 import { BenchmarkPageProfile } from "@/lib/benchmark-page-profile";
+import { markBenchmarkPage } from "@/lib/benchmark-page-profile";
 import type {
   ExpenseResponse,
   MaintenanceResponse,
@@ -569,6 +570,7 @@ function deriveAnalytics(
 }
 
 export default function AnalyticsPage() {
+  markBenchmarkPage("analytics", "target-function-entry");
   const [, navigate] = useLocation();
   const [selectedYear, setSelectedYear] = useState(MOCK_YEAR);
   const [selectedMonth, setSelectedMonth] = useState(0);
