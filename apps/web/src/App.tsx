@@ -13,6 +13,7 @@ import { AuthProvider } from "@/providers/AuthProvider";
 import { OfflineProvider } from "@/features/offline/OfflineProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { Spinner } from "@/components/ui/spinner";
+import { markBenchmarkPage } from "@/lib/benchmark-page-profile";
 
 import {
   AcceptInvitationPage,
@@ -195,6 +196,12 @@ function RouteLoading() {
 }
 
 function Router() {
+  if (
+    window.location.pathname === "/analytics" ||
+    window.location.pathname === "/reports"
+  ) {
+    markBenchmarkPage(window.location.pathname.slice(1), "route-selected");
+  }
   return (
     <Switch>
       <Route path="/" component={DashboardPage} />

@@ -44,7 +44,7 @@ export function PlatformShell({ children }: PlatformShellProps) {
       <main
         id="platform-main"
         tabIndex={-1}
-        className="mx-auto w-full max-w-[1200px] px-4 py-5 outline-none sm:px-6 sm:py-8"
+        className="mx-auto w-full max-w-[1200px] px-4 pb-5 pt-4 outline-none sm:px-6 sm:pb-8"
       >
         {children}
       </main>

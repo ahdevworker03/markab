@@ -15,6 +15,7 @@ import {
 
 import { PageHeader } from "@/components/layout/PageHeader";
 import { BenchmarkPageProfile } from "@/lib/benchmark-page-profile";
+import { markBenchmarkPage } from "@/lib/benchmark-page-profile";
 import {
   PeriodSelector,
   periodLabel,
@@ -188,6 +189,7 @@ function isEmptySummary(summary: ReportSummary) {
 }
 
 export default function ReportsPage() {
+  markBenchmarkPage("reports", "target-function-entry");
   const now = new Date();
   const [periodType, setPeriodType] = useState<ReportPeriodType>("month");
   const [month, setMonth] = useState(now.getMonth());
