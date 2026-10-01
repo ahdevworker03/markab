@@ -70,7 +70,7 @@ benefit.
 
 - Step 60 creates or resolves the internal organization only from the
   production-only bootstrap command.
-- Normal registration, tenant user creation, invitations, role mutation, and
+- Tenant provisioning, tenant user creation, invitations, role mutation, and
   normal seed data cannot create or promote a `PLATFORM_OWNER`.
 - The internal organization is excluded from platform client-organization
   list, search, detail, and lifecycle actions.

@@ -9,14 +9,6 @@ export interface HealthStatus {
   status: string;
 }
 
-export interface RegisterRequest {
-  email: string;
-  /** @minLength 8 */
-  password: string;
-  /** @minLength 1 */
-  organizationName: string;
-}
-
 export interface RequestPasswordResetRequest {
   email: string;
 }

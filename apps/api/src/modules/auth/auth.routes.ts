@@ -1,6 +1,5 @@
 import { Router, type IRouter, type RequestHandler } from "express";
 import {
-  register,
   login,
   refresh,
   logout,
@@ -10,7 +9,6 @@ import {
 } from "./auth.controller";
 import { createRateLimiter, validateBody } from "../../middleware";
 import {
-  registerSchema,
   loginSchema,
   requestPasswordResetSchema,
   confirmPasswordResetSchema,
@@ -29,12 +27,6 @@ const requireAllowedOrigin: RequestHandler = (req, _res, next) => {
   next();
 };
 
-router.post(
-  "/register",
-  publicRateLimit(),
-  validateBody(registerSchema),
-  register,
-);
 router.post("/login", publicRateLimit(), validateBody(loginSchema), login);
 router.post("/refresh", publicRateLimit(), requireAllowedOrigin, refresh);
 router.post("/logout", requireAllowedOrigin, logout);

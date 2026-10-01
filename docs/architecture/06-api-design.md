@@ -17,33 +17,32 @@
 | 11 | [Validation](#validation) |
 | 12 | [Authentication](#authentication) |
 | 13 | [Authentication Endpoints](#authentication-endpoints) |
-| 14 | [POST /api/auth/register](#post-apiauthregister) |
-| 15 | [POST /api/auth/login](#post-apiauthlogin) |
-| 16 | [POST /api/auth/refresh](#post-apiauthrefresh) |
-| 17 | [POST /api/auth/logout](#post-apiauthlogout) |
-| 18 | [GET /api/auth/me](#get-apiauthme) |
-| 19 | [Organization Endpoints](#organization-endpoints) |
-| 20 | [Organization Identity From Authentication](#organization-identity-from-authentication) |
-| 21 | [GET /api/organizations/me](#get-apiorganizationsme) |
-| 22 | [PATCH /api/organizations/me](#patch-apiorganizationsme) |
-| 23 | [POST /api/platform/organizations](#post-apiplatformorganizations) |
-| 24 | [GET /api/platform/organizations/:organizationId/users](#get-apiplatformorganizationsorganizationidusers) |
-| 25 | [POST /api/platform/organizations/:organizationId/invitations/:invitationId/resend](#post-apiplatformorganizationsorganizationidinvitationsinvitationidresend) |
-| 26 | [POST /api/platform/organizations/:organizationId/owner/password-reset](#post-apiplatformorganizationsorganizationidownerpassword-reset) |
-| 27 | [POST /api/platform/organizations/:organizationId/users/:userId/deactivate](#post-apiplatformorganizationsorganizationidusersuseriddeactivate) |
-| 28 | [PATCH /api/platform/organizations/:organizationId/status](#patch-apiplatformorganizationsorganizationidstatus) |
-| 29 | [DELETE /api/organizations/me](#delete-apiorganizationsme) |
-| 30 | [Authorization](#authorization) |
-| 31 | [Pagination](#pagination) |
-| 32 | [Filtering](#filtering) |
-| 33 | [Sorting](#sorting) |
-| 34 | [Searching](#searching) |
-| 35 | [Versioning](#versioning) |
-| 36 | [Offline Synchronization](#offline-synchronization) |
-| 37 | [Security](#security) |
-| 38 | [Consistency](#consistency) |
-| 39 | [Future Expansion](#future-expansion) |
-| 40 | [Guiding Principle](#guiding-principle) |
+| 14 | [POST /api/auth/login](#post-apiauthlogin) |
+| 15 | [POST /api/auth/refresh](#post-apiauthrefresh) |
+| 16 | [POST /api/auth/logout](#post-apiauthlogout) |
+| 17 | [GET /api/auth/me](#get-apiauthme) |
+| 18 | [Organization Endpoints](#organization-endpoints) |
+| 19 | [Organization Identity From Authentication](#organization-identity-from-authentication) |
+| 20 | [GET /api/organizations/me](#get-apiorganizationsme) |
+| 21 | [PATCH /api/organizations/me](#patch-apiorganizationsme) |
+| 22 | [POST /api/platform/organizations](#post-apiplatformorganizations) |
+| 23 | [GET /api/platform/organizations/:organizationId/users](#get-apiplatformorganizationsorganizationidusers) |
+| 24 | [POST /api/platform/organizations/:organizationId/invitations/:invitationId/resend](#post-apiplatformorganizationsorganizationidinvitationsinvitationidresend) |
+| 25 | [POST /api/platform/organizations/:organizationId/owner/password-reset](#post-apiplatformorganizationsorganizationidownerpassword-reset) |
+| 26 | [POST /api/platform/organizations/:organizationId/users/:userId/deactivate](#post-apiplatformorganizationsorganizationidusersuseriddeactivate) |
+| 27 | [PATCH /api/platform/organizations/:organizationId/status](#patch-apiplatformorganizationsorganizationidstatus) |
+| 28 | [DELETE /api/organizations/me](#delete-apiorganizationsme) |
+| 29 | [Authorization](#authorization) |
+| 30 | [Pagination](#pagination) |
+| 31 | [Filtering](#filtering) |
+| 32 | [Sorting](#sorting) |
+| 33 | [Searching](#searching) |
+| 34 | [Versioning](#versioning) |
+| 35 | [Offline Synchronization](#offline-synchronization) |
+| 36 | [Security](#security) |
+| 37 | [Consistency](#consistency) |
+| 38 | [Future Expansion](#future-expansion) |
+| 39 | [Guiding Principle](#guiding-principle) |
 
 ## Purpose
 
@@ -255,32 +254,6 @@ Authentication endpoints are grouped under the `/api/auth/*` prefix.
 
 All endpoints accept and return JSON.
 
-## POST /api/auth/register
-
-- **Purpose:** Register a new organization and its first user (OWNER role).
-- **Request body:**
-  ```json
-  {
-    "email": "owner@example.com",
-    "password": "securepassword",
-    "organizationName": "My Company"
-  }
-  ```
-- **Success response:** `201 Created`
-  ```json
-  {
-    "data": {
-      "accessToken": "...",
-      "refreshToken": "...",
-      "expiresAt": "2026-01-01T00:00:00.000Z"
-    }
-  }
-  ```
-- **Error responses:**
-  - `400` Invalid request
-  - `409` Email already exists
-  - `422` Validation failed
-
 ## POST /api/auth/login
 
 - **Purpose:** Authenticate a user and issue access and refresh tokens.
@@ -447,15 +420,17 @@ Since every authenticated user belongs to exactly one organization, the API deri
 
 ## POST /api/platform/organizations
 
-- **Purpose:** Provision a client organization and its first `OWNER`. Markab is
-  B2B: clients are created by the platform owner.
+- **Purpose:** Provision a client organization and its first `OWNER`. This is
+  the only way to create a tenant: Markab is B2B with operator-managed
+  onboarding, and there is no public registration endpoint.
 - **Authorization:** `PLATFORM_OWNER` only; no tenant middleware.
 - **Request body:**
   ```json
   { "organizationName": "Cedar Rentals", "ownerEmail": "founder@example.com", "initialStatus": "ACTIVE" }
   ```
-  `initialStatus` is `ACTIVE` (default) or `TRIAL`; `SUSPENDED`/`CANCELLED` are
-  rejected. Unknown properties — notably any password — are rejected with `422`.
+  `initialStatus` is `ACTIVE` (default, the normal production choice) or `TRIAL`
+  (currently the same operational access as `ACTIVE`, with no expiry or billing);
+  `SUSPENDED`/`CANCELLED` are rejected. Unknown properties — notably any password — are rejected with `422`.
   The owner email is trimmed, lower-cased, and must be globally unique.
 - **Behavior:** in one transaction the organization, its `OWNER`, a one-time
   password-setup token (the normal password-reset token; hash stored), and a

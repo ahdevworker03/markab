@@ -124,8 +124,14 @@ Examples include:
 ## Organization Lifecycle and Profile
 
 `Organization` has a lifecycle status of `TRIAL`, `ACTIVE`, `SUSPENDED`, or
-`CANCELLED`. New tenant registrations begin in `TRIAL`; existing tenants were
-backfilled to `ACTIVE` when lifecycle support was introduced.
+`CANCELLED`. Client organizations are created only by a `PLATFORM_OWNER`
+through `POST /api/platform/organizations`, together with their first `OWNER`;
+there is no public self-registration. The operator chooses the initial status,
+`ACTIVE` (the normal production default) or `TRIAL`, and `TRIAL` currently has
+the same operational access as `ACTIVE`. The column's own database default
+remains `TRIAL` for persistence compatibility, but provisioning always sets the
+status explicitly, so the default is not what onboarding relies on. Existing
+tenants were backfilled to `ACTIVE` when lifecycle support was introduced.
 
 Organizations also store nullable business identity fields used by contracts
 and reports: legal name, phone, email, address, and contract footer text. SaaS

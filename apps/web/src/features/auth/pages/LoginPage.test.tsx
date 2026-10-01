@@ -40,6 +40,10 @@ describe("LoginPage", () => {
       "submit",
     );
     expect(screen.queryByText("إنشاء حساب الشركة")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /إنشاء حساب|تسجيل شركة|حساب جديد|register|sign up/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "نسيت كلمة المرور؟" })).toBeInTheDocument();
   });
 
   it("shows authentication failures as alert feedback", async () => {

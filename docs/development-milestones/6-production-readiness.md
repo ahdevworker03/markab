@@ -61,7 +61,7 @@ Milestones 1 through 5.8 and Step 58 are documented as complete. Milestone 5.8 c
 - Rebuilding the tenant application, redesigning completed business modules, or carrying out a general refactor.
 - Repeating Milestone 5.8 screen rebuild work. Its final authoritative-data and human-QA blockers must be closed in Milestone 5.8 or explicitly transferred with a documented reason.
 - Turning the Platform Admin surface into a billing, support, impersonation, tenant-user-management, audit-analysis, or customer-success system.
-- Allowing `PLATFORM_OWNER` creation through `POST /api/auth/register`, tenant invitations, `POST /api/users`, normal seed data, or a public bootstrap endpoint.
+- Allowing `PLATFORM_OWNER` creation through tenant provisioning (`POST /api/platform/organizations`), tenant invitations, `POST /api/users`, normal seed data, or a public bootstrap endpoint.
 - Replacing the password-reset token domain, exposing reset tokens in API responses/logs, or adding MFA/OAuth as part of delivery work.
 - Treating the existing transitional `apps/web/src/data` state or React Query cache as an offline synchronization system.
 - Making PostgreSQL secondary to browser data, accepting client-supplied tenant identity, or bypassing server authorization/business rules during synchronization.

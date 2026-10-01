@@ -57,25 +57,15 @@ describe("organization lifecycle routes", () => {
     });
   });
 
-  it("creates registrations in TRIAL", async () => {
-    const email = `trial-${Date.now()}@example.com`;
-    const response = await request(app).post("/api/auth/register").send({
-      email,
-      password: "Password123!",
-      organizationName: "Trial organization",
-    });
-
-    expect(response.status).toBe(201);
-
-    const user = await prisma.user.findUniqueOrThrow({
-      where: { email },
-      select: { organization: { select: { status: true } } },
-    });
-    expect(user.organization.status).toBe("TRIAL");
+  it("gives a TRIAL organization normal business access", async () => {
+    await expect(
+      prisma.organization.findUniqueOrThrow({ where: { id: organizationId } }),
+    ).resolves.toMatchObject({ status: "TRIAL" });
 
     const businessResponse = await request(app)
       .get("/api/customers")
-      .set("Authorization", `Bearer ${response.body.data.accessToken}`);
+      .set("Authorization", `Bearer ${ownerToken}`);
+
     expect(businessResponse.status).toBe(200);
   });
 

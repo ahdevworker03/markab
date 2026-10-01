@@ -1,6 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
 import {
-  registerOrganization,
   login,
   getCurrentUser,
   rotateRefreshToken,
@@ -10,9 +9,8 @@ import {
   requestPasswordReset,
   confirmPasswordReset,
 } from "./password-reset.service";
-import { AppError, ok, created, noContent } from "../../shared";
+import { AppError, ok, noContent } from "../../shared";
 import type {
-  RegisterInput,
   LoginInput,
   RequestPasswordResetInput,
   ConfirmPasswordResetInput,
@@ -22,28 +20,6 @@ import {
   getRefreshCookie,
   setRefreshCookie,
 } from "./auth.cookie";
-
-async function register(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): Promise<void> {
-  try {
-    const input = req.body as RegisterInput;
-    const tokens = await registerOrganization(
-      input.email,
-      input.password,
-      input.organizationName,
-    );
-    setRefreshCookie(res, tokens.refreshToken);
-    created(res, {
-      accessToken: tokens.accessToken,
-      expiresAt: tokens.expiresAt.toISOString(),
-    });
-  } catch (err) {
-    next(err);
-  }
-}
 
 async function loginHandler(
   req: Request,
@@ -167,7 +143,6 @@ async function confirmReset(
 }
 
 export {
-  register,
   loginHandler as login,
   refresh,
   logout,

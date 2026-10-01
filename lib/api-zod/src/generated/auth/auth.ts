@@ -8,25 +8,6 @@
 import * as zod from "zod";
 
 /**
- * Registers an organization with an OWNER user, returns a short-lived access token, and sets the refresh token in an HttpOnly cookie.
- * @summary Register a new organization and its first user
- */
-export const registerOrganizationBodyPasswordMin = 8;
-
-export const RegisterOrganizationBody = zod.object({
-  email: zod.string().email(),
-  password: zod.string().min(registerOrganizationBodyPasswordMin),
-  organizationName: zod.string().min(1),
-});
-
-export const RegisterOrganizationResponse = zod.object({
-  data: zod.object({
-    accessToken: zod.string(),
-    expiresAt: zod.coerce.date(),
-  }),
-});
-
-/**
  * Authenticates a user, returns a short-lived access token, and sets the refresh token in an HttpOnly cookie.
  * @summary Login
  */

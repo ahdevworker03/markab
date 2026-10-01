@@ -3,118 +3,132 @@ import request from "supertest";
 import app from "../../app";
 import { prisma } from "../../database";
 import { cleanup } from "../../test/helpers";
+import { generateAccessToken, hashPassword } from "./index";
 
 describe("auth routes", () => {
   beforeEach(async () => {
     await cleanup();
   });
 
-  it("registers a new organization with an owner", async () => {
-    const email = `owner-${Date.now()}@example.com`;
-    const organizationName = `Role test organization ${Date.now()}`;
-
-    const response = await request(app).post("/api/auth/register").send({
-      email,
+  describe("public tenant registration is removed", () => {
+    const registration = () => ({
+      email: `owner-${Date.now()}@example.com`,
       password: "Password123!",
-      organizationName,
+      organizationName: "Self-registered organization",
     });
 
-    expect(response.status).toBe(201);
+    async function expectNothingProvisioned() {
+      await expect(prisma.organization.count()).resolves.toBe(0);
+      await expect(prisma.user.count()).resolves.toBe(0);
+      await expect(prisma.refreshToken.count()).resolves.toBe(0);
+    }
 
-    const user = await prisma.user.findUniqueOrThrow({
-      where: { email },
-      select: { id: true, role: true, organization_id: true },
+    it("no longer provisions a tenant for unauthenticated callers", async () => {
+      const response = await request(app).post("/api/auth/register").send(registration());
+
+      // Falls through to the shared authenticated routers like any other unmatched path.
+      expect(response.status).toBe(401);
+      expect(response.body.error.code).toBe("AUTHENTICATION_REQUIRED");
+      expect(response.headers["set-cookie"]).toBeUndefined();
+      expect(response.body.data).toBeUndefined();
+      await expectNothingProvisioned();
     });
 
-    expect(user.role).toBe("OWNER");
-    await expect(
-      prisma.organization.count({ where: { id: user.organization_id } }),
-    ).resolves.toBe(1);
-    await expect(
-      prisma.refreshToken.count({ where: { user_id: user.id } }),
-    ).resolves.toBe(1);
-    expect(response.body.data.accessToken).toEqual(expect.any(String));
-    expect(response.body.data.refreshToken).toBeUndefined();
-    expect(response.headers["set-cookie"]?.[0]).toMatch(
+    it("behaves exactly like any other unmatched auth path", async () => {
+      const unmatched = await request(app).post("/api/auth/does-not-exist").send(registration());
+      const register = await request(app).post("/api/auth/register").send(registration());
+
+      expect(register.status).toBe(unmatched.status);
+      expect(register.body).toEqual(unmatched.body);
+    });
+
+    it("does not provision for authenticated tenant users either", async () => {
+      const organization = await prisma.organization.create({ data: { name: "Existing", status: "ACTIVE" } });
+      const owner = await prisma.user.create({
+        data: {
+          email: "existing-owner@example.com",
+          password_hash: await hashPassword("Password123!"),
+          role: "OWNER",
+          organization_id: organization.id,
+        },
+      });
+      const token = generateAccessToken({ sub: owner.id, org: organization.id, role: "OWNER" });
+
+      const response = await request(app)
+        .post("/api/auth/register")
+        .set("Authorization", `Bearer ${token}`)
+        .send(registration());
+
+      expect(response.status).toBe(404);
+      await expect(prisma.organization.count()).resolves.toBe(1);
+      await expect(prisma.user.count()).resolves.toBe(1);
+    });
+
+    it("does not provision for a platform owner through the old path", async () => {
+      const platformOrg = await prisma.organization.create({
+        data: { name: "Platform", internalKey: "platform", status: "ACTIVE" },
+      });
+      const platformOwner = await prisma.user.create({
+        data: {
+          email: "platform@example.com",
+          password_hash: await hashPassword("Password123!"),
+          role: "PLATFORM_OWNER",
+          organization_id: platformOrg.id,
+        },
+      });
+      const token = generateAccessToken({ sub: platformOwner.id, org: platformOrg.id, role: "PLATFORM_OWNER" });
+
+      const response = await request(app)
+        .post("/api/auth/register")
+        .set("Authorization", `Bearer ${token}`)
+        .send(registration());
+
+      expect(response.status).toBe(403);
+      await expect(prisma.organization.count()).resolves.toBe(1);
+      await expect(prisma.user.count()).resolves.toBe(1);
+    });
+  });
+
+  it("accepts case-variant login for a stored normalized email", async () => {
+    const organization = await prisma.organization.create({ data: { name: "Login organization", status: "ACTIVE" } });
+    await prisma.user.create({
+      data: {
+        email: "login-owner@example.com",
+        password_hash: await hashPassword("Password123!"),
+        role: "OWNER",
+        organization_id: organization.id,
+      },
+    });
+
+    const login = await request(app).post("/api/auth/login").send({
+      email: "  LOGIN-OWNER@EXAMPLE.COM ",
+      password: "Password123!",
+    });
+
+    expect(login.status).toBe(200);
+    expect(login.body.data.accessToken).toEqual(expect.any(String));
+    expect(login.body.data.refreshToken).toBeUndefined();
+    expect(login.headers["set-cookie"]?.[0]).toMatch(
       /Path=\/api\/auth;.*HttpOnly; SameSite=Lax/,
     );
   });
 
-  it("normalizes registration email identity and accepts case-variant login", async () => {
-    const email = `normalized-${Date.now()}@example.com`;
-    const registration = await request(app)
-      .post("/api/auth/register")
-      .send({
-        email: `  ${email.toUpperCase()}  `,
-        password: "Password123!",
-        organizationName: "Normalized registration organization",
-      });
-
-    expect(registration.status).toBe(201);
-    await expect(
-      prisma.user.findUniqueOrThrow({ where: { email } }),
-    ).resolves.toMatchObject({ email });
-
-    const login = await request(app).post("/api/auth/login").send({
-      email: email.toUpperCase(),
-      password: "Password123!",
-    });
-    expect(login.status).toBe(200);
-  });
-
-  it("rejects a duplicate email without creating another organization", async () => {
-    const email = `duplicate-${Date.now()}@example.com`;
-    const first = await request(app).post("/api/auth/register").send({
-      email,
-      password: "Password123!",
-      organizationName: "First registration organization",
-    });
-    const second = await request(app).post("/api/auth/register").send({
-      email,
-      password: "Password123!",
-      organizationName: "Duplicate registration organization",
+  it("rejects wrong credentials without revealing which part failed", async () => {
+    const organization = await prisma.organization.create({ data: { name: "Login organization", status: "ACTIVE" } });
+    await prisma.user.create({
+      data: {
+        email: "known@example.com",
+        password_hash: await hashPassword("Password123!"),
+        role: "OWNER",
+        organization_id: organization.id,
+      },
     });
 
-    expect(first.status).toBe(201);
-    expect(second.status).toBe(409);
-    expect(second.body.error.code).toBe("EMAIL_ALREADY_EXISTS");
-    await expect(prisma.organization.count()).resolves.toBe(1);
-    await expect(prisma.user.count({ where: { email } })).resolves.toBe(1);
-  });
+    const wrongPassword = await request(app).post("/api/auth/login").send({ email: "known@example.com", password: "Wrong-Pass-1!" });
+    const unknownEmail = await request(app).post("/api/auth/login").send({ email: "nobody@example.com", password: "Password123!" });
 
-  it("keeps concurrent duplicate registrations to one tenant owner", async () => {
-    const email = `concurrent-${Date.now()}@example.com`;
-    const responses = await Promise.all([
-      request(app).post("/api/auth/register").send({
-        email,
-        password: "Password123!",
-        organizationName: "Concurrent registration A",
-      }),
-      request(app).post("/api/auth/register").send({
-        email,
-        password: "Password123!",
-        organizationName: "Concurrent registration B",
-      }),
-    ]);
-
-    expect(
-      responses.filter((response) => response.status === 201),
-    ).toHaveLength(1);
-    expect(
-      responses.filter((response) => response.status === 409),
-    ).toHaveLength(1);
-    expect(
-      responses.find((response) => response.status === 409)?.body.error.code,
-    ).toBe("EMAIL_ALREADY_EXISTS");
-
-    const [organizationCount, owners] = await Promise.all([
-      prisma.organization.count(),
-      prisma.user.findMany({
-        where: { email },
-        select: { organization_id: true, role: true },
-      }),
-    ]);
-    expect(organizationCount).toBe(1);
-    expect(owners).toEqual([expect.objectContaining({ role: "OWNER" })]);
+    expect(wrongPassword.status).toBe(401);
+    expect(unknownEmail.status).toBe(401);
+    expect(wrongPassword.body.error.code).toBe(unknownEmail.body.error.code);
   });
 });
