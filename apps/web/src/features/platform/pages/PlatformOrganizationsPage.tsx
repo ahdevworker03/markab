@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Building2, ChevronLeft } from "lucide-react";
+import { Building2, ChevronLeft, Plus } from "lucide-react";
 import { Link } from "wouter";
 import {
   useListPlatformOrganizations,
   type OrganizationStatus,
 } from "@workspace/api-client-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState, LoadingState } from "@/components/ui/FeedbackState";
 import { SearchBar } from "@/components/ui/SearchBar";
@@ -60,11 +60,20 @@ export default function PlatformOrganizationsPage() {
 
   return (
     <div className="space-y-5">
-      <header>
-        <h1 className="ui-page-title">المؤسسات</h1>
-        <p className="ui-secondary-text mt-1">
-          المؤسسات العميلة المشتركة في مَركب وحالة كل منها.
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+        <div className="min-w-0">
+          <h1 className="ui-page-title">المؤسسات</h1>
+          <p className="ui-secondary-text mt-1">
+            المؤسسات العميلة المشتركة في مَركب وحالة كل منها.
+          </p>
+        </div>
+        <Link
+          href="/platform/organizations/new"
+          className={`${buttonVariants()} w-full gap-2 sm:w-auto`}
+        >
+          <Plus className="size-4" aria-hidden="true" />
+          إضافة مؤسسة
+        </Link>
       </header>
 
       <section
