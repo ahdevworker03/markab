@@ -14,10 +14,18 @@ import {
 } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/PageHeader";
-import { PeriodSelector, periodLabel } from "@/features/reports/components/PeriodSelector";
+import { BenchmarkPageProfile } from "@/lib/benchmark-page-profile";
+import {
+  PeriodSelector,
+  periodLabel,
+} from "@/features/reports/components/PeriodSelector";
 import { buildBusinessReportHtml } from "@/features/reports/printable";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ErrorState, InlineFeedback, LoadingState } from "@/components/ui/FeedbackState";
+import {
+  ErrorState,
+  InlineFeedback,
+  LoadingState,
+} from "@/components/ui/FeedbackState";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { Button } from "@/components/ui/button";
 import { getApiErrorMessage } from "@/lib/api-error";
@@ -226,21 +234,40 @@ export default function ReportsPage() {
       setActionFeedback(`تم تجهيز ملف CSV لتقرير ${label}.`);
     } catch {
       setActionFeedback(null);
-      setActionError(`تعذر تصدير تقرير ${label}. حاول مرة أخرى دون تغيير الفترة المحددة.`);
+      setActionError(
+        `تعذر تصدير تقرير ${label}. حاول مرة أخرى دون تغيير الفترة المحددة.`,
+      );
     }
   }
 
   function handlePrint() {
     setActionError(null);
     try {
-      if (!openPrintableWindow(buildBusinessReportHtml({ summary, label, range, rentals, tasks, vehicles, vehiclesUnavailable, companyName: organizationName }))) {
-        setActionError(`تعذر فتح معاينة طباعة تقرير ${label}. اسمح بالنوافذ المنبثقة ثم أعد المحاولة.`);
+      if (
+        !openPrintableWindow(
+          buildBusinessReportHtml({
+            summary,
+            label,
+            range,
+            rentals,
+            tasks,
+            vehicles,
+            vehiclesUnavailable,
+            companyName: organizationName,
+          }),
+        )
+      ) {
+        setActionError(
+          `تعذر فتح معاينة طباعة تقرير ${label}. اسمح بالنوافذ المنبثقة ثم أعد المحاولة.`,
+        );
         return;
       }
       setActionFeedback(`تم فتح معاينة طباعة تقرير ${label}.`);
     } catch {
       setActionFeedback(null);
-      setActionError(`تعذر فتح معاينة طباعة تقرير ${label}. حاول مرة أخرى دون تغيير الفترة المحددة.`);
+      setActionError(
+        `تعذر فتح معاينة طباعة تقرير ${label}. حاول مرة أخرى دون تغيير الفترة المحددة.`,
+      );
     }
   }
 
@@ -267,177 +294,192 @@ export default function ReportsPage() {
   );
 
   return (
-    <div className="min-h-full">
-      <PageHeader title="التقارير" action={actions} />
+    <BenchmarkPageProfile
+      route="reports"
+      summariesReady={!isLoading && !isError}
+      loadersCleared={!isLoading}
+    >
+      <div className="min-h-full">
+        <PageHeader title="التقارير" action={actions} />
 
-      <main className="mx-auto max-w-[1600px] space-y-5 px-4 pb-8 pt-4 sm:px-6 lg:space-y-6 lg:pt-6">
-        <SectionCard
-          title="إعداد التقرير"
-          description="اختر الفترة لعرض ملخص مالي وتشغيلي قابل للطباعة والتصدير."
-        >
-          <PeriodSelector
-            type={periodType}
-            month={month}
-            year={year}
-            onTypeChange={setPeriodType}
-            onMonthChange={setMonth}
-            onYearChange={setYear}
-          />
-        </SectionCard>
-        {actionError && <ErrorState title="تعذر تنفيذ الإجراء" description={actionError} />}
-        {actionFeedback && !actionError && <InlineFeedback variant="success" onDismiss={() => setActionFeedback(null)}>{actionFeedback}</InlineFeedback>}
-
-        {isLoading ? (
-          <section
-            aria-label="جارٍ تحميل التقرير"
-            className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(19rem,0.75fr)]"
+        <main className="mx-auto max-w-[1600px] space-y-5 px-4 pb-8 pt-4 sm:px-6 lg:space-y-6 lg:pt-6">
+          <SectionCard
+            title="إعداد التقرير"
+            description="اختر الفترة لعرض ملخص مالي وتشغيلي قابل للطباعة والتصدير."
           >
-            <SectionCard>
-              <LoadingState rows={4} />
-            </SectionCard>
-            <SectionCard>
-              <LoadingState rows={4} />
-            </SectionCard>
-          </section>
-        ) : isError ? (
-          <SectionCard>
-            <ErrorState
-              title="تعذر تحميل التقرير"
-              description={
-                error
-                  ? getApiErrorMessage(error).title
-                  : "تحقق من الاتصال ثم حاول مرة أخرى."
-              }
+            <PeriodSelector
+              type={periodType}
+              month={month}
+              year={year}
+              onTypeChange={setPeriodType}
+              onMonthChange={setMonth}
+              onYearChange={setYear}
             />
           </SectionCard>
-        ) : (
-          <>
-            <div className="flex flex-col justify-between gap-3 border-b border-border pb-4 sm:flex-row sm:items-end">
-              <div className="flex min-w-0 items-start gap-3">
-                <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <FileText className="size-4" aria-hidden="true" />
-                </span>
-                <div>
-                  <h2 className="ui-section-title">تقرير الفترة المحددة</h2>
-                  <p className="ui-secondary-text mt-1 inline-flex items-center gap-1.5">
-                    <CalendarDays className="size-3.5" aria-hidden="true" />
-                    {label}
-                  </p>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                يتضمن القيم المسجلة ضمن الفترة فقط.
-              </p>
-            </div>
-
-            <section
-              className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
-              aria-label="الملخص المالي للتقرير"
+          {actionError && (
+            <ErrorState title="تعذر تنفيذ الإجراء" description={actionError} />
+          )}
+          {actionFeedback && !actionError && (
+            <InlineFeedback
+              variant="success"
+              onDismiss={() => setActionFeedback(null)}
             >
-              <ReportMetricCard
-                label="الإيرادات"
-                context="دفعات مسجلة"
-                value={summary.revenue}
-                icon={WalletCards}
-              />
-              <ReportMetricCard
-                label="المصروفات"
-                context="مصروفات مسجلة"
-                value={summary.expenses}
-                icon={Receipt}
-                tone="danger"
-              />
-              <ReportMetricCard
-                label="صافي الربح"
-                context="الإيرادات ناقص المصروفات"
-                value={summary.netProfit}
-                icon={summary.netProfit < 0 ? TrendingDown : TrendingUp}
-                tone={summary.netProfit < 0 ? "danger" : "positive"}
-              />
-              <ReportMetricCard
-                label="تكلفة الصيانة"
-                context="معروضة بشكل منفصل"
-                value={summary.maintenanceCost}
-                icon={Wrench}
-                tone="warning"
-              />
-            </section>
+              {actionFeedback}
+            </InlineFeedback>
+          )}
 
-            <div className="grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.75fr)]">
-              <SectionCard
-                title="معاينة التقرير"
-                description="ملخص القيم التي ستظهر في النسخة المطبوعة وملف CSV."
-              >
-                <div className="divide-y divide-border rounded-lg border border-border">
-                  <ReportRow
-                    label="الإيرادات"
-                    context="دفعات الإيجارات المسجلة"
-                    value={formatCurrency(summary.revenue)}
-                  />
-                  <ReportRow
-                    label="المصروفات"
-                    context="مصروفات الأعمال المسجلة"
-                    value={formatCurrency(summary.expenses)}
-                  />
-                  <ReportRow
-                    label="صافي الربح"
-                    context="الإيرادات ناقص المصروفات"
-                    value={formatCurrency(summary.netProfit)}
-                  />
-                  <ReportRow
-                    label="تكلفة الصيانة"
-                    context="تكلفة منفصلة عن المصروفات"
-                    value={formatCurrency(summary.maintenanceCost)}
-                  />
-                </div>
-                <div className="mt-4 rounded-lg bg-muted/60 px-4 py-3 text-sm text-muted-foreground">
-                  لا تدخل تكلفة الصيانة في صافي الربح المعروض، وتبقى مفصّلة
-                  كتكلفة تشغيلية مستقلة.
-                </div>
-              </SectionCard>
-
-              <SectionCard
-                title="ملخص العمليات"
-                description="عدد السجلات المسجلة في الفترة."
-              >
-                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
-                  <ActivityMetric
-                    label="الإيجارات"
-                    value={summary.rentalCount}
-                    icon={FileText}
-                  />
-                  <ActivityMetric
-                    label="المدفوعات"
-                    value={summary.paymentCount}
-                    icon={WalletCards}
-                  />
-                  <ActivityMetric
-                    label="سجلات الصيانة"
-                    value={summary.maintenanceCount}
-                    icon={Wrench}
-                  />
-                  <ActivityMetric
-                    label="المهام المكتملة"
-                    value={summary.completedTaskCount}
-                    icon={CheckCircle2}
-                  />
-                </div>
-              </SectionCard>
-            </div>
-
-            {hasNoActivity && (
+          {isLoading ? (
+            <section
+              aria-label="جارٍ تحميل التقرير"
+              className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(19rem,0.75fr)]"
+            >
               <SectionCard>
-                <EmptyState
-                  icon={FileText}
-                  title="لا يوجد نشاط في هذه الفترة"
-                  description="غيّر الفترة أو أضف سجلات مالية وتشغيلية لعرض التقرير."
-                  className="py-8"
-                />
+                <LoadingState rows={4} />
               </SectionCard>
-            )}
-          </>
-        )}
-      </main>
-    </div>
+              <SectionCard>
+                <LoadingState rows={4} />
+              </SectionCard>
+            </section>
+          ) : isError ? (
+            <SectionCard>
+              <ErrorState
+                title="تعذر تحميل التقرير"
+                description={
+                  error
+                    ? getApiErrorMessage(error).title
+                    : "تحقق من الاتصال ثم حاول مرة أخرى."
+                }
+              />
+            </SectionCard>
+          ) : (
+            <>
+              <div className="flex flex-col justify-between gap-3 border-b border-border pb-4 sm:flex-row sm:items-end">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <FileText className="size-4" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <h2 className="ui-section-title">تقرير الفترة المحددة</h2>
+                    <p className="ui-secondary-text mt-1 inline-flex items-center gap-1.5">
+                      <CalendarDays className="size-3.5" aria-hidden="true" />
+                      {label}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  يتضمن القيم المسجلة ضمن الفترة فقط.
+                </p>
+              </div>
+
+              <section
+                className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+                aria-label="الملخص المالي للتقرير"
+              >
+                <ReportMetricCard
+                  label="الإيرادات"
+                  context="دفعات مسجلة"
+                  value={summary.revenue}
+                  icon={WalletCards}
+                />
+                <ReportMetricCard
+                  label="المصروفات"
+                  context="مصروفات مسجلة"
+                  value={summary.expenses}
+                  icon={Receipt}
+                  tone="danger"
+                />
+                <ReportMetricCard
+                  label="صافي الربح"
+                  context="الإيرادات ناقص المصروفات"
+                  value={summary.netProfit}
+                  icon={summary.netProfit < 0 ? TrendingDown : TrendingUp}
+                  tone={summary.netProfit < 0 ? "danger" : "positive"}
+                />
+                <ReportMetricCard
+                  label="تكلفة الصيانة"
+                  context="معروضة بشكل منفصل"
+                  value={summary.maintenanceCost}
+                  icon={Wrench}
+                  tone="warning"
+                />
+              </section>
+
+              <div className="grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.75fr)]">
+                <SectionCard
+                  title="معاينة التقرير"
+                  description="ملخص القيم التي ستظهر في النسخة المطبوعة وملف CSV."
+                >
+                  <div className="divide-y divide-border rounded-lg border border-border">
+                    <ReportRow
+                      label="الإيرادات"
+                      context="دفعات الإيجارات المسجلة"
+                      value={formatCurrency(summary.revenue)}
+                    />
+                    <ReportRow
+                      label="المصروفات"
+                      context="مصروفات الأعمال المسجلة"
+                      value={formatCurrency(summary.expenses)}
+                    />
+                    <ReportRow
+                      label="صافي الربح"
+                      context="الإيرادات ناقص المصروفات"
+                      value={formatCurrency(summary.netProfit)}
+                    />
+                    <ReportRow
+                      label="تكلفة الصيانة"
+                      context="تكلفة منفصلة عن المصروفات"
+                      value={formatCurrency(summary.maintenanceCost)}
+                    />
+                  </div>
+                  <div className="mt-4 rounded-lg bg-muted/60 px-4 py-3 text-sm text-muted-foreground">
+                    لا تدخل تكلفة الصيانة في صافي الربح المعروض، وتبقى مفصّلة
+                    كتكلفة تشغيلية مستقلة.
+                  </div>
+                </SectionCard>
+
+                <SectionCard
+                  title="ملخص العمليات"
+                  description="عدد السجلات المسجلة في الفترة."
+                >
+                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+                    <ActivityMetric
+                      label="الإيجارات"
+                      value={summary.rentalCount}
+                      icon={FileText}
+                    />
+                    <ActivityMetric
+                      label="المدفوعات"
+                      value={summary.paymentCount}
+                      icon={WalletCards}
+                    />
+                    <ActivityMetric
+                      label="سجلات الصيانة"
+                      value={summary.maintenanceCount}
+                      icon={Wrench}
+                    />
+                    <ActivityMetric
+                      label="المهام المكتملة"
+                      value={summary.completedTaskCount}
+                      icon={CheckCircle2}
+                    />
+                  </div>
+                </SectionCard>
+              </div>
+
+              {hasNoActivity && (
+                <SectionCard>
+                  <EmptyState
+                    icon={FileText}
+                    title="لا يوجد نشاط في هذه الفترة"
+                    description="غيّر الفترة أو أضف سجلات مالية وتشغيلية لعرض التقرير."
+                    className="py-8"
+                  />
+                </SectionCard>
+              )}
+            </>
+          )}
+        </main>
+      </div>
+    </BenchmarkPageProfile>
   );
 }

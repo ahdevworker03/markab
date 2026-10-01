@@ -56,8 +56,21 @@ export function BenchmarkPageProfile({
   return (
     <Profiler
       id={route}
-      onRender={(_id, _phase: Phase, actualDuration, baseDuration, _startTime, commitTime) =>
-        record({ route, type: "commit", at: commitTime, actualDuration, baseDuration })
+      onRender={(
+        _id,
+        _phase: Phase,
+        actualDuration,
+        baseDuration,
+        _startTime,
+        commitTime,
+      ) =>
+        record({
+          route,
+          type: "commit",
+          at: commitTime,
+          actualDuration,
+          baseDuration,
+        })
       }
     >
       {children}

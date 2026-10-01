@@ -1902,6 +1902,9 @@ test.describe("Slice 5 post-load navigation profile", () => {
                   document.querySelectorAll("tbody tr, article"),
                 ).filter(visible).length,
                 longTasks,
+                pageProfile:
+                  (window as Window & { __benchmarkPageProfile?: unknown[] })
+                    .__benchmarkPageProfile ?? [],
               };
             });
 
@@ -1986,6 +1989,9 @@ test.describe("Slice 5 post-load navigation profile", () => {
                     }>;
                   }
                 ).__slice5LongTasks = [];
+                (
+                  window as Window & { __benchmarkPageProfile?: unknown[] }
+                ).__benchmarkPageProfile = [];
               });
               requests = [];
               sizeTasks = [];

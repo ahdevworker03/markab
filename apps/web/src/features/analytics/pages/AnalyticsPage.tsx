@@ -665,524 +665,532 @@ export default function AnalyticsPage() {
       loadersCleared={!analyticsLoading}
     >
       <div className="min-h-full">
-      <PageHeader title="التحليلات" showBack />
-      <main className="space-y-5 px-4 pb-8 pt-4 sm:px-6 lg:space-y-6 lg:pt-6">
-        <div className="flex flex-col justify-between gap-4 border-b border-border pb-4 xl:flex-row xl:items-end">
-          <div>
-            <p className="ui-section-title">نظرة مالية وتشغيلية</p>
-            <p className="ui-secondary-text mt-1">
-              راجع الإيرادات والمصروفات وأداء السيارات خلال الفترة المحددة.
-            </p>
+        <PageHeader title="التحليلات" showBack />
+        <main className="space-y-5 px-4 pb-8 pt-4 sm:px-6 lg:space-y-6 lg:pt-6">
+          <div className="flex flex-col justify-between gap-4 border-b border-border pb-4 xl:flex-row xl:items-end">
+            <div>
+              <p className="ui-section-title">نظرة مالية وتشغيلية</p>
+              <p className="ui-secondary-text mt-1">
+                راجع الإيرادات والمصروفات وأداء السيارات خلال الفترة المحددة.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <AnalyticsPeriodSelect
+                label="سنة التحليل"
+                value={selectedYear}
+                options={ANALYTICS_YEARS.map((year) => ({
+                  value: year,
+                  label: String(year),
+                }))}
+                onChange={setSelectedYear}
+                minWidthClassName="min-w-[12rem]"
+              />
+              <AnalyticsPeriodSelect
+                label="شهر الملخص"
+                value={selectedMonth}
+                options={ANALYTICS_MONTHS.map((month, index) => ({
+                  value: index,
+                  label: month,
+                }))}
+                onChange={setSelectedMonth}
+                minWidthClassName="min-w-[15rem]"
+              />
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <AnalyticsPeriodSelect
-              label="سنة التحليل"
-              value={selectedYear}
-              options={ANALYTICS_YEARS.map((year) => ({
-                value: year,
-                label: String(year),
-              }))}
-              onChange={setSelectedYear}
-              minWidthClassName="min-w-[12rem]"
-            />
-            <AnalyticsPeriodSelect
-              label="شهر الملخص"
-              value={selectedMonth}
-              options={ANALYTICS_MONTHS.map((month, index) => ({
-                value: index,
-                label: month,
-              }))}
-              onChange={setSelectedMonth}
-              minWidthClassName="min-w-[15rem]"
-            />
-          </div>
-        </div>
-        <InlineFeedback variant="info">
-          يعرض الملخص المالي شهر {ANALYTICS_MONTHS[selectedMonth]}{" "}
-          {selectedYear}. تشمل رؤى السيارات بيانات السجلات المتاحة، وقد تختلف عن
-          نطاق الشهر المحدد.
-        </InlineFeedback>
-        {hasFinancialError && (
-          <InlineFeedback variant="error">
-            تعذر تحديث بعض البيانات المالية: {financialError}
+          <InlineFeedback variant="info">
+            يعرض الملخص المالي شهر {ANALYTICS_MONTHS[selectedMonth]}{" "}
+            {selectedYear}. تشمل رؤى السيارات بيانات السجلات المتاحة، وقد تختلف
+            عن نطاق الشهر المحدد.
           </InlineFeedback>
-        )}
-        <section
-          className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
-          aria-label="ملخص الأداء المالي"
-        >
-          <MetricCard
-            label="إجمالي الإيرادات"
-            context={`${ANALYTICS_MONTHS[selectedMonth]} ${selectedYear}`}
-            value={analytics.thisMonthRevenue}
-            icon={WalletCards}
-            isLoading={financialLoading}
-            isError={hasFinancialError}
-            trend={revenueTrend}
-          />
-          <MetricCard
-            label="الأرصدة المستحقة"
-            context="الرصيد المتبقي من الإيجارات"
-            value={analytics.totalPending}
-            icon={CircleDollarSign}
-            isLoading={outstandingQuery.isLoading}
-            isError={Boolean(outstandingQuery.error)}
-            tone="danger"
-          />
-          <MetricCard
-            label="صافي الربح"
-            context={`${ANALYTICS_MONTHS[selectedMonth]} ${selectedYear}`}
-            value={analytics.netProfit}
-            icon={TrendingUp}
-            isLoading={financialLoading}
-            isError={hasFinancialError}
-            tone="positive"
-          />
-          <MetricCard
-            label="مصروفات الفترة"
-            context={`${ANALYTICS_MONTHS[selectedMonth]} ${selectedYear}`}
-            value={analytics.expenseTotalForPeriod}
-            icon={TrendingDown}
-            isLoading={expensesQuery.isLoading}
-            isError={Boolean(expensesQuery.error)}
-            tone="warning"
-          />
-        </section>
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(19rem,0.75fr)]">
-          <SectionCard
-            title={`اتجاه أداء الأعمال ${selectedYear}`}
-            description="الإيرادات والمصروفات وصافي الربح حسب الشهر."
+          {hasFinancialError && (
+            <InlineFeedback variant="error">
+              تعذر تحديث بعض البيانات المالية: {financialError}
+            </InlineFeedback>
+          )}
+          <section
+            className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+            aria-label="ملخص الأداء المالي"
           >
-            {analyticsLoading ? (
-              <LoadingState rows={4} />
-            ) : hasAnalyticsError ? (
-              <ErrorState description={analyticsError} className="py-8" />
-            ) : (
-              <PerformanceTrend
-                points={analytics.performanceTrend}
-                year={selectedYear}
-              />
-            )}
-          </SectionCard>
-          <SectionCard
-            title="الأرصدة المستحقة"
-            description="العملاء ذوو الأرصدة المتبقية."
-          >
-            {outstandingQuery.isLoading ? (
-              <LoadingState rows={4} />
-            ) : outstandingQuery.error ? (
-              <ErrorState
-                description={getApiErrorMessage(outstandingQuery.error).title}
-                className="py-8"
-              />
-            ) : analytics.customerOutstandingList.length === 0 ? (
-              <EmptyState
-                icon={CircleDollarSign}
-                title="لا توجد أرصدة مستحقة"
-                description="كل الإيجارات المسجلة مدفوعة بالكامل."
-                className="py-8"
-              />
-            ) : (
-              <div className="divide-y divide-border">
-                {analytics.customerOutstandingList
-                  .slice(0, 5)
-                  .map(({ customer, balance }) => (
-                    <button
-                      key={customer.id}
-                      type="button"
-                      onClick={() => navigate(`/customers/${customer.id}`)}
-                      className="flex w-full items-center justify-between gap-3 py-3 text-right transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-foreground">
-                          {customer.name}
-                        </p>
-                        {customer.location && (
-                          <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                            {customer.location}
+            <MetricCard
+              label="إجمالي الإيرادات"
+              context={`${ANALYTICS_MONTHS[selectedMonth]} ${selectedYear}`}
+              value={analytics.thisMonthRevenue}
+              icon={WalletCards}
+              isLoading={financialLoading}
+              isError={hasFinancialError}
+              trend={revenueTrend}
+            />
+            <MetricCard
+              label="الأرصدة المستحقة"
+              context="الرصيد المتبقي من الإيجارات"
+              value={analytics.totalPending}
+              icon={CircleDollarSign}
+              isLoading={outstandingQuery.isLoading}
+              isError={Boolean(outstandingQuery.error)}
+              tone="danger"
+            />
+            <MetricCard
+              label="صافي الربح"
+              context={`${ANALYTICS_MONTHS[selectedMonth]} ${selectedYear}`}
+              value={analytics.netProfit}
+              icon={TrendingUp}
+              isLoading={financialLoading}
+              isError={hasFinancialError}
+              tone="positive"
+            />
+            <MetricCard
+              label="مصروفات الفترة"
+              context={`${ANALYTICS_MONTHS[selectedMonth]} ${selectedYear}`}
+              value={analytics.expenseTotalForPeriod}
+              icon={TrendingDown}
+              isLoading={expensesQuery.isLoading}
+              isError={Boolean(expensesQuery.error)}
+              tone="warning"
+            />
+          </section>
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(19rem,0.75fr)]">
+            <SectionCard
+              title={`اتجاه أداء الأعمال ${selectedYear}`}
+              description="الإيرادات والمصروفات وصافي الربح حسب الشهر."
+            >
+              {analyticsLoading ? (
+                <LoadingState rows={4} />
+              ) : hasAnalyticsError ? (
+                <ErrorState description={analyticsError} className="py-8" />
+              ) : (
+                <PerformanceTrend
+                  points={analytics.performanceTrend}
+                  year={selectedYear}
+                />
+              )}
+            </SectionCard>
+            <SectionCard
+              title="الأرصدة المستحقة"
+              description="العملاء ذوو الأرصدة المتبقية."
+            >
+              {outstandingQuery.isLoading ? (
+                <LoadingState rows={4} />
+              ) : outstandingQuery.error ? (
+                <ErrorState
+                  description={getApiErrorMessage(outstandingQuery.error).title}
+                  className="py-8"
+                />
+              ) : analytics.customerOutstandingList.length === 0 ? (
+                <EmptyState
+                  icon={CircleDollarSign}
+                  title="لا توجد أرصدة مستحقة"
+                  description="كل الإيجارات المسجلة مدفوعة بالكامل."
+                  className="py-8"
+                />
+              ) : (
+                <div className="divide-y divide-border">
+                  {analytics.customerOutstandingList
+                    .slice(0, 5)
+                    .map(({ customer, balance }) => (
+                      <button
+                        key={customer.id}
+                        type="button"
+                        onClick={() => navigate(`/customers/${customer.id}`)}
+                        className="flex w-full items-center justify-between gap-3 py-3 text-right transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-foreground">
+                            {customer.name}
                           </p>
-                        )}
-                      </div>
-                      <span className="shrink-0 text-sm font-bold tabular-nums text-status-danger">
-                        {formatCurrency(balance)}
-                      </span>
-                    </button>
-                  ))}
-                <div className="flex items-center justify-between gap-3 pt-4 text-sm">
-                  <span className="font-semibold text-muted-foreground">
-                    إجمالي الأرصدة المستحقة
-                  </span>
-                  <strong className="shrink-0 text-base tabular-nums text-foreground">
-                    {formatCurrency(analytics.totalPending)}
-                  </strong>
+                          {customer.location && (
+                            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                              {customer.location}
+                            </p>
+                          )}
+                        </div>
+                        <span className="shrink-0 text-sm font-bold tabular-nums text-status-danger">
+                          {formatCurrency(balance)}
+                        </span>
+                      </button>
+                    ))}
+                  <div className="flex items-center justify-between gap-3 pt-4 text-sm">
+                    <span className="font-semibold text-muted-foreground">
+                      إجمالي الأرصدة المستحقة
+                    </span>
+                    <strong className="shrink-0 text-base tabular-nums text-foreground">
+                      {formatCurrency(analytics.totalPending)}
+                    </strong>
+                  </div>
                 </div>
-              </div>
-            )}
-          </SectionCard>
-        </div>
-        <section aria-labelledby="vehicle-insights-heading">
-          <div className="mb-3">
-            <h2 id="vehicle-insights-heading" className="ui-section-title">
-              رؤى السيارات
-            </h2>
-            <p className="ui-secondary-text mt-1">
-              مقارنة الربحية وتكاليف الصيانة حسب السيارة.
-            </p>
+              )}
+            </SectionCard>
           </div>
-          {analyticsLoading ? (
-            <SectionCard>
-              <LoadingState rows={4} />
-            </SectionCard>
-          ) : hasAnalyticsError ? (
-            <SectionCard>
-              <ErrorState description={analyticsError} className="py-8" />
-            </SectionCard>
-          ) : analytics.profitability.length === 0 &&
-            Object.keys(analytics.lifetimeMaintenanceCost).length === 0 ? (
-            <SectionCard>
-              <EmptyState
-                icon={BarChart3}
-                title="لا توجد بيانات كافية لرؤى السيارات"
-                description="ستظهر الربحية وتكاليف الصيانة بعد تسجيل العمليات ذات الصلة."
-                className="py-8"
-              />
-            </SectionCard>
-          ) : (
-            <div className="grid gap-5 xl:grid-cols-2">
-              <SectionCard
-                className="min-w-0"
-                title="أكثر السيارات ربحاً"
-                description="الربحية وفق البيانات المسجلة مدى الحياة."
-              >
-                {analytics.profitability.length === 0 ? (
-                  <p className="py-4 text-center text-sm text-muted-foreground">
-                    لا توجد بيانات ربحية مسجّلة
-                  </p>
-                ) : (
-                  <div className="space-y-4">
-                    {analytics.profitability.slice(0, 5).map((item, index) => {
+          <section aria-labelledby="vehicle-insights-heading">
+            <div className="mb-3">
+              <h2 id="vehicle-insights-heading" className="ui-section-title">
+                رؤى السيارات
+              </h2>
+              <p className="ui-secondary-text mt-1">
+                مقارنة الربحية وتكاليف الصيانة حسب السيارة.
+              </p>
+            </div>
+            {analyticsLoading ? (
+              <SectionCard>
+                <LoadingState rows={4} />
+              </SectionCard>
+            ) : hasAnalyticsError ? (
+              <SectionCard>
+                <ErrorState description={analyticsError} className="py-8" />
+              </SectionCard>
+            ) : analytics.profitability.length === 0 &&
+              Object.keys(analytics.lifetimeMaintenanceCost).length === 0 ? (
+              <SectionCard>
+                <EmptyState
+                  icon={BarChart3}
+                  title="لا توجد بيانات كافية لرؤى السيارات"
+                  description="ستظهر الربحية وتكاليف الصيانة بعد تسجيل العمليات ذات الصلة."
+                  className="py-8"
+                />
+              </SectionCard>
+            ) : (
+              <div className="grid gap-5 xl:grid-cols-2">
+                <SectionCard
+                  className="min-w-0"
+                  title="أكثر السيارات ربحاً"
+                  description="الربحية وفق البيانات المسجلة مدى الحياة."
+                >
+                  {analytics.profitability.length === 0 ? (
+                    <p className="py-4 text-center text-sm text-muted-foreground">
+                      لا توجد بيانات ربحية مسجّلة
+                    </p>
+                  ) : (
+                    <div className="space-y-4">
+                      {analytics.profitability
+                        .slice(0, 5)
+                        .map((item, index) => {
+                          const vehicle = realVehicles.find(
+                            (candidate) => candidate.id === item.vehicleId,
+                          );
+                          if (!vehicle) return null;
+                          const width = Math.max(
+                            8,
+                            Math.round(
+                              (Math.abs(item.profit) /
+                                Math.max(
+                                  Math.abs(
+                                    analytics.profitability[0]?.profit ?? 0,
+                                  ),
+                                  1,
+                                )) *
+                                100,
+                            ),
+                          );
+                          return (
+                            <button
+                              key={item.vehicleId}
+                              type="button"
+                              onClick={() =>
+                                navigate(`/vehicles/${item.vehicleId}`)
+                              }
+                              className="w-full text-right"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex min-w-0 items-start gap-2.5">
+                                  <span className="mt-0.5 text-xs tabular-nums text-muted-foreground">
+                                    {index + 1}
+                                  </span>
+                                  <VehicleIdentity vehicle={vehicle} />
+                                </div>
+                                <strong
+                                  className={cn(
+                                    "shrink-0 text-sm tabular-nums",
+                                    item.profit < 0
+                                      ? "text-status-danger"
+                                      : "text-status-positive",
+                                  )}
+                                >
+                                  {formatCurrency(item.profit)}
+                                </strong>
+                              </div>
+                              <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-muted">
+                                <span
+                                  className={cn(
+                                    "block h-full rounded-full",
+                                    item.profit < 0
+                                      ? "bg-status-danger"
+                                      : "bg-primary",
+                                  )}
+                                  style={{ width: `${width}%` }}
+                                />
+                              </span>
+                            </button>
+                          );
+                        })}
+                    </div>
+                  )}
+                </SectionCard>
+                <SectionCard
+                  className="min-w-0"
+                  title="تكاليف الصيانة"
+                  description={`تكلفة السنة ${selectedYear} ومدى الحياة لكل سيارة.`}
+                >
+                  <div className="divide-y divide-border">
+                    {[
+                      ...new Set([
+                        ...Object.keys(analytics.lifetimeMaintenanceCost),
+                        ...Object.keys(analytics.yearlyMaintenanceCost),
+                      ]),
+                    ].map((vehicleId) => {
                       const vehicle = realVehicles.find(
-                        (candidate) => candidate.id === item.vehicleId,
+                        (candidate) => candidate.id === vehicleId,
                       );
                       if (!vehicle) return null;
+                      return (
+                        <button
+                          key={vehicleId}
+                          type="button"
+                          onClick={() => navigate(`/vehicles/${vehicleId}`)}
+                          className="flex w-full items-start justify-between gap-3 py-3 text-right transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                        >
+                          <VehicleIdentity vehicle={vehicle} />
+                          <span className="shrink-0 text-left text-xs text-muted-foreground">
+                            <span className="block">
+                              السنة:{" "}
+                              <strong className="tabular-nums text-foreground">
+                                {formatCurrency(
+                                  analytics.yearlyMaintenanceCost[vehicleId] ??
+                                    0,
+                                )}
+                              </strong>
+                            </span>
+                            <span className="mt-1 block">
+                              مدى الحياة:{" "}
+                              <strong className="tabular-nums text-foreground">
+                                {formatCurrency(
+                                  analytics.lifetimeMaintenanceCost[
+                                    vehicleId
+                                  ] ?? 0,
+                                )}
+                              </strong>
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </SectionCard>
+              </div>
+            )}
+          </section>
+          <div className="grid gap-5 xl:grid-cols-2">
+            <SectionCard
+              className="min-w-0"
+              title="إيرادات السيارات هذا الشهر"
+              action={
+                <button
+                  type="button"
+                  onClick={() => navigate("/vehicles")}
+                  className="text-sm font-semibold text-primary hover:underline"
+                >
+                  عرض السيارات
+                </button>
+              }
+            >
+              {financialLoading ? (
+                <LoadingState rows={3} />
+              ) : hasFinancialError ? (
+                <ErrorState description={financialError} className="py-8" />
+              ) : analytics.vehicleRevenueList.length === 0 ? (
+                <EmptyState
+                  icon={WalletCards}
+                  title="لا توجد إيرادات سيارات هذا الشهر"
+                  description="ستظهر الإيرادات بعد تسجيل الدفعات للإيجارات."
+                  className="py-8"
+                />
+              ) : (
+                <div className="space-y-4">
+                  {analytics.vehicleRevenueList
+                    .slice(0, 5)
+                    .map(({ vehicle, amount }, index) => {
                       const width = Math.max(
                         8,
                         Math.round(
-                          (Math.abs(item.profit) /
-                            Math.max(
-                              Math.abs(analytics.profitability[0]?.profit ?? 0),
-                              1,
-                            )) *
-                            100,
+                          (amount / analytics.maxVehicleRevenue) * 100,
                         ),
                       );
                       return (
                         <button
-                          key={item.vehicleId}
+                          key={vehicle.id}
                           type="button"
-                          onClick={() =>
-                            navigate(`/vehicles/${item.vehicleId}`)
-                          }
+                          onClick={() => navigate(`/vehicles/${vehicle.id}`)}
                           className="w-full text-right"
                         >
                           <div className="flex items-start justify-between gap-3">
-                            <div className="flex min-w-0 items-start gap-2.5">
-                              <span className="mt-0.5 text-xs tabular-nums text-muted-foreground">
-                                {index + 1}
-                              </span>
+                            <div className="flex min-w-0 items-start gap-2">
                               <VehicleIdentity vehicle={vehicle} />
-                            </div>
-                            <strong
-                              className={cn(
-                                "shrink-0 text-sm tabular-nums",
-                                item.profit < 0
-                                  ? "text-status-danger"
-                                  : "text-status-positive",
+                              {index === 0 && (
+                                <span className="mt-0.5 rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">
+                                  الأعلى
+                                </span>
                               )}
-                            >
-                              {formatCurrency(item.profit)}
+                            </div>
+                            <strong className="shrink-0 text-sm tabular-nums text-foreground">
+                              {formatCurrency(amount)}
                             </strong>
                           </div>
                           <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-muted">
                             <span
-                              className={cn(
-                                "block h-full rounded-full",
-                                item.profit < 0
-                                  ? "bg-status-danger"
-                                  : "bg-primary",
-                              )}
+                              className="block h-full rounded-full bg-primary"
                               style={{ width: `${width}%` }}
                             />
                           </span>
                         </button>
                       );
                     })}
-                  </div>
-                )}
-              </SectionCard>
-              <SectionCard
-                className="min-w-0"
-                title="تكاليف الصيانة"
-                description={`تكلفة السنة ${selectedYear} ومدى الحياة لكل سيارة.`}
-              >
-                <div className="divide-y divide-border">
-                  {[
-                    ...new Set([
-                      ...Object.keys(analytics.lifetimeMaintenanceCost),
-                      ...Object.keys(analytics.yearlyMaintenanceCost),
-                    ]),
-                  ].map((vehicleId) => {
-                    const vehicle = realVehicles.find(
-                      (candidate) => candidate.id === vehicleId,
-                    );
-                    if (!vehicle) return null;
-                    return (
-                      <button
-                        key={vehicleId}
-                        type="button"
-                        onClick={() => navigate(`/vehicles/${vehicleId}`)}
-                        className="flex w-full items-start justify-between gap-3 py-3 text-right transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-                      >
-                        <VehicleIdentity vehicle={vehicle} />
-                        <span className="shrink-0 text-left text-xs text-muted-foreground">
-                          <span className="block">
-                            السنة:{" "}
-                            <strong className="tabular-nums text-foreground">
-                              {formatCurrency(
-                                analytics.yearlyMaintenanceCost[vehicleId] ?? 0,
-                              )}
-                            </strong>
-                          </span>
-                          <span className="mt-1 block">
-                            مدى الحياة:{" "}
-                            <strong className="tabular-nums text-foreground">
-                              {formatCurrency(
-                                analytics.lifetimeMaintenanceCost[vehicleId] ??
-                                  0,
-                              )}
-                            </strong>
-                          </span>
-                        </span>
-                      </button>
-                    );
-                  })}
                 </div>
-              </SectionCard>
-            </div>
-          )}
-        </section>
-        <div className="grid gap-5 xl:grid-cols-2">
-          <SectionCard
-            className="min-w-0"
-            title="إيرادات السيارات هذا الشهر"
-            action={
-              <button
-                type="button"
-                onClick={() => navigate("/vehicles")}
-                className="text-sm font-semibold text-primary hover:underline"
-              >
-                عرض السيارات
-              </button>
-            }
-          >
-            {financialLoading ? (
-              <LoadingState rows={3} />
-            ) : hasFinancialError ? (
-              <ErrorState description={financialError} className="py-8" />
-            ) : analytics.vehicleRevenueList.length === 0 ? (
-              <EmptyState
-                icon={WalletCards}
-                title="لا توجد إيرادات سيارات هذا الشهر"
-                description="ستظهر الإيرادات بعد تسجيل الدفعات للإيجارات."
-                className="py-8"
-              />
-            ) : (
-              <div className="space-y-4">
-                {analytics.vehicleRevenueList
-                  .slice(0, 5)
-                  .map(({ vehicle, amount }, index) => {
-                    const width = Math.max(
-                      8,
-                      Math.round((amount / analytics.maxVehicleRevenue) * 100),
-                    );
-                    return (
+              )}
+            </SectionCard>
+            <SectionCard
+              className="min-w-0"
+              title="حالة السيارات"
+              description="حالة السيارات الحالية والإيجارات المكتملة."
+            >
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  [
+                    "available",
+                    analytics.availableCount,
+                    "bg-status-positive-bg text-status-positive",
+                  ],
+                  [
+                    "rented",
+                    analytics.rentedCount,
+                    "bg-status-info-bg text-status-info",
+                  ],
+                  [
+                    "maintenance",
+                    analytics.maintenanceCount,
+                    "bg-status-warning-bg text-status-warning",
+                  ],
+                ].map(([status, count, tone]) => (
+                  <div
+                    key={status}
+                    className={cn("rounded-lg p-3 text-center", tone)}
+                  >
+                    <p className="text-2xl font-bold tabular-nums">{count}</p>
+                    <p className="mt-1 text-xs font-semibold">
+                      {
+                        VEHICLE_STATUS_LABELS[
+                          status as keyof typeof VEHICLE_STATUS_LABELS
+                        ]
+                      }
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 flex items-center justify-between rounded-lg border border-border px-3 py-2.5 text-sm">
+                <span className="text-muted-foreground">إيجارات مكتملة</span>
+                <strong className="tabular-nums text-foreground">
+                  {analytics.endedCount}
+                </strong>
+              </div>
+              {(analytics.rentedVehicles.length > 0 ||
+                analytics.maintenanceVehicles.length > 0) && (
+                <div className="mt-4 divide-y divide-border border-t border-border">
+                  {[
+                    ...analytics.rentedVehicles.map((vehicle) => ({
+                      vehicle,
+                      status: "rented" as const,
+                    })),
+                    ...analytics.maintenanceVehicles.map((vehicle) => ({
+                      vehicle,
+                      status: "maintenance" as const,
+                    })),
+                  ]
+                    .slice(0, 4)
+                    .map(({ vehicle, status }) => (
                       <button
                         key={vehicle.id}
                         type="button"
                         onClick={() => navigate(`/vehicles/${vehicle.id}`)}
-                        className="w-full text-right"
+                        className="flex w-full items-center justify-between gap-3 py-3 text-right"
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex min-w-0 items-start gap-2">
-                            <VehicleIdentity vehicle={vehicle} />
-                            {index === 0 && (
-                              <span className="mt-0.5 rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">
-                                الأعلى
-                              </span>
-                            )}
-                          </div>
-                          <strong className="shrink-0 text-sm tabular-nums text-foreground">
-                            {formatCurrency(amount)}
-                          </strong>
-                        </div>
-                        <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-muted">
-                          <span
-                            className="block h-full rounded-full bg-primary"
-                            style={{ width: `${width}%` }}
-                          />
+                        <StatusBadge status={status} />
+                        <span
+                          dir="ltr"
+                          className="min-w-0 truncate text-sm font-semibold text-foreground"
+                        >
+                          {vehicle.make} {vehicle.model}
                         </span>
                       </button>
-                    );
-                  })}
-              </div>
-            )}
-          </SectionCard>
-          <SectionCard
-            className="min-w-0"
-            title="حالة السيارات"
-            description="حالة السيارات الحالية والإيجارات المكتملة."
-          >
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                [
-                  "available",
-                  analytics.availableCount,
-                  "bg-status-positive-bg text-status-positive",
-                ],
-                [
-                  "rented",
-                  analytics.rentedCount,
-                  "bg-status-info-bg text-status-info",
-                ],
-                [
-                  "maintenance",
-                  analytics.maintenanceCount,
-                  "bg-status-warning-bg text-status-warning",
-                ],
-              ].map(([status, count, tone]) => (
-                <div
-                  key={status}
-                  className={cn("rounded-lg p-3 text-center", tone)}
-                >
-                  <p className="text-2xl font-bold tabular-nums">{count}</p>
-                  <p className="mt-1 text-xs font-semibold">
-                    {
-                      VEHICLE_STATUS_LABELS[
-                        status as keyof typeof VEHICLE_STATUS_LABELS
-                      ]
-                    }
-                  </p>
+                    ))}
                 </div>
-              ))}
-            </div>
-            <div className="mt-4 flex items-center justify-between rounded-lg border border-border px-3 py-2.5 text-sm">
-              <span className="text-muted-foreground">إيجارات مكتملة</span>
-              <strong className="tabular-nums text-foreground">
-                {analytics.endedCount}
-              </strong>
-            </div>
-            {(analytics.rentedVehicles.length > 0 ||
-              analytics.maintenanceVehicles.length > 0) && (
-              <div className="mt-4 divide-y divide-border border-t border-border">
-                {[
-                  ...analytics.rentedVehicles.map((vehicle) => ({
-                    vehicle,
-                    status: "rented" as const,
-                  })),
-                  ...analytics.maintenanceVehicles.map((vehicle) => ({
-                    vehicle,
-                    status: "maintenance" as const,
-                  })),
-                ]
-                  .slice(0, 4)
-                  .map(({ vehicle, status }) => (
-                    <button
-                      key={vehicle.id}
-                      type="button"
-                      onClick={() => navigate(`/vehicles/${vehicle.id}`)}
-                      className="flex w-full items-center justify-between gap-3 py-3 text-right"
-                    >
-                      <StatusBadge status={status} />
-                      <span
-                        dir="ltr"
-                        className="min-w-0 truncate text-sm font-semibold text-foreground"
+              )}
+            </SectionCard>
+          </div>
+          {(analytics.maintenanceCostList.length > 0 ||
+            analytics.expensePerVehicleList.length > 0) && (
+            <section className="grid gap-5 xl:grid-cols-2">
+              <SectionCard
+                className="min-w-0"
+                title="أعلى تكاليف الصيانة"
+                action={
+                  <button
+                    type="button"
+                    onClick={() => navigate("/maintenance")}
+                    className="text-sm font-semibold text-primary hover:underline"
+                  >
+                    عرض الصيانة
+                  </button>
+                }
+              >
+                <div className="divide-y divide-border">
+                  {analytics.maintenanceCostList
+                    .slice(0, 5)
+                    .map(({ vehicle, cost }) => (
+                      <button
+                        key={vehicle.id}
+                        type="button"
+                        onClick={() => navigate(`/vehicles/${vehicle.id}`)}
+                        className="flex w-full items-start justify-between gap-3 py-3 text-right"
                       >
-                        {vehicle.make} {vehicle.model}
-                      </span>
-                    </button>
-                  ))}
-              </div>
-            )}
-          </SectionCard>
-        </div>
-        {(analytics.maintenanceCostList.length > 0 ||
-          analytics.expensePerVehicleList.length > 0) && (
-          <section className="grid gap-5 xl:grid-cols-2">
-            <SectionCard
-              className="min-w-0"
-              title="أعلى تكاليف الصيانة"
-              action={
-                <button
-                  type="button"
-                  onClick={() => navigate("/maintenance")}
-                  className="text-sm font-semibold text-primary hover:underline"
-                >
-                  عرض الصيانة
-                </button>
-              }
-            >
-              <div className="divide-y divide-border">
-                {analytics.maintenanceCostList
-                  .slice(0, 5)
-                  .map(({ vehicle, cost }) => (
-                    <button
-                      key={vehicle.id}
-                      type="button"
-                      onClick={() => navigate(`/vehicles/${vehicle.id}`)}
-                      className="flex w-full items-start justify-between gap-3 py-3 text-right"
-                    >
-                      <VehicleIdentity vehicle={vehicle} />
-                      <strong className="shrink-0 text-sm tabular-nums text-foreground">
-                        {formatCurrency(cost)}
-                      </strong>
-                    </button>
-                  ))}
-              </div>
-            </SectionCard>
-            <SectionCard
-              className="min-w-0"
-              title="مصروفات مرتبطة بالسيارات"
-              action={
-                <button
-                  type="button"
-                  onClick={() => navigate("/expenses")}
-                  className="text-sm font-semibold text-primary hover:underline"
-                >
-                  عرض المصروفات
-                </button>
-              }
-            >
-              <div className="divide-y divide-border">
-                {analytics.expensePerVehicleList
-                  .slice(0, 5)
-                  .map(({ vehicle, amount }) => (
-                    <button
-                      key={vehicle.id}
-                      type="button"
-                      onClick={() => navigate(`/vehicles/${vehicle.id}`)}
-                      className="flex w-full items-start justify-between gap-3 py-3 text-right"
-                    >
-                      <VehicleIdentity vehicle={vehicle} />
-                      <strong className="shrink-0 text-sm tabular-nums text-foreground">
-                        {formatCurrency(amount)}
-                      </strong>
-                    </button>
-                  ))}
-              </div>
-            </SectionCard>
-          </section>
-        )}
-      </main>
+                        <VehicleIdentity vehicle={vehicle} />
+                        <strong className="shrink-0 text-sm tabular-nums text-foreground">
+                          {formatCurrency(cost)}
+                        </strong>
+                      </button>
+                    ))}
+                </div>
+              </SectionCard>
+              <SectionCard
+                className="min-w-0"
+                title="مصروفات مرتبطة بالسيارات"
+                action={
+                  <button
+                    type="button"
+                    onClick={() => navigate("/expenses")}
+                    className="text-sm font-semibold text-primary hover:underline"
+                  >
+                    عرض المصروفات
+                  </button>
+                }
+              >
+                <div className="divide-y divide-border">
+                  {analytics.expensePerVehicleList
+                    .slice(0, 5)
+                    .map(({ vehicle, amount }) => (
+                      <button
+                        key={vehicle.id}
+                        type="button"
+                        onClick={() => navigate(`/vehicles/${vehicle.id}`)}
+                        className="flex w-full items-start justify-between gap-3 py-3 text-right"
+                      >
+                        <VehicleIdentity vehicle={vehicle} />
+                        <strong className="shrink-0 text-sm tabular-nums text-foreground">
+                          {formatCurrency(amount)}
+                        </strong>
+                      </button>
+                    ))}
+                </div>
+              </SectionCard>
+            </section>
+          )}
+        </main>
       </div>
     </BenchmarkPageProfile>
   );
