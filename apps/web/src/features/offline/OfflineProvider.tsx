@@ -88,12 +88,15 @@ export function OfflineProvider({
   const [projectionVersion, setProjectionVersion] = useState(0);
   const syncRef = useRef<{ syncNow(): Promise<void> } | undefined>(undefined);
   const sessionStateRef = useRef(sessionState);
+  const forcedOfflineRef = useRef(false);
   sessionStateRef.current = sessionState;
 
   const syncNow = (): void => {
+    forcedOfflineRef.current = false;
     void syncRef.current?.syncNow().catch(() => undefined);
   };
   const markOffline = useCallback(() => {
+    forcedOfflineRef.current = true;
     setIsOnline(false);
     setStatus("offline");
   }, []);
@@ -104,7 +107,7 @@ export function OfflineProvider({
   useEffect(() => {
     if (sessionState === "offline") {
       setStatus("offline");
-    } else if (workspace && available && connectivityHint()) {
+    } else if (workspace && available && !forcedOfflineRef.current && connectivityHint()) {
       setStatus("pending");
     }
   }, [available, sessionState, workspace]);
@@ -130,9 +133,10 @@ export function OfflineProvider({
       if (!active) return;
       pendingCountRef.current = count;
       setPendingCount(count);
-      setIsOnline(online);
+      const reachable = !forcedOfflineRef.current && online;
+      setIsOnline(reachable);
       setStatus(
-        sessionStateRef.current === "offline" || !online
+        sessionStateRef.current === "offline" || !reachable
           ? "offline"
           : "pending",
       );
@@ -158,7 +162,7 @@ export function OfflineProvider({
               setPendingCount(next.pendingCount);
               setConflicts(next.conflicts);
               setStatus(
-                sessionStateRef.current === "offline" || !connectivityHint()
+                sessionStateRef.current === "offline" || forcedOfflineRef.current || !connectivityHint()
                   ? "offline"
                   : next.status,
               );
@@ -179,6 +183,7 @@ export function OfflineProvider({
       if (!online) setStatus("offline");
     };
     const syncOnOnline = () => {
+      forcedOfflineRef.current = false;
       updateConnectivity();
       syncNow();
     };

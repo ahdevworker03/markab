@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { OfflineProvider, useOffline } from "./OfflineProvider";
-import type { OfflineStore } from "./types";
+import type { OfflineStore, QueuedOperation } from "./types";
 
 const useAuth = vi.hoisted(() => vi.fn());
 const syncPush = vi.hoisted(() => vi.fn());
@@ -46,13 +46,14 @@ function createStore(): OfflineStore {
 }
 
 function OfflineProbe() {
-  const { conflicts, isOnline, markOffline, pendingCount, status, syncReady } = useOffline();
+  const { conflicts, isOnline, markOffline, pendingCount, status, syncNow, syncReady } = useOffline();
   return (
     <>
       <p>{`${status}:${isOnline}`}</p>
       <p>{`${pendingCount}:${conflicts.length}`}</p>
       <p>{String(syncReady)}</p>
       <button type="button" onClick={markOffline}>Mark offline</button>
+      <button type="button" onClick={syncNow}>Sync now</button>
     </>
   );
 }
@@ -227,7 +228,81 @@ describe("OfflineProvider", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Mark offline" }));
 
-    expect(screen.getByText("offline:false")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByText("offline:false")).toBeInTheDocument(),
+    );
+  });
+
+  it("recovers a queued transport failure through explicit sync without an online event", async () => {
+    const operation: QueuedOperation = {
+      operation_id: "queued-customer",
+      type: "CUSTOMER_CREATE",
+      customer_create: {
+        first_name: "Ada",
+        last_name: "Lovelace",
+        phone: "10000000",
+        address: "Beirut",
+        national_id: "national-queued-customer",
+        license_number: "license-queued-customer",
+        license_expiry_date: "2030-01-01",
+      },
+      createdAt: "2026-09-23T12:00:00.000Z",
+      attempts: 0,
+      state: "PENDING",
+    };
+    let outbox: QueuedOperation[] = [operation];
+    const store = createStore();
+    store.listOutbox = vi.fn().mockImplementation(async () => outbox);
+    store.removeOutbox = vi.fn(async (_workspace, operationId) => {
+      outbox = outbox.filter((item) => item.operation_id !== operationId);
+    });
+    syncPush.mockResolvedValue({
+      results: [{
+        operation_id: operation.operation_id,
+        type: "CUSTOMER_CREATE",
+        status: "APPLIED",
+        code: "SYNC_APPLIED",
+        resource_type: "CUSTOMER",
+        customer: {
+          id: "customer-queued",
+          firstName: "Ada",
+          lastName: "Lovelace",
+          phone: "10000000",
+          address: "Beirut",
+          nationalId: "national-queued-customer",
+          licenseNumber: "license-queued-customer",
+          licenseExpiryDate: "2030-01-01",
+          createdAt: "2026-09-23T12:00:00.000Z",
+          updatedAt: "2026-09-23T12:00:00.000Z",
+        },
+      }],
+    });
+    syncPull.mockResolvedValue({
+      changes: [],
+      next_cursor: null,
+      completion_cursor: "complete",
+    });
+    render(
+      <OfflineProvider store={store}>
+        <OfflineProbe />
+      </OfflineProvider>,
+    );
+
+    await screen.findByText("pending:true");
+    await screen.findByText("true");
+    fireEvent.click(screen.getByRole("button", { name: "Mark offline" }));
+    await screen.findByText("offline:false");
+    expect(syncPush).not.toHaveBeenCalled();
+    expect(syncPull).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Sync now" }));
+
+    await waitFor(() => expect(store.removeOutbox).toHaveBeenCalledWith(
+      { organizationId: "organization-a", userId: "user-a" },
+      operation.operation_id,
+    ));
+    expect(syncPush).toHaveBeenCalledOnce();
+    expect(syncPull).toHaveBeenCalledOnce();
   });
 
   it.each(["SUSPENDED", "CANCELLED"] as const)(
