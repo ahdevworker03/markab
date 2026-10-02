@@ -110,7 +110,12 @@ export function OfflineProvider({
     } else if (workspace && available && !forcedOfflineRef.current && connectivityHint()) {
       setStatus("pending");
     }
-  }, [available, sessionState, workspace]);
+  }, [
+    available,
+    sessionState,
+    workspace?.organizationId,
+    workspace?.userId,
+  ]);
 
   useEffect(() => {
     pendingCountRef.current = 0;
