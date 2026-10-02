@@ -46,12 +46,13 @@ function createStore(): OfflineStore {
 }
 
 function OfflineProbe() {
-  const { conflicts, isOnline, pendingCount, status, syncReady } = useOffline();
+  const { conflicts, isOnline, markOffline, pendingCount, status, syncReady } = useOffline();
   return (
     <>
       <p>{`${status}:${isOnline}`}</p>
       <p>{`${pendingCount}:${conflicts.length}`}</p>
       <p>{String(syncReady)}</p>
+      <button type="button" onClick={markOffline}>Mark offline</button>
     </>
   );
 }
@@ -213,6 +214,20 @@ describe("OfflineProvider", () => {
 
     expect(await screen.findByText("offline:false")).toBeInTheDocument();
     expect(store.listOutbox).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses a failed supported mutation as an offline signal when the browser reports online", async () => {
+    const store = createStore();
+    render(
+      <OfflineProvider store={store}>
+        <OfflineProbe />
+      </OfflineProvider>,
+    );
+    await screen.findByText("pending:true");
+
+    fireEvent.click(screen.getByRole("button", { name: "Mark offline" }));
+
+    expect(screen.getByText("offline:false")).toBeInTheDocument();
   });
 
   it.each(["SUSPENDED", "CANCELLED"] as const)(

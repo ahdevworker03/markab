@@ -36,7 +36,7 @@ export function SyncStatus() {
     : statusConfig[status];
 
   const canResolve = status === "conflict" || status === "failed";
-  if (canResolve) {
+  if (canResolve || status === "offline") {
     return (
       <>
         <button
@@ -47,18 +47,18 @@ export function SyncStatus() {
           )}
           aria-label={config.label}
           data-state={status}
-          onClick={() => setDialogOpen(true)}
+          onClick={() => (status === "offline" ? syncNow() : setDialogOpen(true))}
         >
           {config.label}
         </button>
-        <SyncResolutionDialog
+        {canResolve && <SyncResolutionDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           workspace={workspace}
           store={store}
           refreshProjections={refreshProjections}
           syncNow={syncNow}
-        />
+        />}
       </>
     );
   }

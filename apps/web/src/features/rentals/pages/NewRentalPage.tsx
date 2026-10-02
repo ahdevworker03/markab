@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { useCustomersList } from "@/features/customers/api-hooks";
 import { useVehiclesList } from "@/features/vehicles/api-hooks";
 import { createOfflineCommands } from "@/features/offline/commands";
+import { isNetworkFailure } from "@/features/offline/network";
 import { useOffline } from "@/features/offline/OfflineProvider";
 
 function toDateInput(date: Date): string {
@@ -76,7 +77,7 @@ export default function NewRentalPage() {
   const [saved, setSaved] = useState(false);
   const [queuedOffline, setQueuedOffline] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { isOffline, refreshProjections, store, workspace } = useOffline();
+  const { isOffline, markOffline, refreshProjections, store, workspace } = useOffline();
 
   useTimeout(() => setLocation("/rentals"), saved ? 1200 : null);
 
@@ -235,24 +236,20 @@ export default function NewRentalPage() {
     setFormError(null);
     setIsSubmitting(true);
 
+    const draft = {
+      vehicle_id: selectedVehicleId,
+      pickup_date: pickupDateTime!.toISOString(),
+      expected_return_date: returnDateTime!.toISOString(),
+      daily_rate: rate,
+      total_amount: total,
+      deposit_amount: deposit,
+    };
+    const customerReference = selectedCustomerId.startsWith("local:")
+      ? { customer_create_operation_id: selectedCustomerId.slice("local:".length) }
+      : { customer_id: selectedCustomerId };
     try {
-      const draft = {
-        vehicle_id: selectedVehicleId,
-        pickup_date: pickupDateTime!.toISOString(),
-        expected_return_date: returnDateTime!.toISOString(),
-        daily_rate: rate,
-        total_amount: total,
-        deposit_amount: deposit,
-      };
       if (isOffline) {
         if (!workspace) throw new Error("لا تتوفر مساحة عمل دون اتصال.");
-        const customerReference = selectedCustomerId.startsWith("local:")
-          ? {
-              customer_create_operation_id: selectedCustomerId.slice(
-                "local:".length,
-              ),
-            }
-          : { customer_id: selectedCustomerId };
         await createOfflineCommands({ workspace, store }).queueRentalCreate(
           draft,
           customerReference,
@@ -266,6 +263,18 @@ export default function NewRentalPage() {
       }
       setSaved(true);
     } catch (error) {
+      if (workspace && isNetworkFailure(error)) {
+        try {
+          await createOfflineCommands({ workspace, store }).queueRentalCreate(draft, customerReference);
+          markOffline();
+          refreshProjections();
+          setQueuedOffline(true);
+          setSaved(true);
+        } catch (queueError) {
+          setFormError(getApiErrorMessage(queueError).title);
+        }
+        return;
+      }
       setFormError(getApiErrorMessage(error).title);
     } finally {
       setIsSubmitting(false);
