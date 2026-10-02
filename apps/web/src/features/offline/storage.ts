@@ -147,6 +147,11 @@ export function createOfflineStore(
   factory = globalThis.indexedDB,
 ): OfflineStore {
   let database: Promise<IDBDatabase> | undefined;
+  const listeners = new Map<string, Set<() => void>>();
+  const notifyOutbox = (workspace: OfflineWorkspace) => {
+    for (const listener of listeners.get(tenantKey(workspace)) ?? [])
+      listener();
+  };
 
   const getDatabase = () => {
     if (!factory) throw new Error("IndexedDB is unavailable");
@@ -189,6 +194,39 @@ export function createOfflineStore(
   };
 
   return {
+    subscribeOutbox(workspace, listener) {
+      const key = tenantKey(workspace);
+      const callbacks = listeners.get(key) ?? new Set<() => void>();
+      listeners.set(key, callbacks);
+      callbacks.add(listener);
+      return () => {
+        callbacks.delete(listener);
+        if (!callbacks.size) listeners.delete(key);
+      };
+    },
+
+    async requireReconciliation(workspace) {
+      const db = await getDatabase();
+      const transaction = db.transaction("metadata", "readwrite");
+      transaction.objectStore("metadata").put({
+        tenantKey: tenantKey(workspace),
+        key: "reconciliation_required",
+        value: "true",
+      } satisfies MetadataRecord);
+      await transactionDone(transaction);
+    },
+
+    async isReconciliationRequired(workspace) {
+      const db = await getDatabase();
+      const transaction = db.transaction("metadata", "readonly");
+      const record = await request(
+        transaction
+          .objectStore("metadata")
+          .get([tenantKey(workspace), "reconciliation_required"]),
+      );
+      await transactionDone(transaction);
+      return Boolean(record);
+    },
     async open(_workspace) {
       await getDatabase();
     },
@@ -250,7 +288,12 @@ export function createOfflineStore(
       return (record as MetadataRecord | undefined)?.value;
     },
 
-    async applyPull(workspace, changes, completionCursor) {
+    async applyPull(
+      workspace,
+      changes,
+      completionCursor,
+      reconciliationComplete = false,
+    ) {
       const db = await getDatabase();
       const transaction = db.transaction(
         [...projectionStores, "metadata"],
@@ -269,6 +312,11 @@ export function createOfflineStore(
           key: "completion_cursor",
           value: completionCursor,
         } satisfies MetadataRecord);
+      }
+      if (reconciliationComplete) {
+        transaction
+          .objectStore("metadata")
+          .delete([key, "reconciliation_required"]);
       }
       await transactionDone(transaction);
     },
@@ -298,6 +346,7 @@ export function createOfflineStore(
         .objectStore("outbox")
         .put({ ...serializedOperation(operation), tenantKey: key });
       await transactionDone(transaction);
+      notifyOutbox(workspace);
     },
 
     async listOutbox(workspace, limit) {
@@ -382,6 +431,7 @@ export function createOfflineStore(
       outbox.delete([key, operationId]);
       outbox.put({ ...serializedOperation(replacement), tenantKey: key });
       await transactionDone(transaction);
+      notifyOutbox(workspace);
     },
 
     async discardCustomerConflict(workspace, operationId) {

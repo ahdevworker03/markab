@@ -77,7 +77,7 @@ export default function NewRentalPage() {
   const [saved, setSaved] = useState(false);
   const [queuedOffline, setQueuedOffline] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { isOffline, markOffline, refreshProjections, store, workspace } = useOffline();
+  const { isOffline, refreshProjections, store, workspace } = useOffline();
 
   useTimeout(() => setLocation("/rentals"), saved ? 1200 : null);
 
@@ -245,7 +245,11 @@ export default function NewRentalPage() {
       deposit_amount: deposit,
     };
     const customerReference = selectedCustomerId.startsWith("local:")
-      ? { customer_create_operation_id: selectedCustomerId.slice("local:".length) }
+      ? {
+          customer_create_operation_id: selectedCustomerId.slice(
+            "local:".length,
+          ),
+        }
       : { customer_id: selectedCustomerId };
     try {
       if (isOffline) {
@@ -265,8 +269,10 @@ export default function NewRentalPage() {
     } catch (error) {
       if (workspace && isNetworkFailure(error)) {
         try {
-          await createOfflineCommands({ workspace, store }).queueRentalCreate(draft, customerReference);
-          markOffline();
+          await createOfflineCommands({ workspace, store }).queueRentalCreate(
+            draft,
+            customerReference,
+          );
           refreshProjections();
           setQueuedOffline(true);
           setSaved(true);

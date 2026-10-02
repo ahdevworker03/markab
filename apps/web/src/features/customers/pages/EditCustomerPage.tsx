@@ -1,9 +1,15 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Users } from "lucide-react";
-import { useCustomerMutations, useCustomerRecord } from "@/features/customers/api-hooks";
+import {
+  useCustomerMutations,
+  useCustomerRecord,
+} from "@/features/customers/api-hooks";
 
-import { CustomerFormFields, type CustomerFormState } from "@/features/customers/components/CustomerFormFields";
+import {
+  CustomerFormFields,
+  type CustomerFormState,
+} from "@/features/customers/components/CustomerFormFields";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -33,25 +39,36 @@ export default function EditCustomerPage({ params }: DetailPageParams) {
   const { id } = params;
   const [, setLocation] = useLocation();
   const [form, setForm] = useState<CustomerFormState | null>(null);
-  const [errors, setErrors] = useState<Partial<Record<keyof CustomerFormState, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof CustomerFormState, string>>
+  >({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const customerQuery = useCustomerRecord(id);
   const { update: updateMutation } = useCustomerMutations();
-  const { isOffline, markOffline, refreshProjections, store, workspace } = useOffline();
+  const { isOffline, refreshProjections, store, workspace } = useOffline();
 
   useEffect(() => {
     if (!customerQuery.data?.data || form) return;
     const customer = customerQuery.data.data;
     setForm({
-      first_name: customer.firstName, last_name: customer.lastName, phone: customer.phone, address: customer.address,
-      national_id: customer.nationalId, license_number: customer.licenseNumber, license_expiry_date: toDateInputValue(customer.licenseExpiryDate),
+      first_name: customer.firstName,
+      last_name: customer.lastName,
+      phone: customer.phone,
+      address: customer.address,
+      national_id: customer.nationalId,
+      license_number: customer.licenseNumber,
+      license_expiry_date: toDateInputValue(customer.licenseExpiryDate),
     });
   }, [customerQuery.data, form]);
 
-  function set<K extends keyof CustomerFormState>(field: K, value: CustomerFormState[K]) {
-    setForm((current) => current ? { ...current, [field]: value } : current);
-    if (errors[field]) setErrors((current) => ({ ...current, [field]: undefined }));
+  function set<K extends keyof CustomerFormState>(
+    field: K,
+    value: CustomerFormState[K],
+  ) {
+    setForm((current) => (current ? { ...current, [field]: value } : current));
+    if (errors[field])
+      setErrors((current) => ({ ...current, [field]: undefined }));
   }
 
   function validate(): boolean {
@@ -62,19 +79,27 @@ export default function EditCustomerPage({ params }: DetailPageParams) {
     if (!form.phone.trim()) nextErrors.phone = "هذا الحقل مطلوب.";
     if (!form.address.trim()) nextErrors.address = "هذا الحقل مطلوب.";
     if (!form.national_id.trim()) nextErrors.national_id = "هذا الحقل مطلوب.";
-    if (!form.license_number.trim()) nextErrors.license_number = "هذا الحقل مطلوب.";
-    if (!isValidDate(form.license_expiry_date)) nextErrors.license_expiry_date = "أدخل تاريخاً صحيحاً.";
+    if (!form.license_number.trim())
+      nextErrors.license_number = "هذا الحقل مطلوب.";
+    if (!isValidDate(form.license_expiry_date))
+      nextErrors.license_expiry_date = "أدخل تاريخاً صحيحاً.";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
 
   async function handleSubmit() {
-    if (!form || isSubmitting || updateMutation.isPending || !validate()) return;
+    if (!form || isSubmitting || updateMutation.isPending || !validate())
+      return;
     setFormError(null);
     setIsSubmitting(true);
     const data = {
-      first_name: form.first_name.trim(), last_name: form.last_name.trim(), phone: form.phone.trim(), address: form.address.trim(),
-      national_id: form.national_id.trim(), license_number: form.license_number.trim(), license_expiry_date: new Date(form.license_expiry_date).toISOString(),
+      first_name: form.first_name.trim(),
+      last_name: form.last_name.trim(),
+      phone: form.phone.trim(),
+      address: form.address.trim(),
+      national_id: form.national_id.trim(),
+      license_number: form.license_number.trim(),
+      license_expiry_date: new Date(form.license_expiry_date).toISOString(),
     };
     const customer = customerQuery.data?.data;
     try {
@@ -83,7 +108,10 @@ export default function EditCustomerPage({ params }: DetailPageParams) {
         if (!customer || customer.id.startsWith("local:")) {
           throw new Error("لا يمكن تعديل عميل أضيف دون اتصال قبل مزامنته.");
         }
-        await createOfflineCommands({ workspace, store }).queueCustomerUpdate(customer, data);
+        await createOfflineCommands({ workspace, store }).queueCustomerUpdate(
+          customer,
+          data,
+        );
         refreshProjections();
         setLocation(`/customers/${id}`);
         return;
@@ -94,10 +122,17 @@ export default function EditCustomerPage({ params }: DetailPageParams) {
       });
       setLocation(`/customers/${id}`);
     } catch (error) {
-      if (workspace && customer && !customer.id.startsWith("local:") && isNetworkFailure(error)) {
+      if (
+        workspace &&
+        customer &&
+        !customer.id.startsWith("local:") &&
+        isNetworkFailure(error)
+      ) {
         try {
-          await createOfflineCommands({ workspace, store }).queueCustomerUpdate(customer, data);
-          markOffline();
+          await createOfflineCommands({ workspace, store }).queueCustomerUpdate(
+            customer,
+            data,
+          );
           refreshProjections();
           setLocation(`/customers/${id}`);
         } catch (queueError) {
@@ -111,22 +146,84 @@ export default function EditCustomerPage({ params }: DetailPageParams) {
     }
   }
 
-  if (customerQuery.isLoading || (!form && !customerQuery.isError)) return <div className="min-h-full"><PageHeader title="تعديل العميل" showBack /><div className="px-4 py-6 sm:px-6"><LoadingState rows={4} /></div></div>;
-  if (customerQuery.isError || !form) return <div className="min-h-full"><PageHeader title="تعديل العميل" showBack /><EmptyState icon={Users} title="تعذر العثور على العميل" description={customerQuery.error ? getApiErrorMessage(customerQuery.error).title : "لم يتم العثور على هذا العميل."} className="py-16" /></div>;
-  if (id.startsWith("local:")) return <div className="min-h-full"><PageHeader title="تعديل العميل" showBack /><InlineError className="mx-4 mt-6 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 sm:mx-6">لا يمكن تعديل عميل أضيف دون اتصال قبل مزامنته.</InlineError></div>;
+  if (customerQuery.isLoading || (!form && !customerQuery.isError))
+    return (
+      <div className="min-h-full">
+        <PageHeader title="تعديل العميل" showBack />
+        <div className="px-4 py-6 sm:px-6">
+          <LoadingState rows={4} />
+        </div>
+      </div>
+    );
+  if (customerQuery.isError || !form)
+    return (
+      <div className="min-h-full">
+        <PageHeader title="تعديل العميل" showBack />
+        <EmptyState
+          icon={Users}
+          title="تعذر العثور على العميل"
+          description={
+            customerQuery.error
+              ? getApiErrorMessage(customerQuery.error).title
+              : "لم يتم العثور على هذا العميل."
+          }
+          className="py-16"
+        />
+      </div>
+    );
+  if (id.startsWith("local:"))
+    return (
+      <div className="min-h-full">
+        <PageHeader title="تعديل العميل" showBack />
+        <InlineError className="mx-4 mt-6 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 sm:mx-6">
+          لا يمكن تعديل عميل أضيف دون اتصال قبل مزامنته.
+        </InlineError>
+      </div>
+    );
 
-  const canSave = Boolean(form.first_name.trim() && form.last_name.trim() && form.phone.trim() && form.address.trim() && form.national_id.trim() && form.license_number.trim() && form.license_expiry_date);
+  const canSave = Boolean(
+    form.first_name.trim() &&
+    form.last_name.trim() &&
+    form.phone.trim() &&
+    form.address.trim() &&
+    form.national_id.trim() &&
+    form.license_number.trim() &&
+    form.license_expiry_date,
+  );
 
   return (
     <div className="min-h-full pb-6">
       <PageHeader title="تعديل العميل" showBack />
       <div className="mx-auto max-w-5xl space-y-4 px-4 pb-6 pt-4 sm:px-6 lg:space-y-5">
-        <div><h2 className="ui-page-title">بيانات العميل</h2><p className="ui-secondary-text mt-1">حدّث معلومات التواصل والهوية ورخصة القيادة.</p></div>
-        {formError && <InlineError className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">{formError}</InlineError>}
+        <div>
+          <h2 className="ui-page-title">بيانات العميل</h2>
+          <p className="ui-secondary-text mt-1">
+            حدّث معلومات التواصل والهوية ورخصة القيادة.
+          </p>
+        </div>
+        {formError && (
+          <InlineError className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
+            {formError}
+          </InlineError>
+        )}
         <CustomerFormFields form={form} errors={errors} onChange={set} />
         <div className="sticky bottom-0 flex flex-wrap justify-end gap-2 border-t border-border bg-background/95 py-3 backdrop-blur-sm">
-          <Button type="button" variant="outline" onClick={() => setLocation(`/customers/${id}`)}>إلغاء</Button>
-          <Button type="button" onClick={handleSubmit} disabled={!canSave || isSubmitting || updateMutation.isPending}>{isSubmitting || updateMutation.isPending ? "جارٍ الحفظ" : "حفظ التعديلات"}</Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setLocation(`/customers/${id}`)}
+          >
+            إلغاء
+          </Button>
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!canSave || isSubmitting || updateMutation.isPending}
+          >
+            {isSubmitting || updateMutation.isPending
+              ? "جارٍ الحفظ"
+              : "حفظ التعديلات"}
+          </Button>
         </div>
       </div>
     </div>

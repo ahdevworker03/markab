@@ -147,6 +147,9 @@ function createStore(): OfflineStore {
     ),
     getRental: vi.fn(),
     getCompletionCursor: vi.fn(),
+    requireReconciliation: vi.fn(),
+    isReconciliationRequired: vi.fn().mockResolvedValue(false),
+    subscribeOutbox: vi.fn(() => () => undefined),
     applyPull: vi.fn(async (workspace, changes: readonly SyncPullChange[]) => {
       for (const change of changes) {
         if (change.resource_type === "CUSTOMER" && change.customer) {

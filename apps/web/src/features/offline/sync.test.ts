@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ApiError,
   syncPull,
@@ -78,6 +78,8 @@ function apiError(status: number, code?: string): ApiError {
 
 function createStore(initial: QueuedOperation[] = []): OfflineStore {
   const outbox = new Map(initial.map((item) => [item.operation_id, item]));
+  let required = false;
+  let listener: (() => void) | undefined;
   return {
     open: vi.fn(),
     close: vi.fn(),
@@ -87,8 +89,23 @@ function createStore(initial: QueuedOperation[] = []): OfflineStore {
     getVehicle: vi.fn(),
     getRental: vi.fn(),
     getCompletionCursor: vi.fn().mockResolvedValue(undefined),
-    applyPull: vi.fn(),
-    enqueue: vi.fn(),
+    requireReconciliation: vi.fn(async () => {
+      required = true;
+    }),
+    isReconciliationRequired: vi.fn(async () => required),
+    subscribeOutbox: vi.fn((_workspace, notify) => {
+      listener = notify;
+      return () => {
+        listener = undefined;
+      };
+    }),
+    applyPull: vi.fn(async (_workspace, _changes, _cursor, complete) => {
+      if (complete) required = false;
+    }),
+    enqueue: vi.fn(async (_workspace, item) => {
+      outbox.set(item.operation_id, item);
+      listener?.();
+    }),
     listOutbox: vi.fn(async (_workspace, limit) =>
       [...outbox.values()].slice(0, limit),
     ),
@@ -110,6 +127,273 @@ function createStore(initial: QueuedOperation[] = []): OfflineStore {
 }
 
 describe("createSyncCoordinator", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => {
+    vi.clearAllTimers();
+    vi.useRealTimers();
+  });
+
+  it("silently recovers on its scheduled attempt with stable IDs and no simultaneous requests", async () => {
+    const store = createStore([operation("1")]);
+    let rejectPush!: (error: Error) => void;
+    const push = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise((_resolve, reject) => {
+            rejectPush = reject;
+          }),
+      )
+      .mockResolvedValue({ results: [applied("1")] });
+    const pull = vi.fn().mockResolvedValue(pullPage());
+    const coordinator = createSyncCoordinator({
+      workspace,
+      store,
+      push,
+      pull,
+      onStatus: vi.fn(),
+    });
+    const first = coordinator.syncNow();
+    const rejected = expect(first).rejects.toThrow("Failed to fetch");
+    await vi.advanceTimersByTimeAsync(0);
+    await vi.advanceTimersByTimeAsync(120000);
+    expect(push).toHaveBeenCalledOnce();
+    rejectPush(new TypeError("Failed to fetch"));
+    await rejected;
+    await vi.advanceTimersByTimeAsync(999);
+    expect(push).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(push).toHaveBeenCalledTimes(2);
+    expect(push.mock.calls[0][0].operations[0].operation_id).toBe("1");
+    expect(push.mock.calls[1][0].operations[0].operation_id).toBe("1");
+    expect(pull).toHaveBeenCalledOnce();
+    expect(await store.listOutbox(workspace, 25)).toEqual([]);
+    expect(store.reconcileCustomerCreate).toHaveBeenCalledWith(
+      workspace,
+      "1",
+      customer("1"),
+    );
+    expect(vi.getTimerCount()).toBe(0);
+    coordinator.stop();
+  });
+
+  it("remembers one follow-up for new outbox work queued during an active pull", async () => {
+    const store = createStore();
+    let resolvePull!: (value: SyncPullResponse) => void;
+    const pull = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<SyncPullResponse>((resolve) => {
+            resolvePull = resolve;
+          }),
+      )
+      .mockResolvedValue(pullPage());
+    const push = vi.fn().mockResolvedValue({ results: [applied("1")] });
+    const coordinator = createSyncCoordinator({
+      workspace,
+      store,
+      push,
+      pull,
+      onStatus: vi.fn(),
+    });
+    const first = coordinator.start();
+    await vi.advanceTimersByTimeAsync(0);
+    await store.enqueue(workspace, operation("1"));
+    expect(coordinator.syncNow()).toBe(first);
+    expect(coordinator.syncNow()).toBe(first);
+    expect(push).not.toHaveBeenCalled();
+    resolvePull(pullPage());
+    await first;
+    expect(push).toHaveBeenCalledOnce();
+    expect(pull).toHaveBeenCalledTimes(2);
+    expect(vi.getTimerCount()).toBe(0);
+    coordinator.stop();
+  });
+
+  it.each([400, 401, 403, 409, 422])(
+    "does not automatically retry HTTP %s or classify it as transport loss",
+    async (status) => {
+      const store = createStore([operation("1")]);
+      const push = vi.fn().mockRejectedValue(apiError(status));
+      const onStatus = vi.fn();
+      const coordinator = createSyncCoordinator({
+        workspace,
+        store,
+        push,
+        pull: vi.fn(),
+        onStatus,
+      });
+      await expect(coordinator.syncNow()).rejects.toBeInstanceOf(ApiError);
+      expect(onStatus).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          status: status === 401 ? "authenticationRequired" : "failed",
+          reachable: true,
+        }),
+      );
+      expect(vi.getTimerCount()).toBe(0);
+      expect(await store.listOutbox(workspace, 25)).toHaveLength(1);
+      coordinator.stop();
+    },
+  );
+
+  it("bounded-retries queued HTTP 500 as failed rather than offline", async () => {
+    const onStatus = vi.fn();
+    const push = vi.fn().mockRejectedValue(apiError(500));
+    const coordinator = createSyncCoordinator({
+      workspace,
+      store: createStore([operation("1")]),
+      push,
+      pull: vi.fn(),
+      onStatus,
+    });
+    await expect(coordinator.syncNow()).rejects.toBeInstanceOf(ApiError);
+    expect(onStatus).toHaveBeenLastCalledWith(
+      expect.objectContaining({ status: "failed", reachable: true }),
+    );
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(push).toHaveBeenCalledTimes(2);
+    coordinator.stop();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("auth and organization failures latch a block that ordinary triggers cannot bypass", async () => {
+    for (const error of [
+      apiError(401),
+      apiError(403, "ORGANIZATION_NOT_OPERATIONAL"),
+    ]) {
+      const push = vi.fn().mockRejectedValue(error);
+      const coordinator = createSyncCoordinator({
+        workspace,
+        store: createStore([operation("1")]),
+        push,
+        pull: vi.fn(),
+        onStatus: vi.fn(),
+      });
+      await expect(coordinator.syncNow()).rejects.toBe(error);
+      await coordinator.syncNow();
+      await vi.advanceTimersByTimeAsync(120000);
+      expect(push).toHaveBeenCalledOnce();
+      expect(vi.getTimerCount()).toBe(0);
+      coordinator.stop();
+    }
+  });
+
+  it("stopping in-flight sync prevents stale reconciliation and follow-up requests", async () => {
+    const store = createStore([operation("1")]);
+    let resolvePush!: (value: SyncPushResponse) => void;
+    const push = vi.fn(
+      () =>
+        new Promise<SyncPushResponse>((resolve) => {
+          resolvePush = resolve;
+        }),
+    );
+    const pull = vi.fn();
+    const coordinator = createSyncCoordinator({
+      workspace,
+      store,
+      push,
+      pull,
+      onStatus: vi.fn(),
+    });
+    const active = coordinator.start();
+    await vi.advanceTimersByTimeAsync(0);
+    coordinator.stop();
+    resolvePush({ results: [applied("1")] });
+    await active;
+    await coordinator.syncNow();
+    await vi.advanceTimersByTimeAsync(120000);
+    expect(store.reconcileCustomerCreate).not.toHaveBeenCalled();
+    expect(store.removeOutbox).not.toHaveBeenCalled();
+    expect(pull).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("successful push resets the budget for a subsequent failed pull", async () => {
+    const push = vi.fn().mockRejectedValue(new TypeError("Failed to fetch"));
+    const pull = vi.fn().mockRejectedValue(new TypeError("Failed to fetch"));
+    const coordinator = createSyncCoordinator({
+      workspace,
+      store: createStore([operation("1")]),
+      push,
+      pull,
+      onStatus: vi.fn(),
+    });
+    await expect(coordinator.syncNow()).rejects.toThrow();
+    for (const delay of [1000, 2000, 4000, 8000, 16000])
+      await vi.advanceTimersByTimeAsync(delay);
+    push.mockResolvedValue({ results: [applied("1")] });
+    await vi.advanceTimersByTimeAsync(30000);
+    expect(pull).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(999);
+    expect(pull).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(pull).toHaveBeenCalledTimes(2);
+    coordinator.stop();
+  });
+
+  it("exhausts six bounded retries without online events, then recovers on a new trigger", async () => {
+    vi.useFakeTimers();
+    const store = createStore([operation("1")]);
+    const push = vi.fn().mockRejectedValue(new TypeError("Failed to fetch"));
+    const coordinator = createSyncCoordinator({
+      workspace,
+      store,
+      push,
+      pull: vi.fn().mockResolvedValue(pullPage()),
+      onStatus: vi.fn(),
+    });
+    await expect(coordinator.syncNow()).rejects.toThrow("Failed to fetch");
+    for (const delay of [1000, 2000, 4000, 8000, 16000, 30000]) {
+      await vi.advanceTimersByTimeAsync(delay);
+    }
+    expect(push).toHaveBeenCalledTimes(7);
+    expect(vi.getTimerCount()).toBe(0);
+    await vi.advanceTimersByTimeAsync(120000);
+    expect(push).toHaveBeenCalledTimes(7);
+    push.mockResolvedValue({ results: [applied("1")] });
+    await coordinator.syncNow();
+    expect(await store.listOutbox(workspace, 25)).toEqual([]);
+    coordinator.stop();
+  });
+
+  it("resumes durable reconciliation after push succeeded and final pull failed", async () => {
+    vi.useFakeTimers();
+    const store = createStore([operation("1")]);
+    let required = false;
+    store.requireReconciliation = vi.fn(async () => {
+      required = true;
+    });
+    store.isReconciliationRequired = vi.fn(async () => required);
+    store.applyPull = vi.fn(async (_workspace, _changes, _cursor, complete) => {
+      if (complete) required = false;
+    });
+    const push = vi.fn().mockResolvedValue({ results: [applied("1")] });
+    const first = createSyncCoordinator({
+      workspace,
+      store,
+      push,
+      pull: vi.fn().mockRejectedValue(new TypeError("Failed to fetch")),
+      onStatus: vi.fn(),
+    });
+    await expect(first.syncNow()).rejects.toThrow();
+    expect(required).toBe(true);
+    expect(await store.listOutbox(workspace, 25)).toEqual([]);
+    first.stop();
+    const pull = vi.fn().mockResolvedValue(pullPage());
+    const restarted = createSyncCoordinator({
+      workspace,
+      store,
+      push,
+      pull,
+      onStatus: vi.fn(),
+    });
+    await restarted.start();
+    expect(pull).toHaveBeenCalledOnce();
+    expect(required).toBe(false);
+    expect(push).toHaveBeenCalledOnce();
+    restarted.stop();
+  });
   it("sends pending operations in FIFO batches of at most 25", async () => {
     const operations = Array.from({ length: 26 }, (_, index) =>
       operation(String(index + 1)),
@@ -421,12 +705,19 @@ describe("createSyncCoordinator", () => {
 
     expect(pull).toHaveBeenNthCalledWith(1, { cursor: "saved" });
     expect(pull).toHaveBeenNthCalledWith(2, { cursor: "next" });
-    expect(store.applyPull).toHaveBeenNthCalledWith(1, workspace, [], null);
+    expect(store.applyPull).toHaveBeenNthCalledWith(
+      1,
+      workspace,
+      [],
+      null,
+      false,
+    );
     expect(store.applyPull).toHaveBeenNthCalledWith(
       2,
       workspace,
       [],
       "completed",
+      true,
     );
   });
 
@@ -483,12 +774,14 @@ describe("createSyncCoordinator", () => {
       workspace,
       [firstChange],
       null,
+      false,
     );
     expect(store.applyPull).toHaveBeenNthCalledWith(
       2,
       workspace,
       [secondChange],
       "completed",
+      true,
     );
   });
 
@@ -511,7 +804,7 @@ describe("createSyncCoordinator", () => {
     await expect(coordinator.syncNow()).rejects.toBe(error);
 
     expect(store.applyPull).toHaveBeenCalledTimes(1);
-    expect(store.applyPull).toHaveBeenCalledWith(workspace, [], null);
+    expect(store.applyPull).toHaveBeenCalledWith(workspace, [], null, false);
   });
 
   it("does not mark sync successful for an unexpected pull response", async () => {
@@ -592,6 +885,7 @@ describe("createSyncCoordinator", () => {
       workspace,
       [tombstone],
       "complete",
+      true,
     );
   });
 });

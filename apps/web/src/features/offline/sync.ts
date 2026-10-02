@@ -11,8 +11,10 @@ import type {
   QueuedOperation,
   QueuedOperationResult,
 } from "./types";
+import { isNetworkFailure } from "./network";
 
 type SyncStatus =
+  | "offline"
   | "pending"
   | "synchronizing"
   | "upToDate"
@@ -26,6 +28,8 @@ export type SyncStatusUpdate = {
   pendingCount: number;
   conflicts: QueuedOperation[];
   error?: unknown;
+  reachable?: boolean;
+  retryExhausted?: boolean;
 };
 
 type SyncCoordinatorOptions = {
@@ -91,18 +95,49 @@ export function createSyncCoordinator({
   push,
   pull,
   onStatus,
-}: SyncCoordinatorOptions): { syncNow(): Promise<void>; retryNow(): Promise<void> } {
+}: SyncCoordinatorOptions) {
   let inFlight: Promise<void> | undefined;
   let syncRequested = false;
+  let stopped = false;
+  let blocked = false;
+  let reachable: boolean | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let unsubscribe: (() => void) | undefined;
+  let retries = 0;
+  const delays = [1000, 2000, 4000, 8000, 16000, 30000];
+  const cancelTimer = () => {
+    if (timer !== undefined) clearTimeout(timer);
+    timer = undefined;
+  };
+  const assertActive = () => {
+    if (stopped) throw new Error("Synchronization stopped");
+  };
+  const communicated = () => {
+    reachable = true;
+    retries = 0;
+  };
+  const hasWork = async () => {
+    const outbox = await store.listOutbox(workspace, 2 ** 32 - 1);
+    return (
+      outbox.some(
+        (item) =>
+          item.state === "PENDING" &&
+          !hasUnresolvedCustomerCreate(item, outbox),
+      ) || (await store.isReconciliationRequired(workspace))
+    );
+  };
 
   const updateStatus = async (status: SyncStatus, error?: unknown) => {
     const outbox = await store.listOutbox(workspace, 2 ** 32 - 1);
+    if (stopped) return;
     onStatus({
       status,
       pendingCount: outbox.filter((operation) => operation.state === "PENDING")
         .length,
       conflicts: outbox.filter((operation) => operation.state === "CONFLICT"),
       error,
+      reachable,
+      retryExhausted: retries >= delays.length && error !== undefined,
     });
   };
 
@@ -202,7 +237,9 @@ export function createSyncCoordinator({
 
   const pushQueuedOperations = async (): Promise<void> => {
     while (true) {
+      assertActive();
       const outbox = await store.listOutbox(workspace, 2 ** 32 - 1);
+      assertActive();
       const batch: QueuedOperation[] = [];
       for (const operation of outbox) {
         if (operation.state !== "PENDING") continue;
@@ -212,13 +249,18 @@ export function createSyncCoordinator({
       }
       if (!batch.length) return;
 
+      await store.requireReconciliation(workspace);
+      assertActive();
       const response = await push({
         operations: batch as SyncPushRequest["operations"],
       });
+      assertActive();
+      communicated();
       const results = new Map(
         response.results.map((result) => [result.operation_id, result]),
       );
       for (const operation of batch) {
+        assertActive();
         const result = results.get(operation.operation_id);
         if (!result) {
           throw new Error(`Missing sync result for ${operation.operation_id}`);
@@ -234,7 +276,10 @@ export function createSyncCoordinator({
   const pullChanges = async (): Promise<void> => {
     let cursor = await store.getCompletionCursor(workspace);
     while (true) {
+      assertActive();
       const page = await pull(cursor ? { cursor } : undefined);
+      assertActive();
+      communicated();
       if (!isSyncPullResponse(page)) {
         throw new Error("Invalid sync pull response");
       }
@@ -242,47 +287,108 @@ export function createSyncCoordinator({
         workspace,
         page.changes,
         page.next_cursor ? null : page.completion_cursor,
+        page.next_cursor === null,
       );
       if (!page.next_cursor) return;
       cursor = page.next_cursor;
     }
   };
 
-  const syncNow = (): Promise<void> => {
-    if (inFlight) return inFlight;
-      inFlight = (async () => {
-        let error: unknown;
-        do {
-          syncRequested = false;
-          error = undefined;
-          try {
-            await updateStatus("synchronizing");
-            await pushQueuedOperations();
-            const remaining = await store.listOutbox(workspace, 2 ** 32 - 1);
-            if (hasPendingOperations(remaining)) break;
-            if (remaining.some((operation) => operation.state === "CONFLICT")) {
-              await updateStatus("conflict");
-              break;
-            }
-            await pullChanges();
-            await updateStatus("upToDate");
-          } catch (caught) {
-            error = caught;
-            await updateStatus(requestStatus(caught), caught);
-          }
-        } while (syncRequested);
-        if (error) throw error;
-      })().finally(() => {
-        inFlight = undefined;
-      });
+  const attempt = (): Promise<void> => {
+    if (stopped || blocked) return Promise.resolve();
+    if (inFlight) {
+      syncRequested = true;
       return inFlight;
+    }
+    inFlight = (async () => {
+      let failure: unknown;
+      do {
+        syncRequested = false;
+        failure = undefined;
+        try {
+          await updateStatus("synchronizing");
+          assertActive();
+          await pushQueuedOperations();
+          const remaining = await store.listOutbox(workspace, 2 ** 32 - 1);
+          assertActive();
+          if (remaining.some((item) => item.state === "CONFLICT")) {
+            await updateStatus("conflict");
+            break;
+          }
+          if (
+            remaining.some(
+              (item) => item.state === "REJECTED" || item.state === "EXPIRED",
+            )
+          ) {
+            await updateStatus("failed");
+            break;
+          }
+          if (hasPendingOperations(remaining)) {
+            await updateStatus("failed");
+            break;
+          }
+          await pullChanges();
+          await updateStatus("upToDate");
+        } catch (error) {
+          if (stopped) return;
+          failure = error;
+          const status = requestStatus(error);
+          blocked =
+            status === "authenticationRequired" ||
+            status === "organizationUnavailable" ||
+            (error instanceof ApiError && error.status === 403);
+          const transport = isNetworkFailure(error);
+          const transient =
+            transport ||
+            (error instanceof ApiError &&
+              [500, 502, 503, 504].includes(error.status));
+          reachable = !transport;
+          if (
+            !blocked &&
+            transient &&
+            (await hasWork()) &&
+            retries < delays.length
+          ) {
+            const delay = delays[retries++];
+            timer = setTimeout(() => {
+              timer = undefined;
+              void attempt().catch(() => undefined);
+            }, delay);
+          }
+          await updateStatus(
+            transport && timer !== undefined ? "offline" : status,
+            error,
+          );
+          if (!transient || blocked) break;
+        }
+        if (stopped || !syncRequested || !(await hasWork())) break;
+        cancelTimer();
+      } while (!stopped && !blocked);
+      if (failure) throw failure;
+    })().finally(() => {
+      inFlight = undefined;
+    });
+    return inFlight;
+  };
+
+  const syncNow = (): Promise<void> => {
+    if (!inFlight) retries = 0;
+    cancelTimer();
+    return attempt();
   };
 
   return {
     syncNow,
-    retryNow() {
-      if (inFlight) syncRequested = true;
+    start() {
+      unsubscribe ??= store.subscribeOutbox(workspace, () => {
+        void syncNow().catch(() => undefined);
+      });
       return syncNow();
+    },
+    stop() {
+      stopped = true;
+      cancelTimer();
+      unsubscribe?.();
     },
   };
 }

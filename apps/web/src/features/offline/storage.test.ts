@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createOfflineStore } from "./storage";
 
 const tenantA = { organizationId: "organization-a", userId: "user-a" };
@@ -179,6 +179,31 @@ describe("OfflineStore", () => {
   });
 
   afterEach(() => store.close());
+
+  it("persists reconciliation across restart and clears it only on a completed pull", async () => {
+    await store.requireReconciliation(tenantA);
+    await store.close();
+    store = createOfflineStore(indexedDb);
+    expect(await store.isReconciliationRequired(tenantA)).toBe(true);
+    expect(await store.isReconciliationRequired(tenantB)).toBe(false);
+    await store.applyPull(tenantA, [], null);
+    expect(await store.isReconciliationRequired(tenantA)).toBe(true);
+    await store.applyPull(tenantA, [], "complete", true);
+    expect(await store.isReconciliationRequired(tenantA)).toBe(false);
+  });
+
+  it("notifies only the matching workspace after durable enqueue and unsubscribes", async () => {
+    const notify = vi.fn();
+    const unsubscribe = store.subscribeOutbox(tenantA, notify);
+    await store.enqueue(tenantB, queuedCustomerCreate("other"));
+    expect(notify).not.toHaveBeenCalled();
+    await store.enqueue(tenantA, queuedCustomerCreate("new"));
+    expect(notify).toHaveBeenCalledOnce();
+    expect(await store.listOutbox(tenantA, 25)).toHaveLength(1);
+    unsubscribe();
+    await store.enqueue(tenantA, queuedCustomerCreate("later"));
+    expect(notify).toHaveBeenCalledOnce();
+  });
 
   it("does not return tenant A customers to tenant B", async () => {
     await store.applyPull(tenantA, [customerChange("customer-a")], "cursor-a");

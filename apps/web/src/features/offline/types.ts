@@ -69,10 +69,17 @@ export interface OfflineStore {
     id: string,
   ): Promise<RentalResponse | undefined>;
   getCompletionCursor(workspace: OfflineWorkspace): Promise<string | undefined>;
+  requireReconciliation(workspace: OfflineWorkspace): Promise<void>;
+  isReconciliationRequired(workspace: OfflineWorkspace): Promise<boolean>;
+  subscribeOutbox(
+    workspace: OfflineWorkspace,
+    listener: () => void,
+  ): () => void;
   applyPull(
     workspace: OfflineWorkspace,
     changes: readonly SyncPullChange[],
     completionCursor: string | null,
+    reconciliationComplete?: boolean,
   ): Promise<void>;
   enqueue(
     workspace: OfflineWorkspace,
