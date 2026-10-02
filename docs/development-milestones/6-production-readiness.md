@@ -2,7 +2,7 @@
 
 **Status:** In progress
 
-**Current Step:** Step 64 — Measured Performance Optimization. Narrow Step 65 staging enablement is allowed only to complete deferred Step 64 evidence.
+**Current Step:** Step 65 — Production Deployment, Migrations, and Operations. Step 64 is closed with deferred reconnect statistical verification; production release remains gated by that verification and the other Step 65/66 release criteria.
 
 ## Milestone Goal
 
@@ -534,7 +534,9 @@ Measure the completed product against approved pilot targets, fix verified bottl
 ### Current State
 
 - Approved pilot targets, deterministic representative local benchmark data, repeatable API/browser/sync benchmarks, and read-only database query-plan evidence now exist. Local API/DB/resource evidence, sync/search measurements, initial-load and bounded-rendering improvements are recorded in the production baseline.
-- Slice 5B Analytics/Reports final verification remains deferred pending a complete raw artifact, and the real reconnect gate remains deferred pending production-like staging with a real network interruption/restoration.
+- Step 64 is **CLOSED WITH DEFERRED RECONNECT STATISTICAL VERIFICATION**. Initial usable app load, offline IndexedDB search, request fan-out regressions, bounded Rentals/Customers rendering, and the API/database/resource performance slice have verified evidence. Slice 5B Analytics/Reports remains deferred verification pending a complete raw artifact.
+- Real OS-level reconnect diagnostics repeatedly demonstrated automatic reconciliation: push succeeded, authoritative pull completed, the outbox drained to 0, `reconciliation_required` cleared, the provisional Customer was removed, one authoritative Customer remained, duplicates were 0, and sync errors were 0. Successful reconnect samples completed at approximately 9 seconds individually, within the 10-second target.
+- The intended 5-warmup/30-recorded reconnect benchmark was not completed, so no valid reconnect P50/P95/max statistical result exists and the <=10-second reconnect P95 gate is not passed. Repeated benchmark-environment/harness instability included browser/context lifecycle issues, harness observation/instrumentation defects, staging/UI readiness issues, and NetworkManager/Wi-Fi activation issues. The final corrected one-sample validation reconciled successfully; no remaining reconnect product correctness defect was confirmed.
 - Search uses database substring filters and existing indexes may not serve all query shapes; dashboard, reports, analytics, rentals, payment summaries, and media are likely measurement priorities based on current request patterns. No Redis, background workers, server cache, or aggregate reporting API exists, and none is assumed necessary.
 
 ### Scope
@@ -645,7 +647,7 @@ After this migration succeeds, normal rollback to the old API is unsafe because 
 ### Dependencies
 
 - **Staging enablement:** Steps 57 through 63; operator access; an isolated staging database; controlled staging secrets/domains; and only the minimum deployed web/API path needed for non-destructive Step 64 evidence. It may provision a disposable tenant, representative non-sensitive data, authenticated browser access, and a real network interruption/restoration method. It must not be used for production release, migration-cutover, backup/restore, or full release rehearsal claims.
-- **Full Step 65 release work:** Steps 57 through 64; approved providers, domains, secrets, alert destinations, backup policy, RPO/RTO, maintenance window, and completed Step 64 evidence. Production deployment, full staging release rehearsal, migration-cutover rehearsal, backups, rollback, and production smoke remain blocked until Step 64 closes.
+- **Step 65 staging/operational work:** May continue after Step 64 closes with the deferred reconnect statistical verification explicitly tracked. Production deployment, full staging release rehearsal, migration-cutover rehearsal, backups, rollback, production smoke, and the production release decision remain gated by the deferred verification and all remaining Step 65/66 criteria.
 
 ---
 
@@ -752,6 +754,6 @@ Milestone 6 is complete only when all of the following are true:
 
 **Status:** In progress
 
-**Current Step:** Step 64 — Measured Performance Optimization. Narrow Step 65 staging enablement is allowed only to complete deferred Step 64 evidence.
+**Current Step:** Step 65 — Production Deployment, Migrations, and Operations. Step 64 is closed with deferred reconnect statistical verification; production release remains gated by that verification and the other Step 65/66 release criteria.
 
 **Entry Gate:** Complete Milestone 5.8 Step 56 and final human product QA before Step 57 begins.
