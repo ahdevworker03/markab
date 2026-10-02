@@ -505,6 +505,16 @@ reconnect product optimization is justified. The final gate requires the
 existing queued-Customer-create scenario against production-like staging with a
 real network interruption and restoration; staging is currently unavailable.
 
+### Step 64 Slice 5B navigation disposition (2026-10-01)
+
+**Status: DEFERRED VERIFICATION.** The latest Analytics aggregate artifact
+(`apps/web/test-results/benchmark/2026-10-01T18-41-25.962Z.json`) recorded P50
+**1,254.92 ms** and P95 **1,305.11 ms** against the one-second gate, with zero
+errors. It has no raw Slice 5 artifact, so the failure cannot be classified;
+Reports did not complete. Earlier location-change-to-usable evidence showed
+fast product-side processing. No production navigation, routing, or cache
+optimization is justified without a complete raw artifact.
+
 ### Step 64 Slice 2 — local-search gate and interaction evidence (2026-09-29)
 
 **A. Authoritative IndexedDB/local-search gate (<=300 ms).** The browser uses
