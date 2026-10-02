@@ -750,8 +750,8 @@ Milestone 6 is complete only when all of the following are true:
 
 ## Milestone Status
 
-**Status:** Planned
+**Status:** In progress
 
-**Current Step:** Not started
+**Current Step:** Step 64 — Measured Performance Optimization. Narrow Step 65 staging enablement is allowed only to complete deferred Step 64 evidence.
 
 **Entry Gate:** Complete Milestone 5.8 Step 56 and final human product QA before Step 57 begins.
