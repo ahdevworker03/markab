@@ -28,6 +28,7 @@ import {
   saveOfflineIdentity,
   type OfflineSessionIdentity,
 } from "@/features/offline/session";
+import { isNetworkFailure } from "@/features/offline/network";
 
 interface LoginParams {
   email: string;
@@ -56,17 +57,6 @@ function isAuthenticationFailure(error: unknown): boolean {
     error !== null &&
     "status" in error &&
     error.status === 401
-  );
-}
-
-function isNetworkFailure(error: unknown): boolean {
-  return (
-    error instanceof TypeError &&
-    [
-      "Failed to fetch",
-      "Load failed",
-      "NetworkError when attempting to fetch resource.",
-    ].includes(error.message)
   );
 }
 

@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { InlineError, LoadingState } from "@/components/ui/FeedbackState";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { createOfflineCommands } from "@/features/offline/commands";
+import { isNetworkFailure } from "@/features/offline/network";
 import { useOffline } from "@/features/offline/OfflineProvider";
 
 interface DetailPageParams {
@@ -37,7 +38,7 @@ export default function EditCustomerPage({ params }: DetailPageParams) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const customerQuery = useCustomerRecord(id);
   const { update: updateMutation } = useCustomerMutations();
-  const { isOffline, refreshProjections, store, workspace } = useOffline();
+  const { isOffline, markOffline, refreshProjections, store, workspace } = useOffline();
 
   useEffect(() => {
     if (!customerQuery.data?.data || form) return;
@@ -71,14 +72,14 @@ export default function EditCustomerPage({ params }: DetailPageParams) {
     if (!form || isSubmitting || updateMutation.isPending || !validate()) return;
     setFormError(null);
     setIsSubmitting(true);
+    const data = {
+      first_name: form.first_name.trim(), last_name: form.last_name.trim(), phone: form.phone.trim(), address: form.address.trim(),
+      national_id: form.national_id.trim(), license_number: form.license_number.trim(), license_expiry_date: new Date(form.license_expiry_date).toISOString(),
+    };
+    const customer = customerQuery.data?.data;
     try {
-      const data = {
-        first_name: form.first_name.trim(), last_name: form.last_name.trim(), phone: form.phone.trim(), address: form.address.trim(),
-        national_id: form.national_id.trim(), license_number: form.license_number.trim(), license_expiry_date: new Date(form.license_expiry_date).toISOString(),
-      };
       if (isOffline) {
         if (!workspace) throw new Error("لا تتوفر مساحة عمل دون اتصال.");
-        const customer = customerQuery.data?.data;
         if (!customer || customer.id.startsWith("local:")) {
           throw new Error("لا يمكن تعديل عميل أضيف دون اتصال قبل مزامنته.");
         }
@@ -93,6 +94,17 @@ export default function EditCustomerPage({ params }: DetailPageParams) {
       });
       setLocation(`/customers/${id}`);
     } catch (error) {
+      if (workspace && customer && !customer.id.startsWith("local:") && isNetworkFailure(error)) {
+        try {
+          await createOfflineCommands({ workspace, store }).queueCustomerUpdate(customer, data);
+          markOffline();
+          refreshProjections();
+          setLocation(`/customers/${id}`);
+        } catch (queueError) {
+          setFormError(getApiErrorMessage(queueError).title);
+        }
+        return;
+      }
       setFormError(getApiErrorMessage(error).title);
     } finally {
       setIsSubmitting(false);

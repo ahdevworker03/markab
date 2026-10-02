@@ -21,15 +21,19 @@ describe("SyncStatus", () => {
     ).toHaveAttribute("data-state", "pending");
   });
 
-  it("announces that the workspace is offline", () => {
-    useOffline.mockReturnValue({ status: "offline", pendingCount: 0 });
+  it("retries synchronization from the offline status", () => {
+    const syncNow = vi.fn();
+    useOffline.mockReturnValue({ status: "offline", pendingCount: 0, syncNow });
 
     render(<SyncStatus />);
 
-    expect(screen.getByRole("status", { name: "غير متصل" })).toHaveAttribute(
+    const retry = screen.getByRole("button", { name: "غير متصل" });
+    expect(retry).toHaveAttribute(
       "data-state",
       "offline",
     );
+    fireEvent.click(retry);
+    expect(syncNow).toHaveBeenCalledOnce();
   });
 
   it("opens the resolution dialog for changes that need review", () => {

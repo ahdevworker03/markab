@@ -28,6 +28,7 @@ type OfflineContextValue = {
   isOnline: boolean;
   pendingCount: number;
   syncNow: () => void;
+  markOffline: () => void;
   conflicts: unknown[];
   isOffline: boolean;
   syncReady: boolean;
@@ -92,6 +93,10 @@ export function OfflineProvider({
   const syncNow = (): void => {
     void syncRef.current?.syncNow().catch(() => undefined);
   };
+  const markOffline = useCallback(() => {
+    setIsOnline(false);
+    setStatus("offline");
+  }, []);
   const refreshProjections = useCallback(() => {
     setProjectionVersion((version) => version + 1);
   }, []);
@@ -204,6 +209,7 @@ export function OfflineProvider({
         isOnline: sessionState === "offline" ? false : isOnline,
         pendingCount,
         syncNow,
+        markOffline,
         conflicts,
         isOffline: sessionState === "offline" || status === "offline",
         syncReady,

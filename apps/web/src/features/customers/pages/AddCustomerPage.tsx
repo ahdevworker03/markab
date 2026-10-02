@@ -11,6 +11,7 @@ import { InlineError } from "@/components/ui/FeedbackState";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { createOfflineCommands } from "@/features/offline/commands";
+import { isNetworkFailure } from "@/features/offline/network";
 import { useOffline } from "@/features/offline/OfflineProvider";
 
 const INITIAL: CustomerFormState = {
@@ -44,7 +45,7 @@ export default function AddCustomerPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { create: createMutation } = useCustomerMutations();
   const uploadMutation = useUploadCustomerDocument();
-  const { isOffline, refreshProjections, store, workspace } = useOffline();
+  const { isOffline, markOffline, refreshProjections, store, workspace } = useOffline();
 
   function set<K extends keyof CustomerFormState>(field: K, value: CustomerFormState[K]) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -72,12 +73,12 @@ export default function AddCustomerPage() {
     }
     setFormError(null);
     setIsSubmitting(true);
+    const data = {
+      first_name: form.first_name.trim(), last_name: form.last_name.trim(), phone: form.phone.trim(), address: form.address.trim(),
+      national_id: form.national_id.trim(), license_number: form.license_number.trim(), license_expiry_date: new Date(form.license_expiry_date).toISOString(),
+    };
     let customerId = createdCustomerId;
     try {
-      const data = {
-        first_name: form.first_name.trim(), last_name: form.last_name.trim(), phone: form.phone.trim(), address: form.address.trim(),
-        national_id: form.national_id.trim(), license_number: form.license_number.trim(), license_expiry_date: new Date(form.license_expiry_date).toISOString(),
-      };
       if (isOffline) {
         if (!workspace) throw new Error("لا تتوفر مساحة عمل دون اتصال.");
         await createOfflineCommands({ workspace, store }).queueCustomerCreate(data);
@@ -97,6 +98,17 @@ export default function AddCustomerPage() {
 
       setLocation(`/customers/${customerId}`);
     } catch (error) {
+      if (!customerId && documents.length === 0 && workspace && isNetworkFailure(error)) {
+        try {
+          await createOfflineCommands({ workspace, store }).queueCustomerCreate(data);
+          markOffline();
+          refreshProjections();
+          setLocation("/customers");
+        } catch (queueError) {
+          setFormError(getApiErrorMessage(queueError).title);
+        }
+        return;
+      }
       setFormError(customerId ? "تم إنشاء العميل، لكن تعذر رفع بعض المستندات. أعد المحاولة أو أضفها من صفحة العميل." : getApiErrorMessage(error).title);
     } finally {
       setIsSubmitting(false);
