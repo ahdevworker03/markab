@@ -6,6 +6,8 @@ import { validateBenchmarkTarget } from "./benchmark-target";
 
 const target =
   "postgresql://postgres:postgres@127.0.0.1:5432/markab_benchmark?schema=public";
+const stagingTarget =
+  "postgresql://benchmark:benchmark@staging-db.internal:5432/markab_staging_benchmark?schema=public";
 
 test("accepts matching local benchmark URLs in benchmark mode", () => {
   const result = validateBenchmarkTarget({
@@ -58,6 +60,61 @@ test("accepts matching URLs after normalization", () => {
       BENCHMARK_PASSWORD: "local-benchmark-password",
     }).databaseUrl,
     normalizedTarget,
+  );
+});
+
+test("rejects a remote staging benchmark target without explicit opt-in", () => {
+  assert.throws(() =>
+    validateBenchmarkTarget({
+      NODE_ENV: "benchmark",
+      DATABASE_URL: stagingTarget,
+      BENCHMARK_DATABASE_URL: stagingTarget,
+      BENCHMARK_PASSWORD: "staging-benchmark-password",
+      APPROVED_STAGING_BENCHMARK_DATABASE_URL: stagingTarget,
+    }),
+  );
+});
+
+test("rejects an opted-in remote staging target with a different database", () => {
+  assert.throws(() =>
+    validateBenchmarkTarget({
+      NODE_ENV: "benchmark",
+      DATABASE_URL:
+        "postgresql://benchmark:benchmark@staging-db.internal:5432/markab_staging?schema=public",
+      BENCHMARK_DATABASE_URL:
+        "postgresql://benchmark:benchmark@staging-db.internal:5432/markab_staging?schema=public",
+      BENCHMARK_PASSWORD: "staging-benchmark-password",
+      ALLOW_STAGING_BENCHMARK_SEED: "true",
+      APPROVED_STAGING_BENCHMARK_DATABASE_URL: stagingTarget,
+    }),
+  );
+});
+
+test("accepts only the exact opted-in remote staging benchmark target", () => {
+  const result = validateBenchmarkTarget({
+    NODE_ENV: "benchmark",
+    DATABASE_URL: stagingTarget,
+    BENCHMARK_DATABASE_URL: stagingTarget,
+    BENCHMARK_PASSWORD: "staging-benchmark-password",
+    ALLOW_STAGING_BENCHMARK_SEED: "true",
+    APPROVED_STAGING_BENCHMARK_DATABASE_URL: stagingTarget,
+  });
+
+  assert.equal(result.databaseUrl, stagingTarget);
+});
+
+test("rejects an opted-in production-like database", () => {
+  assert.throws(() =>
+    validateBenchmarkTarget({
+      NODE_ENV: "benchmark",
+      DATABASE_URL:
+        "postgresql://benchmark:benchmark@production-db.internal:5432/markab_production?schema=public",
+      BENCHMARK_DATABASE_URL:
+        "postgresql://benchmark:benchmark@production-db.internal:5432/markab_production?schema=public",
+      BENCHMARK_PASSWORD: "staging-benchmark-password",
+      ALLOW_STAGING_BENCHMARK_SEED: "true",
+      APPROVED_STAGING_BENCHMARK_DATABASE_URL: stagingTarget,
+    }),
   );
 });
 

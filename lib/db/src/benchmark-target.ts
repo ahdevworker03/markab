@@ -39,6 +39,24 @@ function validateDatabaseUrl(url: URL, name: string): void {
   }
 }
 
+function approvedStagingDatabaseUrl(
+  environment: NodeJS.ProcessEnv,
+): string | undefined {
+  if (environment.ALLOW_STAGING_BENCHMARK_SEED !== "true") return undefined;
+
+  const approved = new URL(
+    required(environment, "APPROVED_STAGING_BENCHMARK_DATABASE_URL"),
+  );
+
+  if (approved.protocol !== "postgresql:") {
+    throw new Error(
+      "APPROVED_STAGING_BENCHMARK_DATABASE_URL must use PostgreSQL.",
+    );
+  }
+
+  return normalize(approved);
+}
+
 function benchmarkProfile(
   environment: NodeJS.ProcessEnv,
 ): BenchmarkSeedProfile {
@@ -63,11 +81,24 @@ export function validateBenchmarkTarget(environment: NodeJS.ProcessEnv): {
   const benchmark = new URL(required(environment, "BENCHMARK_DATABASE_URL"));
   const database = new URL(required(environment, "DATABASE_URL"));
 
-  validateDatabaseUrl(benchmark, "BENCHMARK_DATABASE_URL");
-  validateDatabaseUrl(database, "DATABASE_URL");
-
   const databaseUrl = normalize(database);
   const benchmarkUrl = normalize(benchmark);
+  const approvedStagingUrl = approvedStagingDatabaseUrl(environment);
+
+  if (
+    approvedStagingUrl &&
+    databaseUrl === approvedStagingUrl &&
+    benchmarkUrl === approvedStagingUrl
+  ) {
+    return {
+      databaseUrl: approvedStagingUrl,
+      password: required(environment, "BENCHMARK_PASSWORD"),
+      profile: benchmarkProfile(environment),
+    };
+  }
+
+  validateDatabaseUrl(benchmark, "BENCHMARK_DATABASE_URL");
+  validateDatabaseUrl(database, "DATABASE_URL");
 
   if (databaseUrl !== benchmarkUrl) {
     throw new Error(
