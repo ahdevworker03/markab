@@ -10,7 +10,7 @@ COPY lib/api-zod/package.json ./lib/api-zod/
 COPY lib/db/package.json ./lib/db/
 COPY apps/api/package.json ./apps/api/
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --fetch-timeout=600000
 
 FROM base AS builder
 RUN corepack enable && corepack prepare pnpm@11.15.0 --activate
@@ -38,7 +38,7 @@ COPY lib/api-zod/package.json ./lib/api-zod/
 COPY lib/db/package.json ./lib/db/
 COPY apps/api/package.json ./apps/api/
 
-RUN pnpm install --prod --frozen-lockfile
+RUN pnpm install --prod --frozen-lockfile --fetch-timeout=600000
 
 FROM base AS runner
 WORKDIR /app
