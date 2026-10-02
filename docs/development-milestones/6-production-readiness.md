@@ -1,5 +1,9 @@
 # Milestone 6 — Production Readiness
 
+**Status:** In progress
+
+**Current Step:** Step 64 — Measured Performance Optimization. Narrow Step 65 staging enablement is allowed only to complete deferred Step 64 evidence.
+
 ## Milestone Goal
 
 Take the completed Version 2 business capabilities to a production-ready state without expanding the product into Version 3. The release must be a secure, deployable, supportable multi-tenant SaaS application that a first real rental business can use for daily work, including approved offline operation through temporary connectivity loss.
@@ -98,7 +102,7 @@ These rules apply milestone-wide and are not repeated inside each step unless a 
 | 62   | 57-61                  | Offline contracts depend on settled identity, authorization, security, and operation scope.                                  |
 | 63   | 62                     | The client implements only the approved synchronization contract and conflict semantics.                                     |
 | 64   | 57-63                  | Final measurements must include the completed online and offline data paths.                                                 |
-| 65   | 57-64                  | Production deployment uses completed capabilities and verified capacity/security results.                                    |
+| 65   | 57-63 for staging enablement; 57-64 for release | A minimal isolated staging environment enables final Step 64 evidence; production deployment uses completed capacity/security results. |
 | 66   | 58-65                  | Final E2E, manual, documentation, and release evidence verify the integrated product.                                        |
 
 Major inputs and enablers: closed Milestone 5.8 with final defect disposition; current product requirements (`docs/product/02-business-requirements.md`, `docs/product/03-user-flows.md`); current architecture/schema contracts; a disposable PostgreSQL test/E2E database and a production-like staging database with representative non-sensitive data; approved staging and production providers (React/Vite frontend on Cloudflare Pages, Node/Express API on a Hetzner VPS, PostgreSQL co-located on the VPS, Cloudflare R2 private object storage, transactional email, Cloudflare edge, monitoring/logging); controlled test mailboxes, object-storage buckets, DNS/domain access, TLS, and secret-management access; and an approved pilot-capacity profile, performance targets, backup retention, RPO, and RTO.
@@ -529,7 +533,8 @@ Measure the completed product against approved pilot targets, fix verified bottl
 
 ### Current State
 
-- No repository performance budgets, representative benchmark dataset, route-level bundle report, repeatable API benchmark, database query plan record, or synchronization performance target exists.
+- Approved pilot targets, deterministic representative local benchmark data, repeatable API/browser/sync benchmarks, and read-only database query-plan evidence now exist. Local API/DB/resource evidence, sync/search measurements, initial-load and bounded-rendering improvements are recorded in the production baseline.
+- Slice 5B Analytics/Reports final verification remains deferred pending a complete raw artifact, and the real reconnect gate remains deferred pending production-like staging with a real network interruption/restoration.
 - Search uses database substring filters and existing indexes may not serve all query shapes; dashboard, reports, analytics, rentals, payment summaries, and media are likely measurement priorities based on current request patterns. No Redis, background workers, server cache, or aggregate reporting API exists, and none is assumed necessary.
 
 ### Scope
@@ -639,8 +644,8 @@ After this migration succeeds, normal rollback to the old API is unsafe because 
 
 ### Dependencies
 
-- Steps 57 through 64; approved providers, domains, secrets, alert destinations, backup policy, RPO/RTO, and maintenance window.
-- Operator access and a production-like staging environment.
+- **Staging enablement:** Steps 57 through 63; operator access; an isolated staging database; controlled staging secrets/domains; and only the minimum deployed web/API path needed for non-destructive Step 64 evidence. It may provision a disposable tenant, representative non-sensitive data, authenticated browser access, and a real network interruption/restoration method. It must not be used for production release, migration-cutover, backup/restore, or full release rehearsal claims.
+- **Full Step 65 release work:** Steps 57 through 64; approved providers, domains, secrets, alert destinations, backup policy, RPO/RTO, maintenance window, and completed Step 64 evidence. Production deployment, full staging release rehearsal, migration-cutover rehearsal, backups, rollback, and production smoke remain blocked until Step 64 closes.
 
 ---
 
