@@ -91,8 +91,9 @@ export function createSyncCoordinator({
   push,
   pull,
   onStatus,
-}: SyncCoordinatorOptions): { syncNow(): Promise<void> } {
+}: SyncCoordinatorOptions): { syncNow(): Promise<void>; retryNow(): Promise<void> } {
   let inFlight: Promise<void> | undefined;
+  let syncRequested = false;
 
   const updateStatus = async (status: SyncStatus, error?: unknown) => {
     const outbox = await store.listOutbox(workspace, 2 ** 32 - 1);
@@ -247,29 +248,41 @@ export function createSyncCoordinator({
     }
   };
 
-  return {
-    syncNow() {
-      if (inFlight) return inFlight;
+  const syncNow = (): Promise<void> => {
+    if (inFlight) return inFlight;
       inFlight = (async () => {
-        try {
-          await updateStatus("synchronizing");
-          await pushQueuedOperations();
-          const remaining = await store.listOutbox(workspace, 2 ** 32 - 1);
-          if (hasPendingOperations(remaining)) return;
-          if (remaining.some((operation) => operation.state === "CONFLICT")) {
-            await updateStatus("conflict");
-            return;
+        let error: unknown;
+        do {
+          syncRequested = false;
+          error = undefined;
+          try {
+            await updateStatus("synchronizing");
+            await pushQueuedOperations();
+            const remaining = await store.listOutbox(workspace, 2 ** 32 - 1);
+            if (hasPendingOperations(remaining)) break;
+            if (remaining.some((operation) => operation.state === "CONFLICT")) {
+              await updateStatus("conflict");
+              break;
+            }
+            await pullChanges();
+            await updateStatus("upToDate");
+          } catch (caught) {
+            error = caught;
+            await updateStatus(requestStatus(caught), caught);
           }
-          await pullChanges();
-          await updateStatus("upToDate");
-        } catch (error) {
-          await updateStatus(requestStatus(error), error);
-          throw error;
-        } finally {
-          inFlight = undefined;
-        }
-      })();
+        } while (syncRequested);
+        if (error) throw error;
+      })().finally(() => {
+        inFlight = undefined;
+      });
       return inFlight;
+  };
+
+  return {
+    syncNow,
+    retryNow() {
+      if (inFlight) syncRequested = true;
+      return syncNow();
     },
   };
 }

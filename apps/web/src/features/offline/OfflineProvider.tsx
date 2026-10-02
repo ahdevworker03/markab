@@ -86,14 +86,14 @@ export function OfflineProvider({
   const [status, setStatus] = useState<OfflineStatus>("authenticationRequired");
   const [syncReady, setSyncReady] = useState(false);
   const [projectionVersion, setProjectionVersion] = useState(0);
-  const syncRef = useRef<{ syncNow(): Promise<void> } | undefined>(undefined);
+  const syncRef = useRef<{ retryNow(): Promise<void> } | undefined>(undefined);
   const sessionStateRef = useRef(sessionState);
   const forcedOfflineRef = useRef(false);
   sessionStateRef.current = sessionState;
 
   const syncNow = (): void => {
     forcedOfflineRef.current = false;
-    void syncRef.current?.syncNow().catch(() => undefined);
+    void syncRef.current?.retryNow().catch(() => undefined);
   };
   const markOffline = useCallback(() => {
     forcedOfflineRef.current = true;

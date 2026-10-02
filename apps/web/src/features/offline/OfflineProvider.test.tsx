@@ -250,7 +250,19 @@ describe("OfflineProvider", () => {
       attempts: 0,
       state: "PENDING",
     };
-    let outbox: QueuedOperation[] = [operation];
+    let resolveInitialPull!: (value: {
+      changes: [];
+      next_cursor: null;
+      completion_cursor: string;
+    }) => void;
+    const initialPull = new Promise<{
+      changes: [];
+      next_cursor: null;
+      completion_cursor: string;
+    }>((resolve) => {
+      resolveInitialPull = resolve;
+    });
+    let outbox: QueuedOperation[] = [];
     const store = createStore();
     store.listOutbox = vi.fn().mockImplementation(async () => outbox);
     store.removeOutbox = vi.fn(async (_workspace, operationId) => {
@@ -277,7 +289,7 @@ describe("OfflineProvider", () => {
         },
       }],
     });
-    syncPull.mockResolvedValue({
+    syncPull.mockReturnValueOnce(initialPull).mockResolvedValueOnce({
       changes: [],
       next_cursor: null,
       completion_cursor: "complete",
@@ -290,11 +302,16 @@ describe("OfflineProvider", () => {
 
     await screen.findByText("pending:true");
     await screen.findByText("true");
+    fireEvent.online(window);
+    await waitFor(() => expect(syncPull).toHaveBeenCalledOnce());
     fireEvent.click(screen.getByRole("button", { name: "Mark offline" }));
+    outbox = [operation];
     await screen.findByText("offline:false");
-    expect(syncPush).not.toHaveBeenCalled();
-    expect(syncPull).not.toHaveBeenCalled();
-
+    resolveInitialPull({
+      changes: [],
+      next_cursor: null,
+      completion_cursor: "complete",
+    });
     fireEvent.click(screen.getByRole("button", { name: "Sync now" }));
 
     await waitFor(() => expect(store.removeOutbox).toHaveBeenCalledWith(
@@ -302,7 +319,7 @@ describe("OfflineProvider", () => {
       operation.operation_id,
     ));
     expect(syncPush).toHaveBeenCalledOnce();
-    expect(syncPull).toHaveBeenCalledOnce();
+    expect(syncPull).toHaveBeenCalledTimes(2);
   });
 
   it.each(["SUSPENDED", "CANCELLED"] as const)(
