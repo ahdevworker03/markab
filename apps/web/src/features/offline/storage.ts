@@ -525,6 +525,7 @@ export function createOfflineStore(
           );
         }
       }
+      outbox.delete([key, operationId]);
       await transactionDone(transaction);
     },
 

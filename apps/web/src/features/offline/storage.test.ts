@@ -296,7 +296,7 @@ describe("OfflineStore", () => {
     ).rejects.toThrow("Provisional rental customer IDs are not allowed");
   });
 
-  it("replaces a provisional customer and rewrites dependent local rentals", async () => {
+  it("atomically removes an acknowledged customer create while reconciling its projection", async () => {
     const operation = queuedCustomerCreate("customer-create");
     await store.enqueue(tenantA, {
       ...operation,
@@ -383,6 +383,9 @@ describe("OfflineStore", () => {
     ).resolves.toMatchObject({
       localProjection: { rental: { customerId: "customer-a" } },
     });
+    await expect(
+      store.getOutboxItem(tenantA, "customer-create"),
+    ).resolves.toBeUndefined();
   });
 
   it("atomically replaces a stale customer conflict with a reapply operation", async () => {

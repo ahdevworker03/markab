@@ -394,6 +394,51 @@ describe("createSyncCoordinator", () => {
     expect(push).toHaveBeenCalledOnce();
     restarted.stop();
   });
+
+  it("keeps reconciliation required until a retrying final pull completes", async () => {
+    const store = createStore([operation("1")]);
+    const pull = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockResolvedValueOnce(pullPage());
+    const coordinator = createSyncCoordinator({
+      workspace,
+      store,
+      push: vi.fn().mockResolvedValue({ results: [applied("1")] }),
+      pull,
+      onStatus: vi.fn(),
+    });
+
+    await expect(coordinator.syncNow()).rejects.toThrow("Failed to fetch");
+    expect(await store.listOutbox(workspace, 25)).toEqual([]);
+    expect(await store.isReconciliationRequired(workspace)).toBe(true);
+
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(pull).toHaveBeenCalledTimes(2);
+    expect(await store.isReconciliationRequired(workspace)).toBe(false);
+    coordinator.stop();
+  });
+
+  it("does not push an acknowledged operation again while retrying its final pull", async () => {
+    const store = createStore([operation("1")]);
+    const push = vi.fn().mockResolvedValue({ results: [applied("1")] });
+    const coordinator = createSyncCoordinator({
+      workspace,
+      store,
+      push,
+      pull: vi
+        .fn()
+        .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+        .mockResolvedValueOnce(pullPage()),
+      onStatus: vi.fn(),
+    });
+
+    await expect(coordinator.syncNow()).rejects.toThrow("Failed to fetch");
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(push).toHaveBeenCalledOnce();
+    coordinator.stop();
+  });
   it("sends pending operations in FIFO batches of at most 25", async () => {
     const operations = Array.from({ length: 26 }, (_, index) =>
       operation(String(index + 1)),
