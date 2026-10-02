@@ -238,7 +238,7 @@ Resolve confirmed production blockers at request, authentication, tenant, and fr
 
 ## Step 59 — Real Password-Reset Delivery
 
-**Status:** Implementation complete; controlled staging delivery verification remains pending.
+**Status:** Implementation and manual staging delivery verification complete; production delivery verification remains release work.
 
 ### Objective
 
@@ -280,7 +280,7 @@ Connect the existing password-reset domain to a real transactional email deliver
 
 - Adapter tests cover link construction, sender/recipient payload, expiry copy, provider failure, and timeout with fake fetches; route tests cover generic known, unknown, deleted, and provider-failure responses, redacted diagnostics, token lifecycle, and session revocation.
 - API suite: 29 files / 290 tests passed. Workspace typecheck, API lint, API and web production builds, changed-file formatting, and `git diff --check` passed.
-- Manual staging verification remains required: request a reset through a controlled mailbox, confirm HTTPS link origin/path and session revocation, simulate a provider failure, and confirm redacted diagnostics contain no token or secret material.
+- Manual staging verification completed by the project owner: the password-reset flow was exercised end-to-end for the staging environment. This records no additional provider-failure simulation evidence. Production reset delivery remains separate production-release work.
 
 ### Dependencies
 
@@ -290,14 +290,16 @@ Connect the existing password-reset domain to a real transactional email deliver
 
 ## Step 60 — Simple Platform Administration and Secure Bootstrap
 
+**Status:** Implementation complete; manual staging platform workflow verification complete. Production bootstrap rehearsal remains separate production-release work.
+
 ### Objective
 
 Deliver the minimum platform-owner workflow needed to discover client organizations, inspect basic organization state, change lifecycle status, and securely establish/recover platform-owner access.
 
 ### Current State
 
-- The role enum, organization lifecycle states, `PLATFORM_OWNER` authorization, status endpoint, tenant-route rejection, and transactional status audit already exist.
-- All users currently require an organization. Normal registration always creates `OWNER`; tenant user creation/invitations create only `EMPLOYEE`; seed creates no users. There is no platform organization list/detail API, platform router/shell, bootstrap command, or runbook.
+- The role enum, organization lifecycle states, `PLATFORM_OWNER` authorization, platform organization APIs, platform route/shell, production-only bootstrap command, and transactional audits are implemented.
+- Manual staging verification by the project owner confirmed platform-owner login and administration, user creation and deletion, user suspension/reactivation behavior, and the password-reset flow. This does not claim that the production bootstrap command has been rehearsed.
 
 ### Scope
 
@@ -332,7 +334,7 @@ Deliver the minimum platform-owner workflow needed to discover client organizati
 - Add bootstrap tests for first run, repeat run, conflicting email, discarded initial credential, reset activation, and audit output; add frontend route/component tests for role branching, direct-route denial, list/detail states, lifecycle confirmation, and absence of tenant navigation/queries.
 - Add regression tests proving tenant registration and invitation roles remain fixed.
 - Run full API/web tests, OpenAPI/generated drift checks, typecheck, lint, builds, migration checks if needed, and `git diff --check`.
-- Manual: rehearse bootstrap from a production-like shell using staging secrets and a controlled mailbox; log in as all three roles and verify destinations and forbidden boundaries; search organizations, suspend/reactivate one, and verify tenant behavior in a separate session.
+- Manual staging evidence completed by the project owner: platform-owner login and administration, user creation/deletion, suspension/reactivation, and password reset. A production bootstrap rehearsal remains required before production release.
 
 ### Dependencies
 
