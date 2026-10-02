@@ -42,7 +42,7 @@ export function SyncStatus() {
         <button
           type="button"
           className={cn(
-            "ui-badge-text inline-flex min-h-11 items-center rounded-md border px-2 py-0.5 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:min-h-6",
+            "ui-badge-text pointer-events-auto inline-flex min-h-11 items-center rounded-md border px-2 py-0.5 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:min-h-6",
             config.className,
           )}
           aria-label={config.label}

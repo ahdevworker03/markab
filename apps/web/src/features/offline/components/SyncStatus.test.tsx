@@ -32,6 +32,7 @@ describe("SyncStatus", () => {
       "data-state",
       "offline",
     );
+    expect(retry).toHaveClass("pointer-events-auto");
     fireEvent.click(retry);
     expect(syncNow).toHaveBeenCalledOnce();
   });
