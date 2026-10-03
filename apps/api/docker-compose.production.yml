@@ -1,0 +1,73 @@
+name: vehicle-rental-production
+
+services:
+  api:
+    image: ${API_IMAGE:?API_IMAGE is required}
+    labels:
+      org.opencontainers.image.revision: ${RELEASE_ID:?RELEASE_ID is required}
+    environment:
+      PORT: "3000"
+      NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      CORS_ORIGINS: ${CORS_ORIGINS:?CORS_ORIGINS is required}
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET:?REFRESH_TOKEN_SECRET is required}
+      RESEND_API_KEY: ${RESEND_API_KEY:?RESEND_API_KEY is required}
+      RESEND_FROM: ${RESEND_FROM:?RESEND_FROM is required}
+      PASSWORD_RESET_FRONTEND_ORIGIN: ${PASSWORD_RESET_FRONTEND_ORIGIN:?PASSWORD_RESET_FRONTEND_ORIGIN is required}
+      PASSWORD_RESET_FRONTEND_PATH: ${PASSWORD_RESET_FRONTEND_PATH:?PASSWORD_RESET_FRONTEND_PATH is required}
+      STORAGE_PROVIDER: r2
+      R2_ACCOUNT_ID: ${R2_ACCOUNT_ID:?R2_ACCOUNT_ID is required}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?R2_ACCESS_KEY_ID is required}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?R2_SECRET_ACCESS_KEY is required}
+      R2_BUCKET: ${R2_BUCKET:?R2_BUCKET is required}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3000/api/healthz').then(response => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      markab-edge:
+        aliases:
+          - production-api
+      production_data: {}
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+    volumes:
+      - production_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        ["CMD-SHELL", 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - production_data
+    restart: unless-stopped
+
+networks:
+  markab-edge:
+    name: markab-edge
+    external: true
+  production_data:
+    internal: true
+
+volumes:
+  production_pgdata:

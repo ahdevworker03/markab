@@ -73,17 +73,19 @@ The approved production topology deploys each component as follows:
 | Component               | Technology                          | Production Location                                      |
 | ----------------------- | ----------------------------------- | -------------------------------------------------------- |
 | Frontend                | React + TypeScript + Vite           | Cloudflare Pages (assets delivered via Cloudflare CDN)   |
-| Backend API             | Node.js + Express + Prisma + Docker | Hetzner VPS (Nuremberg, Germany)                         |
-| Database                | PostgreSQL                          | Same Hetzner VPS as the API (private/internal access)    |
+| Backend API             | Node.js + Express + Prisma + Docker | Production-specific Compose project on the existing Contabo VPS |
+| Database                | PostgreSQL                          | Separate production container on the existing Contabo VPS (private/internal access) |
 | Object Storage          | S3-compatible (Cloudflare R2)       | Cloudflare R2                                            |
 | Edge / Network          | Cloudflare                          | DNS, proxying, TLS, DDoS, edge rate limiting             |
-| VPS Runtime             | Docker (Docker Compose)             | Hetzner VPS (API, Prisma runtime, PostgreSQL, reverse proxy) |
+| VPS Runtime             | Docker (Docker Compose)             | Existing Contabo VPS with isolated staging and production Compose projects |
 
-The initial backend/database capacity target is approximately 4 vCPU, 8 GB RAM, and 80 GB storage. The exact Hetzner plan may evolve; the architecture records the required capacity and provider rather than a specific plan identifier.
+The initial backend/database capacity target is approximately 4 vCPU, 8 GB RAM, and 80 GB storage. The exact Contabo plan may evolve; the architecture records the required capacity and provider rather than a specific plan identifier.
 
 The frontend is independently deployable from the API and must not be hosted from the production VPS unless a future measurable requirement justifies changing that decision.
 
-The API and PostgreSQL initially share one VPS as an intentional simplicity and cost decision, not a permanent architectural constraint. PostgreSQL remains the authoritative system of record.
+For the initial pilot, staging and production intentionally share one existing Contabo VPS to minimize cost. They share only the physical host: separate Compose project names, API containers, PostgreSQL containers, Docker networks, Docker volumes, environment files, database credentials, JWT/refresh secrets, R2 credentials/buckets, frontend/API origins, Pages projects, and Resend configuration are required. Both PostgreSQL containers remain private/internal with no public host port. PostgreSQL remains the authoritative system of record.
+
+This creates one accepted failure domain: host failure, disk exhaustion, Docker daemon failure, or severe host resource pressure can affect both environments. Production moves to a dedicated VPS when measured load, reliability requirements, customer scale, or revenue justify it.
 
 ---
 
@@ -142,7 +144,7 @@ Application updates should not require manual server configuration whenever poss
 
 # Database Deployment
 
-PostgreSQL is initially deployed on the same Hetzner VPS as the backend API. This co-location is an approved simplicity and cost decision, not a permanent architectural constraint.
+Production PostgreSQL is deployed in its own container on the existing Contabo VPS alongside, but isolated from, the production API. Staging uses a separate PostgreSQL container, Docker network, Docker volumes, credentials, and configuration on the same host.
 
 PostgreSQL must not be publicly exposed. Database access is internal/private to the server/application environment, and backend application credentials remain secret and environment-configured.
 
@@ -257,10 +259,10 @@ The platform should allow independent scaling of:
 
 Scaling decisions should minimize operational complexity while maintaining application performance.
 
-The initial single-VPS backend/database topology is approved and is not considered a scalability blocker. Scaling remains evidence-based, in this order:
+The initial shared-VPS pilot topology is approved as a cost optimization, with its shared failure domain accepted. Scaling remains evidence-based, in this order:
 
-1. Vertically resize the Hetzner VPS when CPU, memory, or storage measurements justify it.
-2. Move PostgreSQL to separate infrastructure when database capacity, reliability, performance, or operational requirements justify separation.
+1. Move production to a dedicated Contabo VPS when measured load, reliability requirements, customer scale, or revenue justify it.
+2. Vertically resize the relevant VPS or move PostgreSQL to separate infrastructure when capacity, reliability, performance, or operational requirements justify it.
 3. Add additional API instances and load balancing only when measured traffic requires horizontal scaling.
 4. Introduce Redis, queues, workers, Kubernetes, distributed databases, or other infrastructure only when a concrete requirement or measured bottleneck justifies them.
 

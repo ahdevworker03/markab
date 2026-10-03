@@ -1,3 +1,8 @@
 {$STAGING_API_HOST} {
 	reverse_proxy api:3000
 }
+
+# Activated with the approved production hostname and DNS in a later release step.
+(production_api) {
+	reverse_proxy production-api:3000
+}

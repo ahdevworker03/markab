@@ -15,6 +15,9 @@ services:
     depends_on:
       api:
         condition: service_healthy
+    networks:
+      - default
+      - markab-edge
     restart: unless-stopped
 
   api:
@@ -76,3 +79,8 @@ volumes:
   caddy_data:
   caddy_config:
   staging_pgdata:
+
+networks:
+  markab-edge:
+    name: markab-edge
+    external: true

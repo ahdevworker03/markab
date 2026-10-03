@@ -356,6 +356,10 @@ GraphQL or gRPC may be evaluated if future requirements justify them.
 
 **Docker for production application packaging and deployment.**
 
+For the initial pilot, staging and production use separate Docker Compose projects on one existing Contabo VPS as a deliberate cost optimization. They share only the physical host: each has its own API and PostgreSQL containers, Docker networks, Docker volumes, environment configuration, database credentials, JWT/refresh secrets, R2 credentials/bucket, frontend/API origins, Pages project, and Resend configuration. Both PostgreSQL containers remain private with no public host port; staging accounts, data, tokens, and R2 objects are never copied into production.
+
+This accepts a shared failure domain: host failure, disk exhaustion, Docker daemon failure, or severe host resource pressure can affect both environments. Production moves to a dedicated VPS when measured load, reliability requirements, customer scale, or revenue justify it.
+
 ### Why
 
 - Reproducible, immutable application images.
