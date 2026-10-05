@@ -7,6 +7,19 @@ const benchmarkOwners = {
 } as const;
 
 type BenchmarkOwnerEmail = keyof typeof benchmarkOwners;
+type BenchmarkOwnerPasswordErrorCode =
+  | "OWNER_NOT_FOUND"
+  | "OWNER_ROLE_INVALID"
+  | "OWNER_ORGANIZATION_INVALID";
+
+export class BenchmarkOwnerPasswordError extends Error {
+  constructor(
+    readonly code: BenchmarkOwnerPasswordErrorCode,
+    message: string,
+  ) {
+    super(message);
+  }
+}
 
 type PasswordRotationTransaction = {
   user: {
@@ -86,14 +99,22 @@ export async function rotateBenchmarkOwnerPassword(
       },
     });
 
-    if (
-      !owner ||
-      owner.role !== "OWNER" ||
-      owner.organization_id !== benchmarkOwners[email] ||
-      owner.deleted_at
-    ) {
-      throw new Error(
-        "Benchmark owner must be an active OWNER in its expected benchmark organization.",
+    if (!owner || owner.deleted_at) {
+      throw new BenchmarkOwnerPasswordError(
+        "OWNER_NOT_FOUND",
+        "Approved benchmark owner was not found or is inactive.",
+      );
+    }
+    if (owner.role !== "OWNER") {
+      throw new BenchmarkOwnerPasswordError(
+        "OWNER_ROLE_INVALID",
+        "Approved benchmark owner does not have the OWNER role.",
+      );
+    }
+    if (owner.organization_id !== benchmarkOwners[email]) {
+      throw new BenchmarkOwnerPasswordError(
+        "OWNER_ORGANIZATION_INVALID",
+        "Benchmark owner does not belong to its expected organization.",
       );
     }
 

@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import * as argon2 from "argon2";
-import { rotateBenchmarkOwnerPassword } from "./benchmark-owner-password";
+import {
+  BenchmarkOwnerPasswordError,
+  rotateBenchmarkOwnerPassword,
+} from "./benchmark-owner-password";
 
 const owner1 = {
   id: "00000000-0000-4000-8000-000001060001",
@@ -155,7 +158,9 @@ test("rejects a benchmark email assigned a PLATFORM_OWNER", async () => {
   const platformOwner = { ...owner1, role: "PLATFORM_OWNER" };
   await assert.rejects(
     () => rotate(owner1.email, [platformOwner, owner2]),
-    /must be an active OWNER in its expected benchmark organization/,
+    (error: unknown) =>
+      error instanceof BenchmarkOwnerPasswordError &&
+      error.code === "OWNER_ROLE_INVALID",
   );
 });
 
@@ -173,14 +178,18 @@ test("rejects an owner assigned to the wrong benchmark organization", async () =
   };
   await assert.rejects(
     () => rotate(owner1.email, [misplacedOwner, owner2]),
-    /must be an active OWNER in its expected benchmark organization/,
+    (error: unknown) =>
+      error instanceof BenchmarkOwnerPasswordError &&
+      error.code === "OWNER_ORGANIZATION_INVALID",
   );
 });
 
 test("rejects a missing benchmark owner", async () => {
   await assert.rejects(
     () => rotate(owner1.email, [owner2, unrelatedOwner]),
-    /must be an active OWNER in its expected benchmark organization/,
+    (error: unknown) =>
+      error instanceof BenchmarkOwnerPasswordError &&
+      error.code === "OWNER_NOT_FOUND",
   );
 });
 
@@ -188,7 +197,9 @@ test("rejects a soft-deleted benchmark owner", async () => {
   const deletedOwner = { ...owner1, deleted_at: new Date() };
   await assert.rejects(
     () => rotate(owner1.email, [deletedOwner, owner2, unrelatedOwner]),
-    /must be an active OWNER in its expected benchmark organization/,
+    (error: unknown) =>
+      error instanceof BenchmarkOwnerPasswordError &&
+      error.code === "OWNER_NOT_FOUND",
   );
 });
 
