@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "benchmark": "playwright test --config playwright.benchmark.config.ts",
+    "benchmark:staging-reconnect": "bash scripts/run-staging-reconnect.sh",
     "test:offline-shell": "pnpm run build && node scripts/test-offline-shell.mjs"
   },
   "devDependencies": {
