@@ -13,6 +13,7 @@
     "db:push": "dotenv prisma db push",
     "db:seed": "dotenv prisma db seed",
     "db:seed:benchmark": "NODE_ENV=benchmark prisma db seed",
+    "db:benchmark:rotate-owner-password": "NODE_ENV=benchmark tsx src/benchmark-owner-password-cli.ts",
     "db:studio": "dotenv prisma studio"
   },
   "dependencies": {
