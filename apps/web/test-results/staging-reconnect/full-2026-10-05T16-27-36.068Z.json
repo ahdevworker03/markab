@@ -1,0 +1,4368 @@
+{
+  "benchmark": "step-64-staging-reconnect",
+  "mode": "full",
+  "runId": "muvgqstl",
+  "startedAt": "2026-10-05T16:27:36.068Z",
+  "finishedAt": "2026-10-05T16:43:18.510Z",
+  "command": "apps/web/scripts/run-staging-reconnect.sh (systemd scope markab-reconnect-bench)",
+  "environment": {
+    "webOrigin": "https://staging.markab-lb.com",
+    "apiOrigin": "https://staging-api.markab-lb.com",
+    "stagingReleaseId": "sha256:c9ef0e35ea9de36ec06a2db959aded4e2a2cd45a31e1fe69fa7c4b037ec92a42",
+    "harnessGitRevision": "d871a4288b76efce182d81987c4494ab47760f4b",
+    "harnessWorkingTreeDirty": true,
+    "browser": "chromium 153.0.8010.12",
+    "viewport": "393x852 @2x",
+    "emulation": "none (no CDP network/CPU emulation, no navigator.onLine changes)",
+    "interruption": "host nftables table inet markab_bench, cgroup-scoped TCP reset / UDP icmpx admin-prohibited to resolved staging web+API addresses",
+    "netWrapperSha256": "ae53d3b3221586d2b87bae3d747721b3828009fde3c4d0397b4d9bd48f437441"
+  },
+  "protocol": {
+    "warmups": 5,
+    "samples": 30,
+    "outageHoldMs": 10000,
+    "recoveryTimeoutMs": 120000,
+    "queuedOperation": "one CUSTOMER_CREATE via the Add Customer form during the outage",
+    "timingBoundary": "from markab-bench-net unblock returning to the in-page IndexedDB poll (50 ms) observing outbox 0, reconciliation_required cleared, provisional removed, exactly one authoritative Customer",
+    "percentileMethod": "nearest-rank over successful recorded samples"
+  },
+  "preRunCleanup": {
+    "search": "SRB-",
+    "found": 0,
+    "deleted": 0,
+    "failures": [],
+    "remaining": 0
+  },
+  "postRunCleanup": {
+    "search": "SRB-muvgqstl-",
+    "found": 35,
+    "deleted": 35,
+    "failures": [],
+    "remaining": 0
+  },
+  "nonStagingRequests": [],
+  "finalNetState": "unblocked",
+  "cycles": [
+    {
+      "index": 1,
+      "kind": "warmup",
+      "label": "SRB-muvgqstl-w1",
+      "success": true,
+      "durationMs": 16075.753725999995,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 998.0608489999995,
+        "queued": 1193.8797720000002,
+        "unblockStart": 10142.950484,
+        "restored": 10227.683463000001,
+        "verified": 26303.437188999997,
+        "firstSyncRequestAfterRestore": 16268.908634,
+        "finalPullCompleted": 26245.055933999996
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "54a9eda6-aad6-40fc-8297-01bbaf88b4e9",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 6041.225170999998,
+            "endedMs": 7470.189941999997,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 7476.550470999999,
+            "endedMs": 8735.394059999999,
+            "status": 200,
+            "error": null,
+            "finalPull": false
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 8745.976418999999,
+            "endedMs": 9249.777552,
+            "status": 200,
+            "error": null,
+            "finalPull": false
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 9252.993633999999,
+            "endedMs": 9636.619562999997,
+            "status": 200,
+            "error": null,
+            "finalPull": false
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 9640.136853,
+            "endedMs": 10123.641194999997,
+            "status": 200,
+            "error": null,
+            "finalPull": false
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 10127.794446,
+            "endedMs": 10987.389347999997,
+            "status": 200,
+            "error": null,
+            "finalPull": false
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 10990.556288,
+            "endedMs": 11398.842074,
+            "status": 200,
+            "error": null,
+            "finalPull": false
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 11405.152236999995,
+            "endedMs": 11789.987299,
+            "status": 200,
+            "error": null,
+            "finalPull": false
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 11793.624645999997,
+            "endedMs": 12149.353083000002,
+            "status": 200,
+            "error": null,
+            "finalPull": false
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 12152.606926,
+            "endedMs": 12540.979778,
+            "status": 200,
+            "error": null,
+            "finalPull": false
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 12544.785021999996,
+            "endedMs": 12980.684795000001,
+            "status": 200,
+            "error": null,
+            "finalPull": false
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 12984.352259,
+            "endedMs": 13425.068265999995,
+            "status": 200,
+            "error": null,
+            "finalPull": false
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 13431.837626,
+            "endedMs": 13985.878874999995,
+            "status": 200,
+            "error": null,
+            "finalPull": false
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 13989.317467,
+            "endedMs": 14448.365185999995,
+            "status": 200,
+            "error": null,
+            "finalPull": false
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 14452.186409999995,
+            "endedMs": 14906.941591999996,
+            "status": 200,
+            "error": null,
+            "finalPull": false
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 14910.043076999995,
+            "endedMs": 15416.992584,
+            "status": 200,
+            "error": null,
+            "finalPull": false
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 15424.832747,
+            "endedMs": 15762.546389999996,
+            "status": 200,
+            "error": null,
+            "finalPull": false
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 15767.229401999997,
+            "endedMs": 16017.372470999995,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 2,
+      "kind": "warmup",
+      "label": "SRB-muvgqstl-w2",
+      "success": true,
+      "durationMs": 6879.038411000001,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 70.42623699999967,
+        "queued": 262.54996299999766,
+        "unblockStart": 10150.573998,
+        "restored": 10234.548274,
+        "verified": 17113.586685000002,
+        "firstSyncRequestAfterRestore": 15351.91949,
+        "finalPullCompleted": 17094.902328000004
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "fe4c97b7-0590-479a-b2d1-c5b4dc47cf42",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5117.371216,
+            "endedMs": 6156.910941000002,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6164.848286,
+            "endedMs": 6860.354054000003,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 3,
+      "kind": "warmup",
+      "label": "SRB-muvgqstl-w3",
+      "success": true,
+      "durationMs": 6991.102958999996,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 72.6928659999976,
+        "queued": 276.00887299999886,
+        "unblockStart": 10143.675186999986,
+        "restored": 10228.533763,
+        "verified": 17219.636721999996,
+        "firstSyncRequestAfterRestore": 15350.490382999997,
+        "finalPullCompleted": 17194.632502999986
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: connect ECONNREFUSED 167.86.76.97:443"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "87e1b6bb-e51a-47f6-8259-a1d2c534d4d5",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5121.956619999997,
+            "endedMs": 6641.72759699999,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6650.116054999991,
+            "endedMs": 6966.098739999987,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 4,
+      "kind": "warmup",
+      "label": "SRB-muvgqstl-w4",
+      "success": true,
+      "durationMs": 6571.326679000005,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 104.77593999999226,
+        "queued": 295.78984100000525,
+        "unblockStart": 10142.423941999994,
+        "restored": 10227.153743999996,
+        "verified": 16798.480423,
+        "firstSyncRequestAfterRestore": 15361.934867999997,
+        "finalPullCompleted": 16730.318081000005
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "122bf022-06ec-46e0-a1ba-5edb93e28528",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5134.781124000001,
+            "endedMs": 6009.511775000006,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6023.247568000006,
+            "endedMs": 6503.164337000009,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 5,
+      "kind": "warmup",
+      "label": "SRB-muvgqstl-w5",
+      "success": true,
+      "durationMs": 6580.908353999985,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 165.9341390000045,
+        "queued": 342.8752499999973,
+        "unblockStart": 10141.263185000003,
+        "restored": 10224.079415,
+        "verified": 16804.987768999985,
+        "firstSyncRequestAfterRestore": 15413.340482999993,
+        "finalPullCompleted": 16777.96319600001
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "c94ef4e6-f071-4b7e-baa4-da07dc6e02bd",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5189.2610679999925,
+            "endedMs": 6141.341267000011,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6153.238979999995,
+            "endedMs": 6553.883781000011,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 1,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r1",
+      "success": true,
+      "durationMs": 7474.968197999988,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 85.58805300001404,
+        "queued": 301.45798300000024,
+        "unblockStart": 10163.110142999998,
+        "restored": 10257.180120000005,
+        "verified": 17732.148317999992,
+        "firstSyncRequestAfterRestore": 15384.37547900001,
+        "finalPullCompleted": 17667.548781999998
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: connect ECONNREFUSED 167.86.76.97:443"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "5c5f8937-890e-4f32-a16b-0134294f9c72",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5127.195359000005,
+            "endedMs": 6258.1630920000025,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6266.169548000005,
+            "endedMs": 7410.3686619999935,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 2,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r2",
+      "success": true,
+      "durationMs": 10925.06570800001,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 77.28331400000025,
+        "queued": 261.36366299999645,
+        "unblockStart": 10200.259372,
+        "restored": 10304.527192999987,
+        "verified": 21229.592900999996,
+        "firstSyncRequestAfterRestore": 15347.174223999988,
+        "finalPullCompleted": 21160.805357000005
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "bd488547-fbcb-46a5-b7d4-c4ab0290e480",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5042.647031,
+            "endedMs": 8696.96534200001,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 8704.144507000019,
+            "endedMs": 10856.278164000018,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 3,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r3",
+      "success": true,
+      "durationMs": 7857.100053000002,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 439.7969710000034,
+        "queued": 628.0956949999963,
+        "unblockStart": 10143.924150000006,
+        "restored": 10231.511398000002,
+        "verified": 18088.611451000004,
+        "firstSyncRequestAfterRestore": 15710.153495000006,
+        "finalPullCompleted": 18020.864873000013
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "fa6ee299-f0e5-4a3f-9316-5ba0cd47aa9a",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5478.642097000004,
+            "endedMs": 6879.641921000002,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6897.073963000003,
+            "endedMs": 7789.353475000011,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 4,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r4",
+      "success": true,
+      "durationMs": 8322.135683,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 78.45651800002088,
+        "queued": 276.49426000000676,
+        "unblockStart": 10145.217753000004,
+        "restored": 10233.154180000012,
+        "verified": 18555.289863000013,
+        "firstSyncRequestAfterRestore": 15347.195225000003,
+        "finalPullCompleted": 18485.47289600002
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: connect ECONNREFUSED 167.86.76.97:443"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "4e594973-4aa1-467a-9214-e514befcabd6",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5114.041044999991,
+            "endedMs": 7833.103593999986,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 7900.97843399999,
+            "endedMs": 8252.318716000009,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 5,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r5",
+      "success": true,
+      "durationMs": 7590.6998430000385,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 76.70451000001049,
+        "queued": 277.37876900000265,
+        "unblockStart": 10145.031753000017,
+        "restored": 10227.25944199998,
+        "verified": 17817.95928500002,
+        "firstSyncRequestAfterRestore": 15355.90626400002,
+        "finalPullCompleted": 17769.679310000007
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: connect ECONNREFUSED 167.86.76.97:443"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "c419a83c-5291-488f-a7a0-df3a406f7adc",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5128.646822000039,
+            "endedMs": 6688.217528000008,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6696.38242400001,
+            "endedMs": 7542.419868000026,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 6,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r6",
+      "success": true,
+      "durationMs": 6948.3051810000325,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 79.63614500005497,
+        "queued": 277.0106350000133,
+        "unblockStart": 10145.056524000014,
+        "restored": 10227.456919000018,
+        "verified": 17175.76210000005,
+        "firstSyncRequestAfterRestore": 15349.10001200001,
+        "finalPullCompleted": 17151.853460000013
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "c321de9e-72a5-4fe8-9788-083a23ba05cd",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5121.6430929999915,
+            "endedMs": 6547.91958799999,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6564.522806000023,
+            "endedMs": 6924.396540999995,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 7,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r7",
+      "success": true,
+      "durationMs": 8446.858210999984,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 76.38445599999977,
+        "queued": 279.0129250000464,
+        "unblockStart": 10144.18101,
+        "restored": 10230.955814000044,
+        "verified": 18677.81402500003,
+        "firstSyncRequestAfterRestore": 15353.289307,
+        "finalPullCompleted": 18620.107964000024
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: connect ECONNREFUSED 167.86.76.97:443"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "a6770bf6-039c-4e6b-a4a3-221d858a0cd2",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5122.333492999955,
+            "endedMs": 6991.5626389999525,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 7000.132949999999,
+            "endedMs": 8389.15214999998,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 8,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r8",
+      "success": true,
+      "durationMs": 6866.973878000048,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 81.06326000002446,
+        "queued": 278.3482400000212,
+        "unblockStart": 10144.513364000013,
+        "restored": 10232.574505999975,
+        "verified": 17099.548384000023,
+        "firstSyncRequestAfterRestore": 15382.091799999995,
+        "finalPullCompleted": 17072.12456700002
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "cc5dfe38-5456-4c13-95b4-f4a8bfefb4ea",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5149.517294000019,
+            "endedMs": 6365.411452000029,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6373.865143000032,
+            "endedMs": 6839.550061000045,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 9,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r9",
+      "success": true,
+      "durationMs": 7374.668272999988,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 78.16344500001287,
+        "queued": 278.71366100001615,
+        "unblockStart": 10147.120391000004,
+        "restored": 10224.77767000004,
+        "verified": 17599.445943000028,
+        "firstSyncRequestAfterRestore": 15352.539609000029,
+        "finalPullCompleted": 17555.405463000003
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "dad9d87f-7aa3-4ec1-b442-4b6fdbded183",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5127.761938999989,
+            "endedMs": 6964.67658499995,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6983.090500999999,
+            "endedMs": 7330.627792999963,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 10,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r10",
+      "success": true,
+      "durationMs": 8197.61839800002,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 83.11755999998422,
+        "queued": 293.6586680000182,
+        "unblockStart": 10147.132388999977,
+        "restored": 10239.048699999985,
+        "verified": 18436.667098000005,
+        "firstSyncRequestAfterRestore": 15366.486258000019,
+        "finalPullCompleted": 18399.026811999967
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: connect ECONNREFUSED 167.86.76.97:443"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "591206c6-d0cd-49f0-bbb4-6542501f1df1",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5127.437558000034,
+            "endedMs": 7188.325539999991,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 7196.8483410000335,
+            "endedMs": 8159.9781119999825,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 11,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r11",
+      "success": true,
+      "durationMs": 8922.129822000046,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 80.92714400001569,
+        "queued": 276.83809099998325,
+        "unblockStart": 10144.51924699999,
+        "restored": 10224.132058999967,
+        "verified": 19146.261881000013,
+        "firstSyncRequestAfterRestore": 15352.55704699998,
+        "finalPullCompleted": 19087.584998000006
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "fe427b1b-b8d5-4dba-aaf4-b20abc8998f4",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5128.424988000013,
+            "endedMs": 7187.537716999999,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 7196.243344000017,
+            "endedMs": 8863.452939000039,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 12,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r12",
+      "success": true,
+      "durationMs": 6812.278137999994,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 86.88938900001813,
+        "queued": 292.097499000025,
+        "unblockStart": 10151.378242000006,
+        "restored": 10235.756661000021,
+        "verified": 17048.034799000015,
+        "firstSyncRequestAfterRestore": 15375.283731999982,
+        "finalPullCompleted": 16983.811702999985
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: connect ECONNREFUSED 167.86.76.97:443"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "60240332-cc38-468e-a7a1-bfae541933f7",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5139.52707099996,
+            "endedMs": 6285.664955999993,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6293.639561999997,
+            "endedMs": 6748.055041999964,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 13,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r13",
+      "success": true,
+      "durationMs": 6595.231107999978,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 75.36687500000698,
+        "queued": 278.30698200000916,
+        "unblockStart": 10143.237721000041,
+        "restored": 10223.569390000019,
+        "verified": 16818.800497999997,
+        "firstSyncRequestAfterRestore": 15353.523327000032,
+        "finalPullCompleted": 16791.075292000023
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: connect ECONNREFUSED 167.86.76.97:443"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "78cdba30-068d-434e-9998-381b9c9015ac",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5129.953937000013,
+            "endedMs": 6239.794401000021,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6257.444965999981,
+            "endedMs": 6567.505902000004,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 14,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r14",
+      "success": true,
+      "durationMs": 7747.317948999989,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 76.66279099998064,
+        "queued": 278.9448470000061,
+        "unblockStart": 10152.081010999973,
+        "restored": 10234.914442999987,
+        "verified": 17982.232391999976,
+        "firstSyncRequestAfterRestore": 15364.992368999985,
+        "finalPullCompleted": 17934.991569999955
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: connect ECONNREFUSED 167.86.76.97:443"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "e77dc6b4-30d7-4830-aaa8-9c80d8c5c9db",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5130.077925999998,
+            "endedMs": 6562.484935000015,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6570.081056999974,
+            "endedMs": 7700.077126999968,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 15,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r15",
+      "success": true,
+      "durationMs": 6816.867774000042,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 81.64007899997523,
+        "queued": 276.43562900001416,
+        "unblockStart": 10147.798211000045,
+        "restored": 10232.825615999987,
+        "verified": 17049.69339000003,
+        "firstSyncRequestAfterRestore": 15368.08357899997,
+        "finalPullCompleted": 16999.838442999986
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "a156df0d-4485-41e4-86d7-bff449c0c80d",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5135.257962999982,
+            "endedMs": 6460.73304099997,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6468.745600000024,
+            "endedMs": 6767.012826999999,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 16,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r16",
+      "success": true,
+      "durationMs": 9680.671929999953,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 80.05347300006542,
+        "queued": 278.64323699998204,
+        "unblockStart": 10143.951273999992,
+        "restored": 10229.871905000065,
+        "verified": 19910.54383500002,
+        "firstSyncRequestAfterRestore": 15354.16338100005,
+        "finalPullCompleted": 19862.416809999966
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: connect ECONNREFUSED 167.86.76.97:443"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "83608a1c-30e4-4a7b-93ea-c0fc4efa7a63",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5124.291475999984,
+            "endedMs": 7554.843047999893,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 7562.916850999929,
+            "endedMs": 9632.5449049999,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 17,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r17",
+      "success": true,
+      "durationMs": 7088.941727000056,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 74.50328499998432,
+        "queued": 278.08428199996706,
+        "unblockStart": 10150.720738000004,
+        "restored": 10230.969750999939,
+        "verified": 17319.911477999995,
+        "firstSyncRequestAfterRestore": 15351.61381999997,
+        "finalPullCompleted": 17232.639666999923
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: connect ECONNREFUSED 167.86.76.97:443"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "ed1120a5-636d-47f9-99e6-2ba265800412",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5120.644069000031,
+            "endedMs": 6412.405375999981,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6420.385433000047,
+            "endedMs": 7001.669915999984,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 18,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r18",
+      "success": true,
+      "durationMs": 7323.941212999984,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 86.05804999999236,
+        "queued": 278.14285299996845,
+        "unblockStart": 10144.076856,
+        "restored": 10228.50809499994,
+        "verified": 17552.449307999923,
+        "firstSyncRequestAfterRestore": 15350.506189999986,
+        "finalPullCompleted": 17466.877174999914
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "3a24f5b4-6b94-47d7-8c56-937d890a6513",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5121.998095000046,
+            "endedMs": 6765.027975999983,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6773.724174999981,
+            "endedMs": 7238.369079999975,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 19,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r19",
+      "success": true,
+      "durationMs": 7508.0513609999325,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 85.95679899991956,
+        "queued": 278.42019600002095,
+        "unblockStart": 10141.343995000003,
+        "restored": 10228.483777999994,
+        "verified": 17736.535138999927,
+        "firstSyncRequestAfterRestore": 15348.377280000015,
+        "finalPullCompleted": 17667.52133899997
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "1693ee76-7960-4f43-bb2e-e537dcfc1a7f",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5119.893502000021,
+            "endedMs": 6721.894199999981,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6739.822930000024,
+            "endedMs": 7439.0375609999755,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 20,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r20",
+      "success": false,
+      "durationMs": null,
+      "error": "Staging benchmark login failed with 429.",
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 73.72146899998188,
+        "queued": 261.2433660000097,
+        "unblockStart": 10151.953806999954,
+        "restored": 10237.925835000002,
+        "verified": 18002.045867000008,
+        "firstSyncRequestAfterRestore": 15329.423913000035,
+        "finalPullCompleted": 17958.689447999932
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "0f4dbefb-5b79-4ec4-8488-0ee261486b31",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5091.498078000033,
+            "endedMs": 6507.337778999936,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6515.7572149999905,
+            "endedMs": 7720.76361299993,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ]
+      }
+    },
+    {
+      "index": 21,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r21",
+      "success": true,
+      "durationMs": 7435.62101100001,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 71.75336299999617,
+        "queued": 278.4683869999135,
+        "unblockStart": 10169.679093999905,
+        "restored": 10265.322791999904,
+        "verified": 17700.943802999915,
+        "firstSyncRequestAfterRestore": 15355.24869399995,
+        "finalPullCompleted": 17675.836248999927
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "a4507c0e-9af3-4817-bd55-8e74072e9884",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5089.925902000046,
+            "endedMs": 6475.07512100006,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6482.865118000074,
+            "endedMs": 7410.513457000023,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 22,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r22",
+      "success": true,
+      "durationMs": 7452.939440999995,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 75.79840099997818,
+        "queued": 274.09763600002043,
+        "unblockStart": 10144.229229000048,
+        "restored": 10224.813965999987,
+        "verified": 17677.753406999982,
+        "firstSyncRequestAfterRestore": 15353.082464999985,
+        "finalPullCompleted": 17602.373206999968
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "69860d31-bf39-4be4-95dc-b958aec074d0",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5128.268498999998,
+            "endedMs": 6554.383698999998,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6569.228036000044,
+            "endedMs": 7377.559240999981,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 23,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r23",
+      "success": true,
+      "durationMs": 10540.415252999985,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 75.35594400006812,
+        "queued": 261.8805290000746,
+        "unblockStart": 10150.473024000064,
+        "restored": 10229.478830000036,
+        "verified": 20769.89408300002,
+        "firstSyncRequestAfterRestore": 15345.410204000073,
+        "finalPullCompleted": 20704.276956000016
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "c65ed21b-727e-4a00-ad4c-5c4efbe8febb",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5115.931374000036,
+            "endedMs": 8464.22732299997,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 8472.849101,
+            "endedMs": 10474.79812599998,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 24,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r24",
+      "success": true,
+      "durationMs": 7130.392814000021,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 71.90753300010692,
+        "queued": 279.04171900008805,
+        "unblockStart": 10146.611015000031,
+        "restored": 10234.161744000041,
+        "verified": 17364.55455800006,
+        "firstSyncRequestAfterRestore": 15356.96877700009,
+        "finalPullCompleted": 17336.6773310001
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: connect ECONNREFUSED 167.86.76.97:443"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "55dab276-8890-46aa-9915-24f725061f44",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5122.807033000048,
+            "endedMs": 6110.274390000035,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6118.40029000002,
+            "endedMs": 7102.51558700006,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 25,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r25",
+      "success": true,
+      "durationMs": 8591.844307999942,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 82.1180620000232,
+        "queued": 277.22185800003354,
+        "unblockStart": 10144.60210899997,
+        "restored": 10229.93587200006,
+        "verified": 18821.78018,
+        "firstSyncRequestAfterRestore": 15360.143607000005,
+        "finalPullCompleted": 18756.881795000052
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: connect ECONNREFUSED 167.86.76.97:443"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "ef1da2ce-37c1-473b-b2e2-3e46e876c785",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5130.207734999945,
+            "endedMs": 6852.948068999918,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6870.458404999925,
+            "endedMs": 8526.945922999992,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 26,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r26",
+      "success": true,
+      "durationMs": 7922.094264000072,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 81.28260500007309,
+        "queued": 276.0094299999764,
+        "unblockStart": 10155.784636000055,
+        "restored": 10240.785850999993,
+        "verified": 18162.880115000065,
+        "firstSyncRequestAfterRestore": 15351.426288000075,
+        "finalPullCompleted": 18108.707528
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "843d807c-b5a5-4cd9-9377-0be8c0fad936",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5110.640437000082,
+            "endedMs": 7053.648725999985,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 7062.644007000024,
+            "endedMs": 7867.921677000006,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 27,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r27",
+      "success": true,
+      "durationMs": 7597.627968000015,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 190.54077199997846,
+        "queued": 375.6698379999725,
+        "unblockStart": 10146.85193600005,
+        "restored": 10232.505612000008,
+        "verified": 17830.133580000023,
+        "firstSyncRequestAfterRestore": 15449.602593000047,
+        "finalPullCompleted": 17730.271981999977
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "9344aeb2-0374-4896-adc9-105f345bede4",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5217.096981000039,
+            "endedMs": 6708.505647000042,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6717.154174000025,
+            "endedMs": 7497.766369999968,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 28,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r28",
+      "success": true,
+      "durationMs": 6169.857198999962,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 75.71681799995713,
+        "queued": 259.6087879999541,
+        "unblockStart": 10145.15042900003,
+        "restored": 10231.568098000018,
+        "verified": 16401.42529699998,
+        "firstSyncRequestAfterRestore": 15347.820695000002,
+        "finalPullCompleted": 16383.185633999994
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "cc8938f1-9997-4e78-a460-2b73f1398305",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5116.252596999984,
+            "endedMs": 5925.683928999933,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 5934.2654289999045,
+            "endedMs": 6151.617535999976,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 29,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r29",
+      "success": true,
+      "durationMs": 6875.204851999995,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 72.60865000006743,
+        "queued": 281.5556799999904,
+        "unblockStart": 10144.439482000074,
+        "restored": 10231.379167000065,
+        "verified": 17106.58401900006,
+        "firstSyncRequestAfterRestore": 15378.898774000001,
+        "finalPullCompleted": 17060.69472000003
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "e4470764-e504-48c5-a802-48efcce2eb72",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5147.5196069999365,
+            "endedMs": 6529.221697999979,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6537.736853000009,
+            "endedMs": 6829.315552999964,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    },
+    {
+      "index": 30,
+      "kind": "recorded",
+      "label": "SRB-muvgqstl-r30",
+      "success": true,
+      "durationMs": 7803.850126000005,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 71.32269300008193,
+        "queued": 260.06637300003786,
+        "unblockStart": 10143.580878000008,
+        "restored": 10232.677775000106,
+        "verified": 18036.52790100011,
+        "firstSyncRequestAfterRestore": 15338.209212000016,
+        "finalPullCompleted": 18009.099442000035
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "c95d81ec-ca93-4176-b753-359f1d549ef0",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 4,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 5105.5314369999105,
+            "endedMs": 6389.42717099993,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 6397.386856999947,
+            "endedMs": 7776.42166699993,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    }
+  ],
+  "summary": {
+    "recorded": 30,
+    "successCount": 29,
+    "failureCount": 1,
+    "p50Ms": 7508.0513609999325,
+    "p95Ms": 10540.415252999985,
+    "maxMs": 10925.06570800001,
+    "gateMs": 10000,
+    "gate": "FAIL"
+  }
+}

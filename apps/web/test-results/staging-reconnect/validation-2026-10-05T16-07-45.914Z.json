@@ -1,0 +1,207 @@
+{
+  "benchmark": "step-64-staging-reconnect",
+  "mode": "validation",
+  "runId": "muvg1af0",
+  "startedAt": "2026-10-05T16:07:45.914Z",
+  "finishedAt": "2026-10-05T16:08:13.582Z",
+  "command": "apps/web/scripts/run-staging-reconnect.sh (systemd scope markab-reconnect-bench)",
+  "environment": {
+    "webOrigin": "https://staging.markab-lb.com",
+    "apiOrigin": "https://staging-api.markab-lb.com",
+    "stagingReleaseId": "sha256:c9ef0e35ea9de36ec06a2db959aded4e2a2cd45a31e1fe69fa7c4b037ec92a42",
+    "harnessGitRevision": "d871a4288b76efce182d81987c4494ab47760f4b",
+    "harnessWorkingTreeDirty": true,
+    "browser": "chromium 153.0.8010.12",
+    "viewport": "393x852 @2x",
+    "emulation": "none (no CDP network/CPU emulation, no navigator.onLine changes)",
+    "interruption": "host nftables table inet markab_bench, cgroup-scoped TCP reset / UDP icmpx admin-prohibited to resolved staging web+API addresses",
+    "netWrapperSha256": "ae53d3b3221586d2b87bae3d747721b3828009fde3c4d0397b4d9bd48f437441"
+  },
+  "protocol": {
+    "warmups": 0,
+    "samples": 1,
+    "outageHoldMs": 10000,
+    "recoveryTimeoutMs": 120000,
+    "queuedOperation": "one CUSTOMER_CREATE via the Add Customer form during the outage",
+    "timingBoundary": "from markab-bench-net unblock returning to the in-page IndexedDB poll (50 ms) observing outbox 0, reconciliation_required cleared, provisional removed, exactly one authoritative Customer",
+    "percentileMethod": "nearest-rank over successful recorded samples"
+  },
+  "preRunCleanup": {
+    "search": "SRB-",
+    "found": 0,
+    "deleted": 0,
+    "failures": [],
+    "remaining": 0
+  },
+  "postRunCleanup": {
+    "search": "SRB-muvg1af0-",
+    "found": 1,
+    "deleted": 1,
+    "failures": [],
+    "remaining": 0
+  },
+  "nonStagingRequests": [
+    "https://fonts.googleapis.com",
+    "https://static.cloudflareinsights.com",
+    "https://fonts.gstatic.com",
+    "https://fonts.gstatic.com",
+    "https://fonts.gstatic.com",
+    "https://fonts.gstatic.com",
+    "https://fonts.gstatic.com",
+    "https://fonts.gstatic.com",
+    "https://fonts.gstatic.com",
+    "https://fonts.gstatic.com",
+    "https://fonts.googleapis.com",
+    "https://static.cloudflareinsights.com",
+    "https://fonts.gstatic.com",
+    "https://fonts.gstatic.com",
+    "https://fonts.gstatic.com",
+    "https://fonts.gstatic.com",
+    "https://fonts.gstatic.com",
+    "https://fonts.gstatic.com",
+    "https://fonts.gstatic.com",
+    "https://fonts.gstatic.com"
+  ],
+  "finalNetState": "unblocked",
+  "cycles": [
+    {
+      "index": 1,
+      "kind": "recorded",
+      "label": "SRB-muvg1af0-r1",
+      "success": true,
+      "durationMs": 4451.112345000001,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 78.90409799999907,
+        "queued": 5644.860519999998,
+        "unblockStart": 10144.193890999999,
+        "restored": 10229.578316,
+        "verified": 14680.690661,
+        "firstSyncRequestAfterRestore": 12707.9528,
+        "finalPullCompleted": 14661.284197
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "browserUnrelatedDuringBlock": {
+          "ok": true,
+          "status": 0
+        },
+        "nodeUnrelatedDuringBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "unrelatedConnectivityDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "7e00f9a7-840d-4c85-94a5-f79d4eacaa74",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 3,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 2478.374484,
+            "endedMs": 4117.143856999999,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 4125.761132,
+            "endedMs": 4431.705881000002,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    }
+  ],
+  "summary": {
+    "recorded": 1,
+    "successCount": 1,
+    "failureCount": 0,
+    "p50Ms": 4451.112345000001,
+    "p95Ms": 4451.112345000001,
+    "maxMs": 4451.112345000001,
+    "gateMs": 10000,
+    "gate": "NOT_EVALUATED (validation mode)"
+  }
+}

@@ -4,6 +4,7 @@ import {
   assertAllowedStagingUrl,
   assertBenchmarkCgroup,
   assertBenchmarkRole,
+  isAllowedStagingReconnectRequestOrigin,
   isAllowedStagingOrigin,
   nearestRank,
   readStagingReconnectConfig,
@@ -55,6 +56,26 @@ describe("staging reconnect guard", () => {
       "not a url",
     ]) {
       expect(isAllowedStagingOrigin(url)).toBe(false);
+    }
+  });
+
+  it("allows only approved static origins in the browser request audit", () => {
+    for (const url of [
+      "https://staging.markab-lb.com/customers",
+      "https://staging-api.markab-lb.com/api/healthz",
+      "https://fonts.googleapis.com/css2?family=Cairo",
+      "https://fonts.gstatic.com/s/cairo.woff2",
+      "https://static.cloudflareinsights.com/beacon.min.js",
+    ]) {
+      expect(isAllowedStagingReconnectRequestOrigin(url)).toBe(true);
+    }
+    for (const url of [
+      "http://fonts.googleapis.com/css2?family=Cairo",
+      "https://api.markab-lb.com/api/healthz",
+      "https://example.com/data",
+      "https://analytics.example.com/collect",
+    ]) {
+      expect(isAllowedStagingReconnectRequestOrigin(url)).toBe(false);
     }
   });
 

@@ -1,0 +1,186 @@
+{
+  "benchmark": "step-64-staging-reconnect",
+  "mode": "validation",
+  "runId": "muvgmclo",
+  "startedAt": "2026-10-05T16:24:08.552Z",
+  "finishedAt": "2026-10-05T16:24:35.313Z",
+  "command": "apps/web/scripts/run-staging-reconnect.sh (systemd scope markab-reconnect-bench)",
+  "environment": {
+    "webOrigin": "https://staging.markab-lb.com",
+    "apiOrigin": "https://staging-api.markab-lb.com",
+    "stagingReleaseId": "sha256:c9ef0e35ea9de36ec06a2db959aded4e2a2cd45a31e1fe69fa7c4b037ec92a42",
+    "harnessGitRevision": "d871a4288b76efce182d81987c4494ab47760f4b",
+    "harnessWorkingTreeDirty": true,
+    "browser": "chromium 153.0.8010.12",
+    "viewport": "393x852 @2x",
+    "emulation": "none (no CDP network/CPU emulation, no navigator.onLine changes)",
+    "interruption": "host nftables table inet markab_bench, cgroup-scoped TCP reset / UDP icmpx admin-prohibited to resolved staging web+API addresses",
+    "netWrapperSha256": "ae53d3b3221586d2b87bae3d747721b3828009fde3c4d0397b4d9bd48f437441"
+  },
+  "protocol": {
+    "warmups": 0,
+    "samples": 1,
+    "outageHoldMs": 10000,
+    "recoveryTimeoutMs": 120000,
+    "queuedOperation": "one CUSTOMER_CREATE via the Add Customer form during the outage",
+    "timingBoundary": "from markab-bench-net unblock returning to the in-page IndexedDB poll (50 ms) observing outbox 0, reconciliation_required cleared, provisional removed, exactly one authoritative Customer",
+    "percentileMethod": "nearest-rank over successful recorded samples"
+  },
+  "preRunCleanup": {
+    "search": "SRB-",
+    "found": 0,
+    "deleted": 0,
+    "failures": [],
+    "remaining": 0
+  },
+  "postRunCleanup": {
+    "search": "SRB-muvgmclo-",
+    "found": 1,
+    "deleted": 1,
+    "failures": [],
+    "remaining": 0
+  },
+  "nonStagingRequests": [],
+  "finalNetState": "unblocked",
+  "cycles": [
+    {
+      "index": 1,
+      "kind": "recorded",
+      "label": "SRB-muvgmclo-r1",
+      "success": true,
+      "durationMs": 4062.803104999999,
+      "error": null,
+      "timeline": {
+        "blockStart": 0,
+        "blockApplied": 79.21199500000148,
+        "queued": 5679.6049889999995,
+        "unblockStart": 10144.987153000002,
+        "restored": 10227.619726,
+        "verified": 14290.422831,
+        "firstSyncRequestAfterRestore": 12750.19542,
+        "finalPullCompleted": 14233.580521
+      },
+      "probes": {
+        "browserApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeWebBeforeBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "browserWebDuringBlock": {
+          "ok": false,
+          "error": "TypeError: Failed to fetch"
+        },
+        "nodeApiDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "nodeWebDuringBlock": {
+          "ok": false,
+          "error": "apiRequestContext.get: read ECONNRESET"
+        },
+        "browserUnrelatedDuringBlock": {
+          "ok": true,
+          "status": 0
+        },
+        "nodeUnrelatedDuringBlock": {
+          "ok": true,
+          "status": 200
+        },
+        "nodeApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        },
+        "browserApiAfterRestore": {
+          "ok": true,
+          "status": 200
+        }
+      },
+      "checks": {
+        "unblockedBeforeCycle": true,
+        "stagingReachableBeforeBlock": true,
+        "blockActive": true,
+        "stagingTrafficFailsDuringBlock": true,
+        "unrelatedConnectivityDuringBlock": true,
+        "operationQueuedOffline": true,
+        "stillBlockedBeforeRestore": true,
+        "unblockSucceeded": true,
+        "stagingReachableAfterRestore": true,
+        "automaticReconciliationWithoutOnlineEvent": true,
+        "pushSucceeded": true,
+        "authoritativePullCompleted": true,
+        "outboxDrained": true,
+        "reconciliationRequiredCleared": true,
+        "provisionalRecordRemoved": true,
+        "exactlyOneAuthoritativeCustomerLocal": true,
+        "exactlyOneAuthoritativeCustomerServer": true,
+        "duplicateCountZero": true,
+        "syncErrorsZero": true
+      },
+      "evidence": {
+        "queuedState": {
+          "outboxTotal": 1,
+          "outboxPending": 1,
+          "queuedOperationId": "375d567e-8f33-4f7b-b7bd-73cd79b1bd7d",
+          "reconciliationRequired": false,
+          "provisionalPresent": true,
+          "authoritativeMatches": 0
+        },
+        "syncFailuresDuringOutage": 3,
+        "navigatorOnLineBeforeRestore": true,
+        "finalState": {
+          "outboxTotal": 0,
+          "outboxPending": 0,
+          "queuedOperationId": null,
+          "reconciliationRequired": false,
+          "provisionalPresent": false,
+          "authoritativeMatches": 1
+        },
+        "syncEventsAfterRestore": [
+          {
+            "path": "/api/sync/push",
+            "startedMs": 2522.575693999999,
+            "endedMs": 3628.5931119999987,
+            "status": 200,
+            "error": null
+          },
+          {
+            "path": "/api/sync/pull",
+            "startedMs": 3688.622539,
+            "endedMs": 4005.960794999999,
+            "status": 200,
+            "error": null,
+            "finalPull": true
+          }
+        ],
+        "pageEvents": {
+          "online": 0,
+          "offline": 0,
+          "focus": 0,
+          "onLine": true
+        },
+        "serverMatches": 1
+      }
+    }
+  ],
+  "summary": {
+    "recorded": 1,
+    "successCount": 1,
+    "failureCount": 0,
+    "p50Ms": 4062.803104999999,
+    "p95Ms": 4062.803104999999,
+    "maxMs": 4062.803104999999,
+    "gateMs": 10000,
+    "gate": "NOT_EVALUATED (validation mode)"
+  }
+}

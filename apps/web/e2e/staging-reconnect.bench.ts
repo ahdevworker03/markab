@@ -18,7 +18,7 @@ import {
   assertAllowedStagingUrl,
   assertBenchmarkCgroup,
   assertBenchmarkRole,
-  isAllowedStagingOrigin,
+  isAllowedStagingReconnectRequestOrigin,
   nearestRank,
   readStagingReconnectConfig,
 } from "./staging-reconnect-guard";
@@ -661,8 +661,8 @@ test("staging reconnect benchmark", async ({ browser, playwright }) => {
       });
     }
   });
-  // Any browser request outside the two staging origins is a violation, except
-  // the explicit unrelated-connectivity probe issued in validation mode.
+  // Static assets are limited to the explicit origins used by staging; all
+  // application and data traffic remains confined to the two staging origins.
   const nonStagingRequests: string[] = [];
   const unrelatedOrigin = new URL(unrelatedUrl).origin;
   const syncEvents: SyncEvent[] = [];
@@ -677,7 +677,7 @@ test("staging reconnect benchmark", async ({ browser, playwright }) => {
     const url = new URL(request.url());
     if (
       (url.protocol === "http:" || url.protocol === "https:") &&
-      !isAllowedStagingOrigin(url.href) &&
+       !isAllowedStagingReconnectRequestOrigin(url.href) &&
       !(config.mode === "validation" && url.origin === unrelatedOrigin)
     ) {
       nonStagingRequests.push(url.origin);

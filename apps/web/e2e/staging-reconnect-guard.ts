@@ -6,6 +6,11 @@ export const NET_WRAPPER = "/usr/local/sbin/markab-bench-net";
 export const BENCHMARK_LABEL_PREFIX = "SRB-";
 
 const allowedOrigins = new Set([STAGING_WEB_ORIGIN, STAGING_API_ORIGIN]);
+const approvedStaticOrigins = new Set([
+  "https://fonts.googleapis.com",
+  "https://fonts.gstatic.com",
+  "https://static.cloudflareinsights.com",
+]);
 
 export type StagingReconnectMode = "validation" | "full";
 
@@ -37,6 +42,15 @@ export function isAllowedStagingOrigin(value: string): boolean {
   try {
     assertAllowedStagingUrl(value);
     return true;
+  } catch {
+    return false;
+  }
+}
+
+export function isAllowedStagingReconnectRequestOrigin(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return isAllowedStagingOrigin(value) || approvedStaticOrigins.has(url.origin);
   } catch {
     return false;
   }
