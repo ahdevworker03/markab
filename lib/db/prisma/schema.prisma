@@ -269,6 +269,7 @@ model Customer {
   @@unique([organization_id, national_id])
   @@unique([organization_id, license_number])
   @@index([organization_id])
+  @@index([organization_id, updated_at, id])
   @@index([deleted_at])
   @@index([first_name])
   @@index([last_name])
@@ -305,6 +306,7 @@ model Vehicle {
 
   @@unique([organization_id, plate_number])
   @@index([organization_id])
+  @@index([organization_id, updated_at, id])
   @@index([deleted_at])
   @@index([status])
   @@index([make])
@@ -458,6 +460,7 @@ model Rental {
   payments Payment[]
 
   @@index([organization_id])
+  @@index([organization_id, updated_at, id])
   @@index([customer_id])
   @@index([vehicle_id])
   @@index([status])

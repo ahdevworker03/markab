@@ -41,16 +41,16 @@ describe("sync pull routes", () => {
       .query({ cursor, limit });
   }
 
-  async function createResources(updatedAt: Date) {
+  async function createResources(updatedAt: Date, suffix = "") {
     const customer = await prisma.customer.create({
       data: {
         organization_id: organizationId,
         first_name: "Amina",
         last_name: "Haddad",
-        phone: "70123456",
+        phone: `70123456${suffix}`,
         address: "Beirut",
-        national_id: "PULL-NID",
-        license_number: "PULL-LIC",
+        national_id: `PULL-NID${suffix}`,
+        license_number: `PULL-LIC${suffix}`,
         license_expiry_date: new Date("2030-01-01T00:00:00.000Z"),
         updated_at: updatedAt,
       },
@@ -60,7 +60,7 @@ describe("sync pull routes", () => {
         organization_id: organizationId,
         make: "Toyota",
         model: "Corolla",
-        plate_number: "PULL-1",
+        plate_number: `PULL-1${suffix}`,
         year: 2024,
         color: "White",
         transmission: "AUTOMATIC",
@@ -86,6 +86,27 @@ describe("sync pull routes", () => {
       },
     });
     return { customer, vehicle, rental };
+  }
+
+  async function createCustomers(count: number, updatedAt: Date) {
+    return Promise.all(
+      Array.from({ length: count }, (_, index) => {
+        const suffix = `${index + 1}`.padStart(3, "0");
+        return prisma.customer.create({
+          data: {
+            organization_id: organizationId,
+            first_name: "Amina",
+            last_name: `Haddad ${suffix}`,
+            phone: `70${suffix}456`,
+            address: "Beirut",
+            national_id: `PULL-NID-${suffix}`,
+            license_number: `PULL-LIC-${suffix}`,
+            license_expiry_date: new Date("2030-01-01T00:00:00.000Z"),
+            updated_at: updatedAt,
+          },
+        });
+      }),
+    );
   }
 
   it("returns an empty completed pull for an empty tenant", async () => {
@@ -165,6 +186,50 @@ describe("sync pull routes", () => {
     expect(final.body.completion_cursor).toEqual(expect.any(String));
   });
 
+  it("caps each repository resource stream at limit plus one", async () => {
+    const updatedAt = new Date("2030-01-01T00:00:00.000Z");
+    await Promise.all(
+      Array.from({ length: 4 }, (_, index) =>
+        createResources(updatedAt, `-${index + 1}`),
+      ),
+    );
+
+    const records = await syncRepository.findChanges(
+      organizationId,
+      undefined,
+      undefined,
+      2,
+    );
+
+    expect(records.customers).toHaveLength(3);
+    expect(records.vehicles).toHaveLength(3);
+    expect(records.rentals).toHaveLength(3);
+  });
+
+  it("delivers a customer-dominated traversal once without skipping equal-timestamp rows", async () => {
+    const updatedAt = new Date("2030-01-01T00:00:00.000Z");
+    await createCustomers(5, updatedAt);
+    const expected = await prisma.customer.findMany({
+      where: { organization_id: organizationId },
+      orderBy: [{ updated_at: "asc" }, { id: "asc" }],
+    });
+    const receivedIds: string[] = [];
+    let cursor: string | undefined;
+
+    do {
+      const response = await pull(cursor, 2).expect(200);
+      receivedIds.push(
+        ...response.body.changes.map(
+          (change: { resource_id: string }) => change.resource_id,
+        ),
+      );
+      cursor = response.body.next_cursor ?? undefined;
+    } while (cursor);
+
+    expect(receivedIds).toEqual(expected.map((customer) => customer.id));
+    expect([...new Set(receivedIds)]).toHaveLength(expected.length);
+  });
+
   it("keeps equal timestamps and IDs from different resources across pages", async () => {
     const id = "00000000-0000-4000-8000-000000000020";
     const updatedAt = new Date("2030-01-01T00:00:00.000Z");
@@ -234,8 +299,14 @@ describe("sync pull routes", () => {
       organizationId,
       undefined,
       upper!,
+      100,
     );
-    const nextCycle = await syncRepository.findChanges(organizationId, upper!);
+    const nextCycle = await syncRepository.findChanges(
+      organizationId,
+      upper!,
+      undefined,
+      100,
+    );
 
     expect(currentCycle.customers).toEqual([]);
     expect(nextCycle.customers).toMatchObject([

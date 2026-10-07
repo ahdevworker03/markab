@@ -174,16 +174,23 @@ async function findChanges(
   organizationId: string,
   after?: SyncPosition,
   upper?: SyncPosition,
+  limit = 100,
 ) {
   const [customers, vehicles, rentals] = await Promise.all([
     prisma.customer.findMany({
       where: changeWhere(organizationId, "CUSTOMER", after, upper),
+      orderBy: [{ updated_at: "asc" }, { id: "asc" }],
+      take: limit + 1,
     }),
     prisma.vehicle.findMany({
       where: changeWhere(organizationId, "VEHICLE", after, upper),
+      orderBy: [{ updated_at: "asc" }, { id: "asc" }],
+      take: limit + 1,
     }),
     prisma.rental.findMany({
       where: changeWhere(organizationId, "RENTAL", after, upper),
+      orderBy: [{ updated_at: "asc" }, { id: "asc" }],
+      take: limit + 1,
     }),
   ]);
   return { customers, vehicles, rentals };

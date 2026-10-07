@@ -85,6 +85,7 @@ async function pullChanges(
     organizationId,
     cursor?.after,
     upper,
+    query.limit,
   );
   const changes = toChanges(records);
 

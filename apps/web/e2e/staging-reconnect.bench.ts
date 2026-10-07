@@ -17,11 +17,11 @@ import {
   STAGING_WEB_ORIGIN,
   assertAllowedStagingUrl,
   assertBenchmarkCgroup,
-  assertBenchmarkRole,
   isAllowedStagingReconnectRequestOrigin,
   nearestRank,
   readStagingReconnectConfig,
 } from "./staging-reconnect-guard";
+import { createStagingReconnectVerifier } from "./staging-reconnect-verifier";
 
 const execFileAsync = promisify(execFile);
 const config = readStagingReconnectConfig(process.env);
@@ -146,41 +146,17 @@ async function browserProbe(
   );
 }
 
-async function apiLogin(request: APIRequestContext): Promise<string> {
-  const response = await request.post(
-    assertAllowedStagingUrl(`${STAGING_API_ORIGIN}/api/auth/login`).href,
-    { data: { email: config.email, password: config.password } },
-  );
-  if (!response.ok()) {
-    throw new Error(`Staging benchmark login failed with ${response.status()}.`);
-  }
-  const body = (await response.json()) as { data?: { accessToken?: string } };
-  const token = body.data?.accessToken;
-  if (!token) throw new Error("Staging benchmark login returned no token.");
-  const me = await request.get(
-    assertAllowedStagingUrl(`${STAGING_API_ORIGIN}/api/auth/me`).href,
-    { headers: { Authorization: `Bearer ${token}` } },
-  );
-  if (!me.ok()) {
-    throw new Error(`Staging benchmark role check failed with ${me.status()}.`);
-  }
-  assertBenchmarkRole(
-    ((await me.json()) as { data?: { role?: unknown } }).data?.role,
-  );
-  return token;
-}
-
 async function findBenchmarkCustomers(
   request: APIRequestContext,
-  token: string,
+  verifier: Awaited<ReturnType<typeof createStagingReconnectVerifier>>,
   search: string,
 ): Promise<Array<{ id: string; nationalId: string }>> {
   const url = assertAllowedStagingUrl(
     `${STAGING_API_ORIGIN}/api/customers?search=${encodeURIComponent(search)}`,
   );
-  const response = await request.get(url.href, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await verifier.authorized((accessToken) =>
+    request.get(url.href, { headers: { Authorization: `Bearer ${accessToken}` } }),
+  );
   if (!response.ok()) {
     throw new Error(`Customer search failed with ${response.status()}.`);
   }
@@ -196,23 +172,25 @@ async function findBenchmarkCustomers(
 
 async function deleteBenchmarkCustomers(
   request: APIRequestContext,
+  verifier: Awaited<ReturnType<typeof createStagingReconnectVerifier>>,
   search: string,
 ): Promise<Record<string, unknown>> {
-  const token = await apiLogin(request);
-  const found = await findBenchmarkCustomers(request, token, search);
+  const found = await findBenchmarkCustomers(request, verifier, search);
   const failures: string[] = [];
   for (const customer of found) {
-    const response = await request.delete(
-      assertAllowedStagingUrl(
-        `${STAGING_API_ORIGIN}/api/customers/${customer.id}`,
-      ).href,
-      { headers: { Authorization: `Bearer ${token}` } },
+    const url = assertAllowedStagingUrl(
+      `${STAGING_API_ORIGIN}/api/customers/${customer.id}`,
+    );
+    const response = await verifier.authorized((accessToken) =>
+      request.delete(url.href, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }),
     );
     if (response.status() !== 204) {
       failures.push(`${customer.nationalId}: ${response.status()}`);
     }
   }
-  const remaining = await findBenchmarkCustomers(request, token, search);
+  const remaining = await findBenchmarkCustomers(request, verifier, search);
   return {
     search,
     found: found.length,
@@ -408,6 +386,7 @@ async function fillCustomerForm(
 async function runCycle(
   page: Page,
   request: APIRequestContext,
+  verifier: Awaited<ReturnType<typeof createStagingReconnectVerifier>>,
   syncEvents: SyncEvent[],
   index: number,
   kind: Cycle["kind"],
@@ -575,8 +554,7 @@ async function runCycle(
       afterRestore[0]?.startedMs ?? null;
     cycle.timeline.finalPullCompleted = finalPull?.endedMs ?? null;
 
-    const token = await apiLogin(request);
-    const serverMatches = await findBenchmarkCustomers(request, token, label);
+    const serverMatches = await findBenchmarkCustomers(request, verifier, label);
     const events = await page.evaluate(() => {
       const target = window as Window & {
         __srbEvents?: Record<string, number>;
@@ -639,9 +617,17 @@ test("staging reconnect benchmark", async ({ browser, playwright }) => {
   expect(await netState()).toBe("unblocked");
 
   const request = await playwright.request.newContext();
+  const verifier = await createStagingReconnectVerifier(request, {
+    loginUrl: assertAllowedStagingUrl(`${STAGING_API_ORIGIN}/api/auth/login`).href,
+    refreshUrl: assertAllowedStagingUrl(`${STAGING_API_ORIGIN}/api/auth/refresh`).href,
+    meUrl: assertAllowedStagingUrl(`${STAGING_API_ORIGIN}/api/auth/me`).href,
+    email: config.email,
+    password: config.password,
+  });
   const startedAt = new Date().toISOString();
   const preRunCleanup = await deleteBenchmarkCustomers(
     request,
+    verifier,
     BENCHMARK_LABEL_PREFIX,
   );
 
@@ -733,12 +719,12 @@ test("staging reconnect benchmark", async ({ browser, playwright }) => {
     const validation = config.mode === "validation";
     for (let index = 1; index <= config.warmups; index += 1) {
       cycles.push(
-        await runCycle(page, request, syncEvents, index, "warmup", false),
+        await runCycle(page, request, verifier, syncEvents, index, "warmup", false),
       );
     }
     for (let index = 1; index <= config.samples; index += 1) {
       cycles.push(
-        await runCycle(page, request, syncEvents, index, "recorded", validation),
+        await runCycle(page, request, verifier, syncEvents, index, "recorded", validation),
       );
     }
   } finally {
@@ -746,8 +732,9 @@ test("staging reconnect benchmark", async ({ browser, playwright }) => {
     await context.close();
     try {
       postRunCleanup = await deleteBenchmarkCustomers(
-        request,
-        `${BENCHMARK_LABEL_PREFIX}${runId}-`,
+          request,
+          verifier,
+          `${BENCHMARK_LABEL_PREFIX}${runId}-`,
       );
     } catch (error) {
       postRunCleanup = { error: firstLine(error) };
