@@ -88,9 +88,9 @@ export function OfflineProvider({
     undefined,
   );
 
-  const syncNow = (): void => {
+  const syncNow = useCallback((): void => {
     void syncRef.current?.syncNow().catch(() => undefined);
-  };
+  }, []);
   const refreshProjections = useCallback(() => {
     setProjectionVersion((version) => version + 1);
   }, []);
@@ -160,6 +160,27 @@ export function OfflineProvider({
     workspace?.organizationId,
     workspace?.userId,
   ]);
+
+  useEffect(() => {
+    if (status !== "offline" || !syncReady) return;
+
+    let active = true;
+    const recoveryProbe = setInterval(() => {
+      void api.healthCheck().then(
+        () => {
+          if (!active) return;
+          clearInterval(recoveryProbe);
+          syncNow();
+        },
+        () => undefined,
+      );
+    }, 1000);
+
+    return () => {
+      active = false;
+      clearInterval(recoveryProbe);
+    };
+  }, [status, syncNow, syncReady]);
 
   return (
     <OfflineContext.Provider

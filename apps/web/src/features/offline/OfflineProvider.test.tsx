@@ -14,11 +14,13 @@ import type { OfflineStore, QueuedOperation } from "./types";
 const useAuth = vi.hoisted(() => vi.fn());
 const syncPush = vi.hoisted(() => vi.fn());
 const syncPull = vi.hoisted(() => vi.fn());
+const healthCheck = vi.hoisted(() => vi.fn());
 vi.mock("@/providers/AuthProvider", () => ({ useAuth }));
 vi.mock("@workspace/api-client-react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@workspace/api-client-react")>()),
   syncPush,
   syncPull,
+  healthCheck,
 }));
 
 const tenant = {
@@ -145,6 +147,7 @@ describe("OfflineProvider", () => {
       sessionState: "authenticated",
     });
     syncPull.mockResolvedValue(page);
+    healthCheck.mockRejectedValue(new TypeError("Failed to fetch"));
     syncPush.mockImplementation(
       async ({ operations }: { operations: QueuedOperation[] }) => ({
         results: operations.map((operation) => ({
@@ -223,6 +226,53 @@ describe("OfflineProvider", () => {
       customer,
     );
     expect(syncPush).toHaveBeenCalledTimes(2);
+  });
+
+  it("recovers transport-offline reconciliation through health check before a residual long retry", async () => {
+    const store = createStore();
+    await createOfflineCommands({
+      workspace,
+      store,
+      createOperationId: () => "operation-a",
+    }).queueCustomerCreate(draft);
+    syncPush.mockRejectedValue(new TypeError("Failed to fetch"));
+    vi.useFakeTimers();
+    render(
+      <OfflineProvider store={store}>
+        <Probe />
+      </OfflineProvider>,
+    );
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(15000);
+    });
+    expect(screen.getByText("offline:false")).toBeInTheDocument();
+    expect(syncPush).toHaveBeenCalledTimes(5);
+
+    syncPush.mockResolvedValue({
+      results: [
+        {
+          operation_id: "operation-a",
+          type: "CUSTOMER_CREATE",
+          status: "APPLIED",
+          code: "SYNC_APPLIED",
+          resource_type: "CUSTOMER",
+          customer,
+        },
+      ],
+    });
+    healthCheck.mockResolvedValue({ status: "ok" });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000);
+    });
+
+    expect(screen.getByText("upToDate:true")).toBeInTheDocument();
+    expect(await store.listOutbox(workspace, 25)).toEqual([]);
+    expect(store.reconcileCustomerCreate).toHaveBeenCalledTimes(1);
+    expect(syncPush).toHaveBeenCalledTimes(6);
+    expect(syncPull).toHaveBeenCalledTimes(1);
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it.each(["online", "focus", "manual"])(
