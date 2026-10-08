@@ -67,7 +67,33 @@ describe("CustomersDataList", () => {
     ]) {
       const identifier = within(table).getByText(value);
       expect(identifier).toHaveAttribute("dir", "ltr");
-      expect(identifier).toHaveClass("identifier-ltr", "whitespace-nowrap");
+      expect(identifier).toHaveClass(
+        "identifier-ltr",
+        "max-w-full",
+        "break-all",
+        "text-start",
+      );
+      expect(identifier).not.toHaveClass("whitespace-nowrap");
+    }
+
+    const mobileCard = screen.getByText("الهوية").closest("article")!;
+    const identityGrid = mobileCard.querySelector(".grid")!;
+    expect(identityGrid).toHaveClass("min-w-0", "sm:grid-cols-2");
+    expect(identityGrid).not.toHaveClass("grid-cols-2");
+
+    for (const value of [
+      longCustomer.nationalId,
+      longCustomer.licenseNumber,
+    ]) {
+      const identifier = within(mobileCard).getByText(value);
+      expect(identifier).toHaveAttribute("dir", "ltr");
+      expect(identifier).toHaveClass(
+        "identifier-ltr",
+        "max-w-full",
+        "break-all",
+        "text-start",
+      );
+      expect(identifier.parentElement?.parentElement).toHaveClass("min-w-0");
     }
   });
 

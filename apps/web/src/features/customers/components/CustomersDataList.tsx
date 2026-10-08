@@ -37,7 +37,7 @@ function IdentityValue({ value }: { value: string }) {
   return (
     <span
       dir="ltr"
-      className="identifier-ltr block whitespace-nowrap text-end text-sm font-medium text-foreground"
+      className="identifier-ltr block max-w-full break-all text-start text-sm font-medium text-foreground"
     >
       {value}
     </span>
@@ -113,19 +113,19 @@ export function CustomersDataList({
           <article key={customer.id} className="space-y-4 px-4 py-4 sm:px-5">
             <CustomerIdentity customer={customer} />
             <div className="grid gap-3 sm:grid-cols-2">
-              <div>
+              <div className="min-w-0">
                 <div className="ui-label">رقم الهاتف</div>
                 <div className="mt-1">
                   <IdentityValue value={customer.phone} />
                 </div>
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="ui-label">رقم الهوية</div>
                 <div className="mt-1">
                   <IdentityValue value={customer.nationalId} />
                 </div>
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="ui-label">رقم الرخصة</div>
                 <div className="mt-1">
                   <IdentityValue value={customer.licenseNumber} />
@@ -151,14 +151,14 @@ export function CustomersDataList({
         {customers.map((customer) => (
           <article key={customer.id} className="space-y-4 px-4 py-4">
             <CustomerIdentity customer={customer} />
-            <div className="grid grid-cols-2 gap-3 rounded-lg bg-muted/45 p-3">
-              <div>
+            <div className="grid min-w-0 gap-3 rounded-lg bg-muted/45 p-3 sm:grid-cols-2">
+              <div className="min-w-0">
                 <div className="ui-label">الهوية</div>
                 <div className="mt-1">
                   <IdentityValue value={customer.nationalId} />
                 </div>
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="ui-label">الرخصة</div>
                 <div className="mt-1">
                   <IdentityValue value={customer.licenseNumber} />
