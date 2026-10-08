@@ -307,11 +307,11 @@ export function PaymentSection({ rentalId, totalAmount }: PaymentSectionProps) {
               </InlineFeedback>
             </div>
           ) : (
-            <div className="mt-3 divide-y divide-border rounded-lg border border-border">
+            <div className="mt-3 max-w-4xl divide-y divide-border rounded-lg border border-border">
               {paymentList.map((payment) => (
                 <div
                   key={payment.id}
-                  className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 px-3 py-3 sm:grid-cols-3 sm:items-center"
+                  className="grid grid-cols-1 gap-x-4 gap-y-3 px-3 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center"
                 >
                   <div className="min-w-0">
                     <div className="text-xs text-muted-foreground">
@@ -321,17 +321,15 @@ export function PaymentSection({ rentalId, totalAmount }: PaymentSectionProps) {
                       {formatDateTime(payment.paymentDate)}
                     </div>
                   </div>
-                  <div className="hidden sm:block">
+                  <div className="min-w-0">
                     <div className="text-xs text-muted-foreground">الطريقة</div>
-                    <div className="mt-1 text-sm font-medium text-foreground">
+                    <div className="mt-1 break-words text-sm font-medium text-foreground">
                       {PAYMENT_METHOD_LABELS[payment.method] ?? payment.method}
                     </div>
                   </div>
-                  <div className="text-end">
-                    <div className="text-xs text-muted-foreground sm:hidden">
-                      {PAYMENT_METHOD_LABELS[payment.method] ?? payment.method}
-                    </div>
-                    <div className="number-ltr mt-1 text-sm font-bold text-foreground">
+                  <div className="min-w-0 text-end sm:justify-self-end">
+                    <div className="text-xs text-muted-foreground">المبلغ</div>
+                    <div className="number-ltr mt-1 whitespace-nowrap text-sm font-bold text-foreground">
                       {formatCurrency(payment.amount)}
                     </div>
                   </div>

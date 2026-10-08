@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { screen, fireEvent, waitFor } from "@testing-library/react";
+import { screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { PaymentSection } from "./PaymentSection";
 import { ApiError, type PaymentResponse } from "@workspace/api-client-react";
 import { renderAtFixedDate as render, withFixedDate } from "@/test/render-at-fixed-date";
@@ -158,6 +158,25 @@ describe("PaymentSection", () => {
     expect(screen.getByText("USD 70")).toBeInTheDocument();
     expect(screen.getAllByText("نقداً").length).toBeGreaterThan(0);
     expect(screen.getAllByText("تحويل بنكي").length).toBeGreaterThan(0);
+  });
+
+  it("keeps each payment record in a responsive date, method, and amount grid", () => {
+    mockData([makePayment({ method: "TRANSFER" })], 0);
+
+    render(<PaymentSection rentalId="r1" />);
+
+    const row = screen.getByText("تاريخ الدفع").parentElement?.parentElement;
+    expect(row).not.toBeNull();
+    expect(row!).toHaveClass(
+      "grid-cols-1",
+      "sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]",
+    );
+    expect(within(row!).getByText("تحويل بنكي").parentElement!).toHaveClass(
+      "min-w-0",
+    );
+    expect(within(row!).getByText("USD 50").parentElement!).toHaveClass(
+      "sm:justify-self-end",
+    );
   });
 
   it("records a payment and shows a success message", async () => {
