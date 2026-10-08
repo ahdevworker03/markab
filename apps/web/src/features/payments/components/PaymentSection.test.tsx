@@ -3,6 +3,7 @@ import { screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { PaymentSection } from "./PaymentSection";
 import { ApiError, type PaymentResponse } from "@workspace/api-client-react";
 import { renderAtFixedDate as render, withFixedDate } from "@/test/render-at-fixed-date";
+import { formatDateTime } from "@/lib/format";
 
 vi.mock("@/features/payments/hooks", () => ({
   useRentalPayments: vi.fn(),
@@ -165,16 +166,30 @@ describe("PaymentSection", () => {
 
     render(<PaymentSection rentalId="r1" />);
 
-    const row = screen.getByText("تاريخ الدفع").parentElement?.parentElement;
+    const row = screen.getByText("تاريخ الدفع").closest("dl");
     expect(row).not.toBeNull();
+    expect(row).toHaveAttribute("dir", "rtl");
     expect(row!).toHaveClass(
       "grid-cols-1",
       "sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]",
     );
-    expect(within(row!).getByText("تحويل بنكي").parentElement!).toHaveClass(
-      "min-w-0",
+    const dateField = within(row!).getByText("تاريخ الدفع").closest("div");
+    const methodField = within(row!).getByText("تحويل بنكي").closest("div");
+    const amountField = within(row!).getByText("USD 50").closest("div");
+
+    expect(dateField?.querySelector("dt")).toHaveTextContent("تاريخ الدفع");
+    expect(dateField?.querySelector("dd")).toHaveTextContent(
+      formatDateTime("2026-08-15T12:00:00Z"),
     );
-    expect(within(row!).getByText("USD 50").parentElement!).toHaveClass(
+    expect(dateField).toHaveClass("sm:col-start-1");
+    expect(dateField?.querySelector("dd")).toHaveClass("text-end");
+    expect(methodField?.querySelector("dt")).toHaveTextContent("الطريقة");
+    expect(methodField?.querySelector("dd")).toHaveTextContent("تحويل بنكي");
+    expect(methodField).toHaveClass("sm:col-start-2", "min-w-0");
+    expect(amountField?.querySelector("dt")).toHaveTextContent("المبلغ");
+    expect(amountField?.querySelector("dd")).toHaveTextContent("USD 50");
+    expect(amountField).toHaveClass(
+      "sm:col-start-3",
       "sm:justify-self-end",
     );
   });

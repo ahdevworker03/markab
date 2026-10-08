@@ -309,31 +309,32 @@ export function PaymentSection({ rentalId, totalAmount }: PaymentSectionProps) {
           ) : (
             <div className="mt-3 max-w-4xl divide-y divide-border rounded-lg border border-border">
               {paymentList.map((payment) => (
-                <div
+                <dl
                   key={payment.id}
+                  dir="rtl"
                   className="grid grid-cols-1 gap-x-4 gap-y-3 px-3 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center"
                 >
-                  <div className="min-w-0">
-                    <div className="text-xs text-muted-foreground">
+                  <div className="min-w-0 sm:col-start-1">
+                    <dt className="text-xs text-muted-foreground">
                       تاريخ الدفع
-                    </div>
-                    <div className="number-ltr mt-1 text-sm font-medium text-foreground">
+                    </dt>
+                    <dd className="number-ltr m-0 mt-1 text-end text-sm font-medium text-foreground">
                       {formatDateTime(payment.paymentDate)}
-                    </div>
+                    </dd>
                   </div>
-                  <div className="min-w-0">
-                    <div className="text-xs text-muted-foreground">الطريقة</div>
-                    <div className="mt-1 break-words text-sm font-medium text-foreground">
+                  <div className="min-w-0 sm:col-start-2">
+                    <dt className="text-xs text-muted-foreground">الطريقة</dt>
+                    <dd className="m-0 mt-1 break-words text-sm font-medium text-foreground">
                       {PAYMENT_METHOD_LABELS[payment.method] ?? payment.method}
-                    </div>
+                    </dd>
                   </div>
-                  <div className="min-w-0 text-end sm:justify-self-end">
-                    <div className="text-xs text-muted-foreground">المبلغ</div>
-                    <div className="number-ltr mt-1 whitespace-nowrap text-sm font-bold text-foreground">
+                  <div className="min-w-0 text-end sm:col-start-3 sm:justify-self-end">
+                    <dt className="text-xs text-muted-foreground">المبلغ</dt>
+                    <dd className="number-ltr m-0 mt-1 whitespace-nowrap text-sm font-bold text-foreground">
                       {formatCurrency(payment.amount)}
-                    </div>
+                    </dd>
                   </div>
-                </div>
+                </dl>
               ))}
             </div>
           )}
