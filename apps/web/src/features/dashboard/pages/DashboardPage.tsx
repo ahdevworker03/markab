@@ -365,29 +365,6 @@ export default function DashboardPage() {
       />
 
       <div className="space-y-4 px-4 pb-4 pt-4 sm:px-6 lg:space-y-5 lg:pb-6 lg:pt-5">
-        <div
-          role="group"
-          aria-label="إجراءات سريعة"
-          className="grid grid-cols-2 gap-1 rounded-xl border border-border bg-card p-1 shadow-sm sm:inline-flex sm:max-w-full sm:flex-wrap sm:items-center sm:justify-start"
-        >
-          <DashboardAction
-            label="إرجاع سيارة"
-            icon={RotateCcw}
-            onClick={() => setLocation("/rentals")}
-          />
-          <DashboardAction
-            label="إضافة سيارة"
-            icon={Car}
-            onClick={() => setLocation("/vehicles/add")}
-          />
-          <DashboardAction
-            label="تسجيل صيانة"
-            icon={Wrench}
-            onClick={() => setLocation("/maintenance/add")}
-            className="col-span-2 sm:col-span-1"
-          />
-        </div>
-
         {isRefreshing && (
           <p className="text-xs text-muted-foreground" role="status">
             جارٍ تحديث بيانات لوحة التحكم...
@@ -397,7 +374,7 @@ export default function DashboardPage() {
         <div className="grid items-start gap-4 lg:grid-cols-2 xl:grid-cols-12 xl:gap-5">
           <section
             aria-label="التنبيهات التشغيلية"
-            className="order-1 self-start lg:col-span-2 xl:order-2 xl:col-span-4"
+            className="self-start lg:col-span-2 xl:col-span-full"
           >
             <SectionCard
               title="ما يحتاج إلى متابعة"
@@ -522,7 +499,75 @@ export default function DashboardPage() {
             </SectionCard>
           </section>
 
-          <div className="order-3 grid gap-4 md:grid-cols-2 lg:col-span-2 xl:contents">
+          <section
+            aria-label="نظرة تشغيلية سريعة"
+            className="grid grid-cols-2 gap-3 lg:col-span-2 xl:col-span-full xl:grid-cols-4 xl:gap-4"
+          >
+            <DashboardMetricCard
+              label="الإيجارات النشطة"
+              value={String(dashboard.activeRentals.length)}
+              context="عقود قيد التنفيذ"
+              icon={Car}
+              tone="info"
+              state={rentalsState}
+              errorMessage={
+                rentalsQuery.error
+                  ? getApiErrorMessage(rentalsQuery.error).title
+                  : undefined
+              }
+              onClick={() => setLocation("/rentals")}
+            />
+            <DashboardMetricCard
+              label="الإرجاعات القريبة"
+              value={String(dashboard.priorityReturns.length)}
+              context={
+                dashboard.returningToday.length > 0
+                  ? `${dashboard.returningToday.length} مستحقة اليوم`
+                  : "خلال اليومين المقبلين"
+              }
+              icon={Clock3}
+              tone={dashboard.overdueReturns.length > 0 ? "danger" : "warning"}
+              state={rentalsState}
+              errorMessage={
+                rentalsQuery.error
+                  ? getApiErrorMessage(rentalsQuery.error).title
+                  : undefined
+              }
+              onClick={() => setLocation("/rentals")}
+            />
+            <DashboardMetricCard
+              label="السيارات المتاحة"
+              value={String(dashboard.availableCount)}
+              context="جاهزة للتأجير"
+              icon={Car}
+              tone="positive"
+              state={fleetState}
+              errorMessage={
+                vehiclesQuery.error
+                  ? getApiErrorMessage(vehiclesQuery.error).title
+                  : undefined
+              }
+              onClick={() => setLocation("/vehicles?filter=available")}
+            />
+            <DashboardMetricCard
+              label="المهام المفتوحة"
+              value={String(pendingTasks)}
+              context={
+                overdueTasks > 0 ? `${overdueTasks} متأخرة` : "تحتاج إلى متابعة"
+              }
+              icon={ClipboardList}
+              tone={overdueTasks > 0 ? "danger" : "warning"}
+              state={tasksState}
+              errorMessage={
+                tasksQuery.error
+                  ? getApiErrorMessage(tasksQuery.error).title
+                  : undefined
+              }
+              onClick={() => setLocation("/tasks")}
+            />
+          </section>
+
+          <div className="grid gap-4 md:grid-cols-2 lg:col-span-2 xl:col-span-full xl:gap-5">
             <SectionCard
               title="الملخص المالي"
               description={`${dashboard.period.label} — بناءً على الدفعات والمصروفات المسجلة`}
@@ -537,7 +582,6 @@ export default function DashboardPage() {
                   <ChevronLeft className="size-4" aria-hidden="true" />
                 </Button>
               }
-              className="xl:order-1 xl:col-span-4"
             >
               {financeState === "error" ? (
                 <ErrorState
@@ -599,7 +643,6 @@ export default function DashboardPage() {
                   <ChevronLeft className="size-4" aria-hidden="true" />
                 </Button>
               }
-              className="xl:order-3 xl:col-span-4"
             >
               {fleetState === "error" ? (
                 <ErrorState
@@ -677,75 +720,30 @@ export default function DashboardPage() {
             </SectionCard>
           </div>
 
-          <section
-            aria-label="نظرة تشغيلية سريعة"
-            className="order-4 grid grid-cols-2 gap-3 lg:col-span-2 xl:order-4 xl:col-span-full xl:grid-cols-4 xl:gap-4"
+          <div
+            role="group"
+            aria-label="إجراءات سريعة"
+            className="grid grid-cols-2 gap-1 rounded-xl border border-border bg-card p-1 shadow-sm lg:col-span-2 sm:inline-flex sm:max-w-full sm:flex-wrap sm:items-center sm:justify-start xl:col-span-full"
           >
-            <DashboardMetricCard
-              label="الإيجارات النشطة"
-              value={String(dashboard.activeRentals.length)}
-              context="عقود قيد التنفيذ"
-              icon={Car}
-              tone="info"
-              state={rentalsState}
-              errorMessage={
-                rentalsQuery.error
-                  ? getApiErrorMessage(rentalsQuery.error).title
-                  : undefined
-              }
+            <DashboardAction
+              label="إرجاع سيارة"
+              icon={RotateCcw}
               onClick={() => setLocation("/rentals")}
             />
-            <DashboardMetricCard
-              label="الإرجاعات القريبة"
-              value={String(dashboard.priorityReturns.length)}
-              context={
-                dashboard.returningToday.length > 0
-                  ? `${dashboard.returningToday.length} مستحقة اليوم`
-                  : "خلال اليومين المقبلين"
-              }
-              icon={Clock3}
-              tone={dashboard.overdueReturns.length > 0 ? "danger" : "warning"}
-              state={rentalsState}
-              errorMessage={
-                rentalsQuery.error
-                  ? getApiErrorMessage(rentalsQuery.error).title
-                  : undefined
-              }
-              onClick={() => setLocation("/rentals")}
+            <DashboardAction
+              label="إضافة عميل"
+              icon={Plus}
+              onClick={() => setLocation("/customers/add")}
             />
-            <DashboardMetricCard
-              label="السيارات المتاحة"
-              value={String(dashboard.availableCount)}
-              context="جاهزة للتأجير"
+            <DashboardAction
+              label="إضافة سيارة"
               icon={Car}
-              tone="positive"
-              state={fleetState}
-              errorMessage={
-                vehiclesQuery.error
-                  ? getApiErrorMessage(vehiclesQuery.error).title
-                  : undefined
-              }
-              onClick={() => setLocation("/vehicles?filter=available")}
+              onClick={() => setLocation("/vehicles/add")}
+              className="col-span-2 sm:col-span-1"
             />
-            <DashboardMetricCard
-              label="المهام المفتوحة"
-              value={String(pendingTasks)}
-              context={
-                overdueTasks > 0 ? `${overdueTasks} متأخرة` : "تحتاج إلى متابعة"
-              }
-              icon={ClipboardList}
-              tone={overdueTasks > 0 ? "danger" : "warning"}
-              state={tasksState}
-              errorMessage={
-                tasksQuery.error
-                  ? getApiErrorMessage(tasksQuery.error).title
-                  : undefined
-              }
-              onClick={() => setLocation("/tasks")}
-            />
-          </section>
+          </div>
 
-          <div className="order-2 grid gap-4 lg:col-span-2 xl:order-5 xl:col-span-full xl:grid-cols-12 xl:gap-5">
+          <div className="grid gap-4 lg:col-span-2 xl:col-span-full xl:grid-cols-12 xl:gap-5">
             <SectionCard
               title="الإيجارات النشطة"
               description={`${dashboard.activeRentals.length} عقود قيد التنفيذ`}
@@ -901,7 +899,7 @@ export default function DashboardPage() {
                 <ChevronLeft className="size-4" aria-hidden="true" />
               </Button>
             }
-            className="order-5 overflow-hidden lg:col-span-2 xl:order-6 xl:col-span-full"
+            className="overflow-hidden lg:col-span-2 xl:col-span-full"
           >
             {rentalRowsState === "loading" ? (
               <LoadingState rows={3} className="-m-1 p-1" />

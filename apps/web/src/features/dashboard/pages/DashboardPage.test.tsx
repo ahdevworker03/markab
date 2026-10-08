@@ -149,6 +149,35 @@ describe("DashboardPage operational dashboard", () => {
     ).toBeInTheDocument();
   });
 
+  it("places quick actions after the snapshot and summary sections", () => {
+    render(<DashboardPage />);
+
+    const attention = screen.getByRole("region", {
+      name: "التنبيهات التشغيلية",
+    });
+    const snapshot = screen.getByRole("region", {
+      name: "نظرة تشغيلية سريعة",
+    });
+    const financialSummary = screen.getByText("الملخص المالي");
+    const quickActions = screen.getByRole("group", { name: "إجراءات سريعة" });
+
+    expect(attention.compareDocumentPosition(snapshot)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(snapshot.compareDocumentPosition(financialSummary)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(financialSummary.compareDocumentPosition(quickActions)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(
+      screen.getByRole("button", { name: "إضافة عميل" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "تسجيل صيانة" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("does not show a misleading financial value while data is loading", () => {
     mockedUsePayments.mockReturnValue({
       data: undefined,
