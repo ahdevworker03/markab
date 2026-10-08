@@ -33,19 +33,8 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { formatCurrency } from "@/lib/format";
-import { VEHICLE_STATUS_LABELS } from "@/lib/labels";
+import { VEHICLE_STATUS_LABELS } from "@/lib/vehicle-labels";
 import { cn } from "@/lib/utils";
-import { useVehicles } from "@/features/vehicles/hooks";
-import { useRentals } from "@/features/rentals/hooks";
-import { useCustomers, useCustomerById } from "@/features/customers/hooks";
-import {
-  getVehicleStatusCounts,
-  getVehiclesByStatus,
-} from "@/features/vehicles/selectors";
-import {
-  getActiveRentals,
-  getEndedRentals,
-} from "@/features/rentals/selectors";
 import { useMaintenance } from "@/features/maintenance/hooks";
 import { getMaintenanceCostPerVehicle } from "@/features/maintenance/selectors";
 import { useExpenses } from "@/features/expenses/hooks";
@@ -81,6 +70,8 @@ import type {
   ExpenseResponse,
   MaintenanceResponse,
   RentalResponse,
+  VehicleResponse,
+  VehicleResponseStatus,
 } from "@workspace/api-client-react";
 
 const MOCK_YEAR = 2025;
@@ -100,13 +91,19 @@ const ANALYTICS_MONTHS = [
   "كانون الأول",
 ];
 
-type AnalyticsVehicle = {
-  id: string;
-  make: string;
-  model: string;
-  year?: number;
-  plateNumber?: string;
-};
+type AnalyticsVehicle = Pick<
+  VehicleResponse,
+  "id" | "make" | "model" | "year" | "plateNumber" | "status"
+>;
+
+const VEHICLE_STATUS_SUMMARY = [
+  { status: "AVAILABLE", tone: "bg-status-positive-bg text-status-positive" },
+  { status: "RESERVED", tone: "bg-primary/10 text-primary" },
+  { status: "RENTED", tone: "bg-status-info-bg text-status-info" },
+  { status: "MAINTENANCE", tone: "bg-status-warning-bg text-status-warning" },
+  { status: "OUT_OF_SERVICE", tone: "bg-status-danger-bg text-status-danger" },
+  { status: "ARCHIVED", tone: "bg-muted text-muted-foreground" },
+] satisfies Array<{ status: VehicleResponseStatus; tone: string }>;
 
 type AnalyticsPeriodOption = {
   value: number;
@@ -426,10 +423,6 @@ function PerformanceTrend({
 }
 
 function deriveAnalytics(
-  vehicles: ReturnType<typeof useVehicles>,
-  rentals: ReturnType<typeof useRentals>,
-  customers: ReturnType<typeof useCustomers>,
-  getCustomerById: (id: string) => import("@/data/types").Customer | undefined,
   maintenance: MaintenanceResponse[],
   realVehicles: AnalyticsVehicle[],
   expenses: ExpenseResponse[],
@@ -483,11 +476,20 @@ function deriveAnalytics(
         Boolean(item.vehicle) && item.amount > 0,
     )
     .sort((a, b) => b.amount - a.amount);
-  const {
-    available: availableCount,
-    rented: rentedCount,
-    maintenance: maintenanceCount,
-  } = getVehicleStatusCounts(vehicles);
+  const vehicleStatusCounts = realVehicles.reduce(
+    (counts, vehicle) => {
+      counts[vehicle.status] += 1;
+      return counts;
+    },
+    {
+      AVAILABLE: 0,
+      RESERVED: 0,
+      RENTED: 0,
+      MAINTENANCE: 0,
+      OUT_OF_SERVICE: 0,
+      ARCHIVED: 0,
+    } satisfies Record<VehicleResponseStatus, number>,
+  );
   const customerOutstandingList = outstanding.customerOutstanding
     .map(({ customerId, outstandingBalance: balance }) => ({
       customer: realCustomersById.get(customerId),
@@ -536,19 +538,18 @@ function deriveAnalytics(
     revenueChange,
     revenueUp: revenueChange !== null && revenueChange >= 0,
     totalPending,
-    activeRentals: getActiveRentals(rentals),
     vehicleRevenueList,
     maxVehicleRevenue: vehicleRevenueList[0]?.amount ?? 1,
-    availableCount,
-    rentedCount,
-    maintenanceCount,
-    rentedVehicles: getVehiclesByStatus(vehicles, "rented"),
-    maintenanceVehicles: getVehiclesByStatus(vehicles, "maintenance"),
+    vehicleStatusCounts,
+    rentedVehicles: realVehicles.filter((vehicle) => vehicle.status === "RENTED"),
+    maintenanceVehicles: realVehicles.filter(
+      (vehicle) => vehicle.status === "MAINTENANCE",
+    ),
     maintenanceCostList,
     expenseTotalForPeriod,
     expensePerVehicleList,
     netProfit: getNetProfit(thisMonthRevenue, expenseTotalForPeriod),
-    endedCount: getEndedRentals(rentals).length,
+    endedCount: apiRentals.filter((rental) => rental.status === "RETURNED").length,
     customerOutstandingList,
     performanceTrend: getBusinessPerformanceTrend(
       payments,
@@ -574,10 +575,6 @@ export default function AnalyticsPage() {
   const [, navigate] = useLocation();
   const [selectedYear, setSelectedYear] = useState(MOCK_YEAR);
   const [selectedMonth, setSelectedMonth] = useState(0);
-  const vehicles = useVehicles();
-  const rentals = useRentals();
-  const customers = useCustomers();
-  const getCustomerById = useCustomerById();
   const maintenanceQuery = useMaintenance(analyticsReportFreshness);
   const maintenance = maintenanceQuery.data?.data ?? [];
   const realVehiclesQuery = useListVehicles(undefined, {
@@ -608,10 +605,6 @@ export default function AnalyticsPage() {
     [realCustomers],
   );
   const analytics = deriveAnalytics(
-    vehicles,
-    rentals,
-    customers,
-    getCustomerById,
     maintenance,
     realVehicles,
     expenses,
@@ -884,11 +877,9 @@ export default function AnalyticsPage() {
                           );
                           return (
                             <button
-                              key={item.vehicleId}
+                              key={vehicle.id}
                               type="button"
-                              onClick={() =>
-                                navigate(`/vehicles/${item.vehicleId}`)
-                              }
+                              onClick={() => navigate(`/vehicles/${vehicle.id}`)}
                               className="w-full text-right"
                             >
                               <div className="flex items-start justify-between gap-3">
@@ -944,9 +935,9 @@ export default function AnalyticsPage() {
                       if (!vehicle) return null;
                       return (
                         <button
-                          key={vehicleId}
+                          key={vehicle.id}
                           type="button"
-                          onClick={() => navigate(`/vehicles/${vehicleId}`)}
+                          onClick={() => navigate(`/vehicles/${vehicle.id}`)}
                           className="flex w-full items-start justify-between gap-3 py-3 text-right transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                         >
                           <VehicleIdentity vehicle={vehicle} />
@@ -1052,35 +1043,17 @@ export default function AnalyticsPage() {
               title="حالة السيارات"
               description="حالة السيارات الحالية والإيجارات المكتملة."
             >
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  [
-                    "available",
-                    analytics.availableCount,
-                    "bg-status-positive-bg text-status-positive",
-                  ],
-                  [
-                    "rented",
-                    analytics.rentedCount,
-                    "bg-status-info-bg text-status-info",
-                  ],
-                  [
-                    "maintenance",
-                    analytics.maintenanceCount,
-                    "bg-status-warning-bg text-status-warning",
-                  ],
-                ].map(([status, count, tone]) => (
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {VEHICLE_STATUS_SUMMARY.map(({ status, tone }) => (
                   <div
                     key={status}
                     className={cn("rounded-lg p-3 text-center", tone)}
                   >
-                    <p className="text-2xl font-bold tabular-nums">{count}</p>
+                    <p className="text-2xl font-bold tabular-nums">
+                      {analytics.vehicleStatusCounts[status]}
+                    </p>
                     <p className="mt-1 text-xs font-semibold">
-                      {
-                        VEHICLE_STATUS_LABELS[
-                          status as keyof typeof VEHICLE_STATUS_LABELS
-                        ]
-                      }
+                      {VEHICLE_STATUS_LABELS[status]}
                     </p>
                   </div>
                 ))}

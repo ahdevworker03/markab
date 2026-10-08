@@ -1,8 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { Router, useLocation } from "wouter";
 import AnalyticsPage from "./AnalyticsPage";
 import { useOrgOutstandingBalances } from "@/features/payments/hooks";
-import { useListCustomers } from "@workspace/api-client-react";
+import { useVehicles } from "@/features/vehicles/hooks";
+import type { Vehicle } from "@/data/types";
+import {
+  useListCustomers,
+  useListVehicles,
+  type ExpenseResponse,
+  type MaintenanceResponse,
+  type VehicleResponse,
+  type VehicleResponseStatus,
+} from "@workspace/api-client-react";
 import { formatCurrency } from "@/lib/format";
 
 vi.mock("@/features/vehicles/hooks", () => ({
@@ -94,6 +104,89 @@ function openSelect(label: string) {
     pointerType: "mouse",
   });
   return trigger;
+}
+
+const vehicleId = "00000000-0000-4000-8000-000000000001";
+
+function makeVehicle(
+  status: VehicleResponseStatus,
+  overrides: Partial<VehicleResponse> = {},
+): VehicleResponse {
+  return {
+    id: vehicleId,
+    make: "Kia",
+    model: "Picanto",
+    plateNumber: "KIA-1",
+    year: 2024,
+    color: "White",
+    transmission: "AUTOMATIC",
+    fuelType: "PETROL",
+    seats: 5,
+    currentMileage: 1_000,
+    status,
+    createdAt: "2025-01-01T00:00:00Z",
+    updatedAt: "2025-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
+function mockApiVehicles(vehicles: VehicleResponse[]) {
+  vi.mocked(useListVehicles).mockReturnValue({
+    data: { data: vehicles },
+    isLoading: false,
+    isError: false,
+    error: null,
+  } as ReturnType<typeof useListVehicles>);
+}
+
+function makeMaintenance(vehicleId: string): MaintenanceResponse {
+  return {
+    id: "maintenance-1",
+    vehicleId,
+    type: "REPAIR",
+    status: "COMPLETED",
+    maintenanceDate: "2025-01-10T00:00:00Z",
+    completedAt: "2025-01-10T00:00:00Z",
+    cost: 150,
+    vendor: null,
+    notes: null,
+    replacedParts: null,
+    createdAt: "2025-01-10T00:00:00Z",
+    updatedAt: "2025-01-10T00:00:00Z",
+  };
+}
+
+function makeExpense(vehicleId: string): ExpenseResponse {
+  return {
+    id: "expense-1",
+    vehicleId,
+    expenseDate: "2026-01-10T00:00:00Z",
+    amount: 75,
+    category: "FUEL",
+    description: null,
+    createdAt: "2025-01-10T00:00:00Z",
+    updatedAt: "2025-01-10T00:00:00Z",
+  };
+}
+
+function makeLegacyVehicle(): Vehicle {
+  return {
+    id: "v2",
+    make: "Kia",
+    model: "Picanto",
+    year: 2021,
+    plate: "LEGACY-2",
+    status: "rented",
+    dailyPrice: 30,
+    mileage: 45_000,
+    photos: [],
+  };
+}
+
+function LocationProbe({ onLocation }: { onLocation: (location: string) => void }) {
+  const [location] = useLocation();
+  onLocation(location);
+  return null;
 }
 
 describe("AnalyticsPage insights", () => {
@@ -232,5 +325,87 @@ describe("AnalyticsPage insights", () => {
     expect(
       screen.queryByText("لا توجد بيانات أداء لهذه السنة"),
     ).not.toBeInTheDocument();
+  });
+
+  it("renders every supported status from the API fleet", () => {
+    mockApiVehicles([
+      makeVehicle("AVAILABLE", { id: "00000000-0000-4000-8000-000000000001" }),
+      makeVehicle("RESERVED", { id: "00000000-0000-4000-8000-000000000002" }),
+      makeVehicle("RENTED", { id: "00000000-0000-4000-8000-000000000003" }),
+      makeVehicle("MAINTENANCE", { id: "00000000-0000-4000-8000-000000000004" }),
+      makeVehicle("OUT_OF_SERVICE", { id: "00000000-0000-4000-8000-000000000005" }),
+      makeVehicle("ARCHIVED", { id: "00000000-0000-4000-8000-000000000006" }),
+    ]);
+
+    render(<AnalyticsPage />);
+
+    const fleetStatus = screen
+      .getByRole("heading", { name: "حالة السيارات" })
+      .closest("section")!;
+
+    ["متاحة", "محجوزة", "مؤجرة", "في الصيانة", "خارج الخدمة", "مؤرشفة"].forEach(
+      (label) =>
+        expect(within(fleetStatus).getAllByText(label).length).toBeGreaterThan(0),
+    );
+  });
+
+  it("navigates fleet rows with the API vehicle UUID rather than a display id", () => {
+    const vehicle = makeVehicle("RENTED");
+    mockApiVehicles([vehicle]);
+    vi.mocked(useVehicles).mockReturnValue([makeLegacyVehicle()]);
+    const locations: string[] = [];
+
+    render(
+      <Router>
+        <AnalyticsPage />
+        <LocationProbe onLocation={(location) => locations.push(location)} />
+      </Router>,
+    );
+
+    const fleetStatus = screen
+      .getByRole("heading", { name: "حالة السيارات" })
+      .closest("section")!;
+    fireEvent.click(within(fleetStatus).getByRole("button", { name: /Kia Picanto/ }));
+
+    expect(locations.at(-1)).toBe(`/vehicles/${vehicle.id}`);
+  });
+
+  it("navigates maintenance and expense rows with their resolved API vehicle UUID", async () => {
+    const { useMaintenance } = await import("@/features/maintenance/hooks");
+    const { useExpenses } = await import("@/features/expenses/hooks");
+    const vehicle = makeVehicle("AVAILABLE");
+    mockApiVehicles([vehicle]);
+    vi.mocked(useMaintenance).mockReturnValue({
+      data: { data: [makeMaintenance(vehicle.id)] },
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof useMaintenance>);
+    vi.mocked(useExpenses).mockReturnValue({
+      data: { data: [makeExpense(vehicle.id)] },
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof useExpenses>);
+    const locations: string[] = [];
+
+    render(
+      <Router>
+        <AnalyticsPage />
+        <LocationProbe onLocation={(location) => locations.push(location)} />
+      </Router>,
+    );
+
+    const maintenanceCosts = screen
+      .getByRole("heading", { name: "أعلى تكاليف الصيانة" })
+      .closest("section")!;
+    fireEvent.click(within(maintenanceCosts).getByRole("button", { name: /Kia Picanto/ }));
+    expect(locations.at(-1)).toBe(`/vehicles/${vehicle.id}`);
+
+    const vehicleExpenses = screen
+      .getByRole("heading", { name: "مصروفات مرتبطة بالسيارات" })
+      .closest("section")!;
+    fireEvent.click(within(vehicleExpenses).getByRole("button", { name: /Kia Picanto/ }));
+    expect(locations.at(-1)).toBe(`/vehicles/${vehicle.id}`);
   });
 });
