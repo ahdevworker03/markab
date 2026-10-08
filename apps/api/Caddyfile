@@ -1,8 +1,7 @@
-{$STAGING_API_HOST} {
-	reverse_proxy api:3000
+staging-api.markab-lb.com {
+	reverse_proxy staging-api:3000
 }
 
-# Activated with the approved production hostname and DNS in a later release step.
-(production_api) {
+api.markab-lb.com {
 	reverse_proxy production-api:3000
 }
