@@ -2,7 +2,7 @@
 
 **Status:** In progress
 
-**Current Step:** Step 65 — Production Deployment, Migrations, and Operations. Step 64 is closed with deferred reconnect statistical verification; production release remains gated by that verification and the other Step 65/66 release criteria.
+**Current Step:** Step 65 — Production Deployment, Migrations, and Operations. Step 64 is **PAUSED / OPEN**: its reconnect P95 gate remains `<= 10,000 ms` and has not passed. Production-readiness infrastructure work may continue, but offline-first is not production-qualified or closed.
 
 ## Milestone Goal
 
@@ -92,18 +92,18 @@ These rules apply milestone-wide and are not repeated inside each step unless a 
 
 ## Dependencies / Step Sequence
 
-| Step | Depends On             | Reason                                                                                                                       |
-| ---- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| 57   | Milestone 5.8 complete | Establishes the release truth, scope, operation matrix, and measurable gates and confirms the approved deployment providers. |
-| 58   | 57                     | Correctness and identity decisions must precede new privileged and offline surfaces.                                         |
-| 59   | 57-58                  | Delivery must preserve the corrected authentication/error behavior.                                                          |
-| 60   | 57-59                  | Bootstrap should reuse verified password-reset delivery for credential activation/recovery.                                  |
-| 61   | 57-60                  | Security and storage controls cover all known public, tenant, platform, email, and upload surfaces.                          |
-| 62   | 57-61                  | Offline contracts depend on settled identity, authorization, security, and operation scope.                                  |
-| 63   | 62                     | The client implements only the approved synchronization contract and conflict semantics.                                     |
-| 64   | 57-63                  | Final measurements must include the completed online and offline data paths.                                                 |
+| Step | Depends On                                      | Reason                                                                                                                                 |
+| ---- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 57   | Milestone 5.8 complete                          | Establishes the release truth, scope, operation matrix, and measurable gates and confirms the approved deployment providers.           |
+| 58   | 57                                              | Correctness and identity decisions must precede new privileged and offline surfaces.                                                   |
+| 59   | 57-58                                           | Delivery must preserve the corrected authentication/error behavior.                                                                    |
+| 60   | 57-59                                           | Bootstrap should reuse verified password-reset delivery for credential activation/recovery.                                            |
+| 61   | 57-60                                           | Security and storage controls cover all known public, tenant, platform, email, and upload surfaces.                                    |
+| 62   | 57-61                                           | Offline contracts depend on settled identity, authorization, security, and operation scope.                                            |
+| 63   | 62                                              | The client implements only the approved synchronization contract and conflict semantics.                                               |
+| 64   | 57-63                                           | Final measurements must include the completed online and offline data paths.                                                           |
 | 65   | 57-63 for staging enablement; 57-64 for release | A minimal isolated staging environment enables final Step 64 evidence; production deployment uses completed capacity/security results. |
-| 66   | 58-65                  | Final E2E, manual, documentation, and release evidence verify the integrated product.                                        |
+| 66   | 58-65                                           | Final E2E, manual, documentation, and release evidence verify the integrated product.                                                  |
 
 Major inputs and enablers: closed Milestone 5.8 with final defect disposition; current product requirements (`docs/product/02-business-requirements.md`, `docs/product/03-user-flows.md`); current architecture/schema contracts; a disposable PostgreSQL test/E2E database and a production-like staging database with representative non-sensitive data; approved staging and production providers (React/Vite frontend on separate Cloudflare Pages projects, Node/Express API stacks on one existing Contabo VPS, separate PostgreSQL containers and Docker resources for each environment, separate Cloudflare R2 private object storage, transactional email, Cloudflare edge, monitoring/logging); controlled test mailboxes, object-storage buckets, DNS/domain access, TLS, and secret-management access; and an approved pilot-capacity profile, performance targets, backup retention, RPO, and RTO.
 
@@ -536,10 +536,21 @@ Measure the completed product against approved pilot targets, fix verified bottl
 ### Current State
 
 - Approved pilot targets, deterministic representative local benchmark data, repeatable API/browser/sync benchmarks, and read-only database query-plan evidence now exist. Local API/DB/resource evidence, sync/search measurements, initial-load and bounded-rendering improvements are recorded in the production baseline.
-- Step 64 is **CLOSED WITH DEFERRED RECONNECT STATISTICAL VERIFICATION**. Initial usable app load, offline IndexedDB search, request fan-out regressions, bounded Rentals/Customers rendering, and the API/database/resource performance slice have verified evidence. Slice 5B Analytics/Reports remains deferred verification pending a complete raw artifact.
-- Real OS-level reconnect diagnostics repeatedly demonstrated automatic reconciliation: push succeeded, authoritative pull completed, the outbox drained to 0, `reconciliation_required` cleared, the provisional Customer was removed, one authoritative Customer remained, duplicates were 0, and sync errors were 0. Successful reconnect samples completed at approximately 9 seconds individually, within the 10-second target.
-- The intended 5-warmup/30-recorded reconnect benchmark was not completed, so no valid reconnect P50/P95/max statistical result exists and the <=10-second reconnect P95 gate is not passed. Repeated benchmark-environment/harness instability included browser/context lifecycle issues, harness observation/instrumentation defects, staging/UI readiness issues, and NetworkManager/Wi-Fi activation issues. The final corrected one-sample validation reconciled successfully; no remaining reconnect product correctness defect was confirmed.
 - Search uses database substring filters and existing indexes may not serve all query shapes; dashboard, reports, analytics, rentals, payment summaries, and media are likely measurement priorities based on current request patterns. No Redis, background workers, server cache, or aggregate reporting API exists, and none is assumed necessary.
+
+### Reconnect Performance Pause Record (2026-10-08)
+
+**Status: PAUSED / OPEN.** Step 64 is not complete. The reconnect/reconciliation gate remains **P95 <= 10,000 ms** and has **not passed**. Offline-first must not be described as production-qualified or closed.
+
+**Validated correctness.** Successful staging cycles prove that an offline customer mutation queues, then automatically reconciles after restoration: push succeeds, the authoritative pull completes, the outbox drains, `reconciliation_required` clears, the provisional record is removed, exactly one authoritative Customer remains locally and server-side, duplicate count is zero, and sync errors are zero. This is substantial reconnect correctness evidence, not complete offline qualification.
+
+**Recorded performance evidence.** The initial full run recorded 29/30 successes with P95 **10,540.42 ms** (fail). A later full run recorded 23/30 successes with P95 **52,493.66 ms** (fail). A QUIC-disabled diagnostic recorded 26/30 successes with P95 **24,639.88 ms** (fail). The latest SPA-navigation validation reconciled successfully but took **32,551.69 ms**. The remaining issue is long-tail reconnect latency, especially the sequential sync-pull chain in some runs. Observed sync-push API processing was roughly tens to low hundreds of milliseconds, so much of the delay is not PostgreSQL/API execution time.
+
+**Completed changes.** Committed production changes include the recovery probe for OS-level restoration without relying only on browser `online`/`focus` events, bounded and order-stabilized organization-scoped sync-pull pagination with supporting indexes, verifier auth-session reuse, and CORS preflight caching (`Access-Control-Max-Age: 600`). The current SPA-navigation change in `apps/web/e2e/staging-reconnect.bench.ts` is an uncommitted benchmark-harness adjustment: it avoids remounting `AuthProvider` through repeated `page.goto()` calls; access tokens are intentionally memory-only, so those navigations exhausted the 30 requests / 15 minutes / IP refresh limiter and caused deterministic late-run `/auth/refresh` 429 responses and customer-form readiness timeouts.
+
+**Harness findings.** Some failures were benchmark artifacts, not proven offline data-integrity failures. During certain blocks, cached/service-worker web-shell requests could succeed while API/network probes failed, making the original requirement that all four probes fail too strict. The generated API client already has single-flight refresh handling; do not add another refresh mutex or weaken the auth limiter based on this evidence.
+
+**Decision.** Pause further Step 64 performance investigation. Do not close the step or weaken/remove the <=10-second P95 requirement. Continue production-readiness work toward controlled real-customer testing: staging and production backend/API/database setup, migrations, backup/restore verification, TLS/domain, R2/email, monitoring/logging, smoke testing, and controlled-pilot preparation. Initial customer pilots are online-first; offline operation must not yet be promised as production-qualified. Return to Step 64 after initial customer validation, or earlier if real customer use makes offline reliability/performance operationally important.
 
 ### Scope
 
@@ -649,7 +660,7 @@ After this migration succeeds, normal rollback to the old API is unsafe because 
 ### Dependencies
 
 - **Staging enablement:** Steps 57 through 63; operator access; an isolated staging database; controlled staging secrets/domains; and only the minimum deployed web/API path needed for non-destructive Step 64 evidence. It may provision a disposable tenant, representative non-sensitive data, authenticated browser access, and a real network interruption/restoration method. It must not be used for production release, migration-cutover, backup/restore, or full release rehearsal claims.
-- **Step 65 staging/operational work:** May continue after Step 64 closes with the deferred reconnect statistical verification explicitly tracked. Production deployment, full staging release rehearsal, migration-cutover rehearsal, backups, rollback, production smoke, and the production release decision remain gated by the deferred verification and all remaining Step 65/66 criteria.
+- **Step 65 staging/operational work:** May continue while Step 64 is paused/open. Infrastructure, migrations, backups/restore, TLS/domain, R2/email, monitoring/logging, smoke testing, production deployment, and controlled online-first pilot operation are not blocked by the reconnect P95 gate. Offline-first production qualification, broader production release approval, and Milestone 6 completion remain gated by the reconnect P95 requirement and the remaining Step 65/66 criteria.
 
 ---
 
@@ -756,6 +767,6 @@ Milestone 6 is complete only when all of the following are true:
 
 **Status:** In progress
 
-**Current Step:** Step 65 — Production Deployment, Migrations, and Operations. Step 64 is closed with deferred reconnect statistical verification; production release remains gated by that verification and the other Step 65/66 release criteria.
+**Current Step:** Step 65 — Production Deployment, Migrations, and Operations. Step 64 is **PAUSED / OPEN**: its reconnect P95 gate remains `<= 10,000 ms` and has not passed. Production-readiness infrastructure work may continue, but offline-first is not production-qualified or closed.
 
 **Entry Gate:** Complete Milestone 5.8 Step 56 and final human product QA before Step 57 begins.
