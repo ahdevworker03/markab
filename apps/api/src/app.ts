@@ -50,6 +50,7 @@ app.use(
     origin: env.CORS_ORIGINS,
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
+    maxAge: 600,
   }),
 );
 app.use(cookieParser());

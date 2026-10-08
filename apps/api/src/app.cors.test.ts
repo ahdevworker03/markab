@@ -24,6 +24,7 @@ describe("CORS", () => {
         "Authorization",
       );
       expect(response.headers["access-control-allow-credentials"]).toBe("true");
+      expect(response.headers["access-control-max-age"]).toBe("600");
     },
   );
 
