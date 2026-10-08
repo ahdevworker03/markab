@@ -83,6 +83,8 @@ The initial backend/database capacity target is approximately 4 vCPU, 8 GB RAM, 
 
 The frontend is independently deployable from the API and must not be hosted from the production VPS unless a future measurable requirement justifies changing that decision.
 
+The approved production origins are `https://markab-lb.com` for the frontend and `https://api.markab-lb.com` for the API. Staging retains `https://staging.markab-lb.com` and `https://staging-api.markab-lb.com`. This is a topology and hostname decision only; it does not establish DNS, TLS, Cloudflare, or a production deployment.
+
 For the initial pilot, staging and production intentionally share one existing Contabo VPS to minimize cost. They share only the physical host: separate Compose project names, API containers, PostgreSQL containers, Docker networks, Docker volumes, environment files, database credentials, JWT/refresh secrets, R2 credentials/buckets, frontend/API origins, Pages projects, and Resend configuration are required. Both PostgreSQL containers remain private/internal with no public host port. PostgreSQL remains the authoritative system of record.
 
 This creates one accepted failure domain: host failure, disk exhaustion, Docker daemon failure, or severe host resource pressure can affect both environments. Production moves to a dedicated VPS when measured load, reliability requirements, customer scale, or revenue justify it.
