@@ -113,9 +113,15 @@ jobs:
             -e PASSWORD_RESET_FRONTEND_ORIGIN=https://ci.markab.invalid \
             -e PASSWORD_RESET_FRONTEND_PATH=/password-reset "$IMAGE_REF"
 
-          until curl --fail --silent --show-error http://127.0.0.1:3000/api/healthz >/dev/null; do
-            sleep 2
-          done
+           until curl --fail --silent --show-error http://127.0.0.1:3000/api/healthz >/dev/null; do
+             sleep 2
+           done
+
+           curl --fail --silent --show-error --max-time 15 http://127.0.0.1:3000/api/readyz >/dev/null
+           docker stop -t 15 "$database"
+           ! curl --fail --silent --show-error --max-time 15 http://127.0.0.1:3000/api/readyz >/dev/null
+           docker stop -t 15 "$api"
+           test "$(docker inspect --format '{{.State.ExitCode}}' "$api")" = 0
 
           image_size="$(docker image inspect --format '{{.Size}}' "$IMAGE_REF")"
           memory_usage="$(docker stats --no-stream --format '{{.MemUsage}}' "$api")"

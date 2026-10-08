@@ -138,6 +138,26 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
+  /readyz:
+    get:
+      operationId: readinessCheck
+      tags: [health]
+      summary: Readiness check
+      description: Returns readiness based on database connectivity and initialized storage configuration
+      responses:
+        "200":
+          description: Ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadinessStatus"
+        "503":
+          description: Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadinessStatus"
+
   /auth/login:
     post:
       operationId: login
@@ -4386,6 +4406,15 @@ components:
       properties:
         status:
           type: string
+      required:
+        - status
+
+    ReadinessStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, unavailable]
       required:
         - status
 

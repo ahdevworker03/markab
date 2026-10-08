@@ -602,7 +602,7 @@ Create reproducible staging/production deployment and operating procedures for t
 
 - Vite can build static frontend assets and the API has a multi-stage non-root Dockerfile; the final runtime image currently copies only `dist` and `package.json` and must be proven and corrected.
 - Development Compose provides PostgreSQL but omits auth/email/storage production configuration, migration execution, durable object storage, and an API health check.
-- `GET /api/healthz` returns process status only; startup does not verify critical dependency readiness and shutdown does not drain/disconnect.
+- `GET /api/healthz` is dependency-free liveness. `GET /api/readyz` checks PostgreSQL connectivity and initialized storage configuration without probing Resend or mutating storage; `SIGTERM`/`SIGINT` drain the listener, disconnect Prisma, and use a bounded forced-exit fallback.
 - Prisma migrations are version controlled and `db:migrate:deploy` exists in `lib/db`, but there is no production release orchestration. The Task recurrence migration removes the legacy recurrence column and is incompatible with overlapping old/new API versions.
 
 ### Scope

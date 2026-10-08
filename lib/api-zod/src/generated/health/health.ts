@@ -14,3 +14,11 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * Returns readiness based on database connectivity and initialized storage configuration
+ * @summary Readiness check
+ */
+export const ReadinessCheckResponse = zod.object({
+  status: zod.enum(["ok", "unavailable"]),
+});
