@@ -47,7 +47,7 @@ export default function VehiclesPage() {
     [filter, vehicles],
   );
 
-  const countLabel = `${filteredVehicles.length} ${filteredVehicles.length === 1 ? "سيارة" : "سيارات"}`;
+  const countLabel = `${filteredVehicles.length} سيارة`;
 
   return (
     <div className="min-h-full">
