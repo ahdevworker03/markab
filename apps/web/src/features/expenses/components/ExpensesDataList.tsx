@@ -17,7 +17,15 @@ interface ExpensesDataListProps {
   onOpen: (expenseId: string) => void;
 }
 
-function VehicleValue({ item, compact = false }: { item: ExpenseListItem; compact?: boolean }) {
+function VehicleValue({
+  item,
+  compact = false,
+  tableCell = false,
+}: {
+  item: ExpenseListItem;
+  compact?: boolean;
+  tableCell?: boolean;
+}) {
   if (!item.expense.vehicleId) return <span className="text-sm text-muted-foreground">مصروف عام</span>;
 
   if (compact) {
@@ -26,6 +34,30 @@ function VehicleValue({ item, compact = false }: { item: ExpenseListItem; compac
         <span dir="ltr" className="block break-words text-sm font-semibold leading-5 text-foreground">{item.vehicleName || "—"}</span>
         <span dir="ltr" className="number-ltr mt-0.5 block text-xs text-muted-foreground">{item.vehiclePlate || "—"}</span>
       </span>
+    );
+  }
+
+  if (tableCell) {
+    return (
+      <div dir="rtl" className="flex min-w-0 items-center gap-2.5">
+        <span className="min-w-0 flex-1 text-end">
+          <span
+            dir="ltr"
+            className="block truncate text-end text-sm font-semibold text-foreground"
+          >
+            {item.vehicleName || "—"}
+          </span>
+          <span
+            dir="ltr"
+            className="number-ltr mt-0.5 block text-end text-xs text-muted-foreground"
+          >
+            {item.vehiclePlate || "—"}
+          </span>
+        </span>
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Car className="size-4" aria-hidden="true" />
+        </span>
+      </div>
     );
   }
 
@@ -72,7 +104,7 @@ export function ExpensesDataList({ items, onOpen }: ExpensesDataListProps) {
               <TableRow key={item.expense.id}>
                 <TableCell><DateValue expense={item.expense} /></TableCell>
                 <TableCell><ExpenseCategoryBadge category={item.expense.category} /></TableCell>
-                <TableCell><VehicleValue item={item} /></TableCell>
+                <TableCell><VehicleValue item={item} tableCell /></TableCell>
                 <TableCell><DescriptionValue expense={item.expense} /></TableCell>
                 <TableCell className="text-end"><AmountValue expense={item.expense} /></TableCell>
                 <TableCell className="text-end"><Button type="button" variant="outline" size="sm" onClick={(event) => { event.stopPropagation(); onOpen(item.expense.id); }}>عرض التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button></TableCell>
