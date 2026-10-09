@@ -47,7 +47,7 @@ export function VehicleFormFields({ form, errors, onChange }: VehicleFormFieldsP
           <input id="vehicle-model" dir="ltr" className={fieldClass(errors.model)} placeholder="Corolla" value={form.model} onChange={(event) => onChange("model", event.target.value)} />
         </FormField>
         <FormField label="رقم اللوحة" required error={errors.plate_number} htmlFor="vehicle-plate">
-          <input id="vehicle-plate" dir="ltr" className={fieldClass(errors.plate_number)} placeholder="TEST-8237" value={form.plate_number} onChange={(event) => onChange("plate_number", event.target.value)} />
+          <input id="vehicle-plate" dir="ltr" className={fieldClass(errors.plate_number)} placeholder="A 123456" value={form.plate_number} onChange={(event) => onChange("plate_number", event.target.value)} />
         </FormField>
         <FormField label="سنة الصنع" required error={errors.year} htmlFor="vehicle-year">
           <input id="vehicle-year" dir="ltr" inputMode="numeric" className={fieldClass(errors.year)} placeholder="2022" value={form.year} onChange={(event) => onChange("year", event.target.value)} />

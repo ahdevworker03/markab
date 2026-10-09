@@ -40,6 +40,10 @@ describe("AddVehiclePage", () => {
   it("submits optional notes without legacy identifier fields", async () => {
     render(<AddVehiclePage />);
 
+    expect(screen.getByLabelText(/رقم اللوحة/)).toHaveAttribute(
+      "placeholder",
+      "A 123456",
+    );
     expect(screen.queryByText("معرّفات إضافية")).toBeNull();
     expect(screen.queryByLabelText(/VIN/)).toBeNull();
     expect(screen.queryByLabelText(/رقم المحرك/)).toBeNull();
