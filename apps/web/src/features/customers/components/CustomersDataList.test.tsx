@@ -83,7 +83,7 @@ describe("CustomersDataList", () => {
     );
     const mobileLocation = within(mobileCard).getByText(longCustomer.address);
     expect(mobileLocation).toHaveAttribute("dir", "auto");
-    expect(mobileLocation).toHaveClass("min-w-0", "break-words", "text-end");
+    expect(mobileLocation).toHaveClass("min-w-0", "break-words", "text-start");
   });
 
   it("preserves desktop customer table widths and actions", () => {
