@@ -10,16 +10,27 @@ interface VehiclesDataListProps {
   onOpen: (vehicleId: string) => void;
 }
 
-function VehicleIdentity({ vehicle }: { vehicle: VehicleResponse }) {
+function VehicleIdentity({
+  vehicle,
+  showIcon = true,
+}: {
+  vehicle: VehicleResponse;
+  showIcon?: boolean;
+}) {
   return (
-    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_2.25rem] items-center gap-3 xl:min-w-[17rem]" dir="rtl">
+    <div
+      className={`grid min-w-0 items-center gap-3 ${showIcon ? "grid-cols-[minmax(0,1fr)_2.25rem]" : "grid-cols-1"} xl:min-w-[17rem]`}
+      dir="rtl"
+    >
       <span className="min-w-0 text-right">
         <span dir="auto" className="block truncate text-sm font-semibold text-foreground">{vehicle.make} {vehicle.model}</span>
         <span dir="ltr" className="number-ltr mt-0.5 block truncate text-right text-xs text-muted-foreground">{vehicle.plateNumber}</span>
       </span>
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-        <Car className="size-4" aria-hidden="true" />
-      </span>
+      {showIcon && (
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Car className="size-4" aria-hidden="true" />
+        </span>
+      )}
     </div>
   );
 }
@@ -99,7 +110,7 @@ export function VehiclesDataList({ vehicles, onOpen }: VehiclesDataListProps) {
         {vehicles.map((vehicle) => (
           <article key={vehicle.id} className="space-y-4 px-4 py-4">
             <div className="flex items-start justify-between gap-3">
-              <VehicleIdentity vehicle={vehicle} />
+              <VehicleIdentity vehicle={vehicle} showIcon={false} />
               <StatusBadge status={vehicle.status} />
             </div>
             <div className="grid grid-cols-2 gap-3 rounded-lg bg-muted/45 p-3">

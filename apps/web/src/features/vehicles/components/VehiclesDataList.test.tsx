@@ -34,6 +34,26 @@ describe("VehiclesDataList", () => {
     expect(onOpen).toHaveBeenCalledWith("vehicle-1");
   });
 
+  it("omits the decorative car icon only from the mobile identity card", () => {
+    const { container } = render(
+      <VehiclesDataList vehicles={[vehicle]} onOpen={vi.fn()} />,
+    );
+
+    const mobileList = container.querySelector('[class~="md:hidden"]');
+    const tabletList = container.querySelector('[class~="md:block"]');
+    const desktopTable = container.querySelector('[class~="xl:block"]');
+
+    expect(mobileList?.querySelector("svg.lucide-car")).not.toBeInTheDocument();
+    expect(tabletList?.querySelector("svg.lucide-car")).toBeInTheDocument();
+    expect(desktopTable?.querySelector("svg.lucide-car")).toBeInTheDocument();
+    expect(mobileList).toHaveTextContent("Toyota Yaris");
+    expect(mobileList).toHaveTextContent("TEST-8237");
+    expect(mobileList).toHaveTextContent("متاحة");
+    expect(mobileList).toHaveTextContent("50,000 كم");
+    expect(mobileList).toHaveTextContent("أوتوماتيك · 5 مقاعد");
+    expect(mobileList).toHaveTextContent("التفاصيل");
+  });
+
   it("keeps short and long mixed-language identities in the same right-aligned text stack", () => {
     const longVehicle = {
       ...vehicle,
