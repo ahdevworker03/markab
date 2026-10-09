@@ -352,7 +352,7 @@ export function RentalsDataList({ items, onOpen }: RentalsDataListProps) {
 
       <div className="divide-y divide-border md:hidden">
         {items.map((item) => (
-          <article key={item.rental.id} className="space-y-4 px-4 py-4">
+          <article key={item.rental.id} className="space-y-3 px-4 py-4">
             <div
               dir="rtl"
               className="grid min-w-0 grid-cols-2 gap-x-3 gap-y-3"
@@ -364,7 +364,7 @@ export function RentalsDataList({ items, onOpen }: RentalsDataListProps) {
                   </div>
                   <RentalStatusCluster rental={item.rental} />
                 </div>
-                <div className="mt-1.5 flex min-w-0 flex-col items-start">
+                <div className="mt-1 flex min-w-0 flex-col items-start">
                   <div
                     dir="auto"
                     className="max-w-full break-words text-sm font-semibold text-foreground"
@@ -382,7 +382,7 @@ export function RentalsDataList({ items, onOpen }: RentalsDataListProps) {
                 </div>
               </div>
               <div className="min-w-0">
-                <div className="mb-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <div className="mb-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Car className="size-3.5" aria-hidden="true" /> السيارة
                 </div>
                 <div className="flex min-w-0 flex-col items-start">
@@ -401,7 +401,7 @@ export function RentalsDataList({ items, onOpen }: RentalsDataListProps) {
                 </div>
               </div>
             </div>
-            <div className="rounded-lg bg-muted/45 p-3">
+            <div className="rounded-lg bg-muted/45 px-3 py-2">
               <DatePair rental={item.rental} />
             </div>
             <div className="flex items-start justify-between gap-3 border-t border-border pt-3">
