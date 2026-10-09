@@ -1,4 +1,5 @@
 import path from 'path';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
@@ -20,7 +21,12 @@ function buildServiceWorker() {
         .filter((output) => output.type === 'chunk' || output.fileName.endsWith('.css'))
         .map((output) => output.fileName)
         .sort();
+      const buildId = createHash('sha256')
+        .update(precacheUrls.join('\n'))
+        .digest('hex')
+        .slice(0, 12);
       const source = readFileSync(path.resolve(import.meta.dirname, 'public', 'sw.js'), 'utf8')
+        .replace('__BUILD_ID__', buildId)
         .replace('__PRECACHE_MANIFEST__', JSON.stringify(precacheUrls));
 
       bundle['sw.js'] = { type: 'asset', fileName: 'sw.js', source };
