@@ -155,7 +155,9 @@ describe("RentalsDataList", () => {
     const mobileGrids = mobileList?.querySelectorAll(".grid-cols-2");
     const identityGrid = mobileGrids?.[0];
     const dateGrid = mobileGrids?.[1];
+    const mobileCard = mobileList?.querySelector("article");
 
+    expect(mobileCard).toHaveClass("space-y-2");
     expect(identityGrid).toHaveClass("grid-cols-2");
     expect(identityGrid?.children).toHaveLength(2);
     expect(identityGrid?.children[0]).toContainElement(customerLabel);
@@ -180,6 +182,7 @@ describe("RentalsDataList", () => {
       "sm:gap-3",
     );
     expect(dateGrid?.children).toHaveLength(2);
+    expect(dateGrid?.parentElement).toHaveClass("rounded-lg", "px-3", "py-1");
     expect(mobile.getByText("01/08/2026")).toHaveAttribute("dir", "ltr");
     expect(mobile.getByText("05/08/2026")).toHaveAttribute("dir", "ltr");
   });

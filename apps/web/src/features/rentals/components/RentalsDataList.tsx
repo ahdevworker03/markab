@@ -352,7 +352,7 @@ export function RentalsDataList({ items, onOpen }: RentalsDataListProps) {
 
       <div className="divide-y divide-border md:hidden">
         {items.map((item) => (
-          <article key={item.rental.id} className="space-y-3 px-4 py-4">
+          <article key={item.rental.id} className="space-y-2 px-4 py-4">
             <div
               dir="rtl"
               className="grid min-w-0 grid-cols-2 gap-x-3 gap-y-3"
@@ -401,7 +401,7 @@ export function RentalsDataList({ items, onOpen }: RentalsDataListProps) {
                 </div>
               </div>
             </div>
-            <div className="rounded-lg bg-muted/45 px-3 py-2">
+            <div className="rounded-lg bg-muted/45 px-3 py-1">
               <DatePair rental={item.rental} />
             </div>
             <div className="flex items-start justify-between gap-3 border-t border-border pt-3">
