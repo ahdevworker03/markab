@@ -113,9 +113,9 @@ export function VehiclesDataList({ vehicles, onOpen }: VehiclesDataListProps) {
               <VehicleIdentity vehicle={vehicle} showIcon={false} />
               <StatusBadge status={vehicle.status} />
             </div>
-            <div className="grid grid-cols-2 gap-3 rounded-lg bg-muted/45 p-3">
+            <div className="grid grid-cols-2 items-start gap-3 rounded-lg bg-muted/45 p-3">
               <div><div className="ui-label">السنة</div><div className="mt-1"><VehicleYear value={vehicle.year} /></div></div>
-              <div><div className="ui-label">العداد</div><div className="mt-1"><Mileage value={vehicle.currentMileage} /></div></div>
+              <div className="self-start"><div className="ui-label">العداد</div><div className="mt-1"><Mileage value={vehicle.currentMileage} /></div></div>
             </div>
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Gauge className="size-3.5" aria-hidden="true" />{vehicle.transmission === "AUTOMATIC" ? "أوتوماتيك" : "يدوي"} · {vehicle.seats} مقاعد</div>

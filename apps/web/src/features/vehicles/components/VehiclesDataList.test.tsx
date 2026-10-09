@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { VehicleResponse } from "@workspace/api-client-react";
 import { VehiclesDataList } from "./VehiclesDataList";
@@ -52,6 +52,11 @@ describe("VehiclesDataList", () => {
     expect(mobileList).toHaveTextContent("50,000 كم");
     expect(mobileList).toHaveTextContent("أوتوماتيك · 5 مقاعد");
     expect(mobileList).toHaveTextContent("التفاصيل");
+    const metadataPanel = mobileList?.querySelector("article > .grid.grid-cols-2");
+    expect(metadataPanel).toHaveClass("items-start");
+    expect(within(metadataPanel as HTMLElement).getByText("العداد").parentElement).toHaveClass(
+      "self-start",
+    );
     expect(mobileList?.querySelector("article > div:last-child")).toHaveClass(
       "items-start",
     );

@@ -79,6 +79,7 @@ describe("CustomersDataList", () => {
     expect(mobilePhone).toHaveClass("number-ltr", "text-right");
     expect(within(mobileCard).getByText("الموقع").parentElement).toHaveClass(
       "min-w-0",
+      "self-start",
     );
     const mobileLocation = within(mobileCard).getByText(longCustomer.address);
     expect(mobileLocation).toHaveAttribute("dir", "auto");

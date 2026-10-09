@@ -167,7 +167,7 @@ export function CustomersDataList({
                   <PhoneValue value={customer.phone} />
                 </div>
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 self-start">
                 <div className="ui-label">الموقع</div>
                 <div className="mt-1">
                   <LocationValue value={customer.address} />
