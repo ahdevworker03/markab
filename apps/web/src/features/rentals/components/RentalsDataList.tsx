@@ -353,7 +353,10 @@ export function RentalsDataList({ items, onOpen }: RentalsDataListProps) {
       <div className="divide-y divide-border md:hidden">
         {items.map((item) => (
           <article key={item.rental.id} className="space-y-4 px-4 py-4">
-            <div dir="rtl" className="min-w-0 space-y-3">
+            <div
+              dir="rtl"
+              className="grid min-w-0 grid-cols-2 gap-x-3 gap-y-3"
+            >
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">

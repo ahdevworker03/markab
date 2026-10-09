@@ -151,7 +151,15 @@ describe("RentalsDataList", () => {
     const vehicleName = mobile.getByText(longItem.vehicleName);
     const vehiclePlate = mobile.getByText(longItem.vehiclePlate);
     const customerLabel = mobile.getByText("العميل");
+    const vehicleLabel = mobile.getByText("السيارة");
+    const mobileGrids = mobileList?.querySelectorAll(".grid-cols-2");
+    const identityGrid = mobileGrids?.[0];
+    const dateGrid = mobileGrids?.[1];
 
+    expect(identityGrid).toHaveClass("grid-cols-2");
+    expect(identityGrid?.children).toHaveLength(2);
+    expect(identityGrid?.children[0]).toContainElement(customerLabel);
+    expect(identityGrid?.children[1]).toContainElement(vehicleLabel);
     expect(customerName).toHaveAttribute("dir", "auto");
     expect(customerPhone).toHaveAttribute("dir", "ltr");
     expect(customerPhone.parentElement).toBe(customerName.parentElement);
@@ -162,7 +170,15 @@ describe("RentalsDataList", () => {
       "محجوز",
     );
 
-    const dateGrid = mobileList?.querySelector(".grid-cols-2");
+    expect(dateGrid).toHaveClass(
+      "grid",
+      "min-w-0",
+      "grid-cols-2",
+      "gap-x-3",
+      "gap-y-2",
+      "text-xs",
+      "sm:gap-3",
+    );
     expect(dateGrid?.children).toHaveLength(2);
     expect(mobile.getByText("01/08/2026")).toHaveAttribute("dir", "ltr");
     expect(mobile.getByText("05/08/2026")).toHaveAttribute("dir", "ltr");
