@@ -191,29 +191,59 @@ describe("PaymentSection", () => {
     expect(dateField?.querySelector("dd")).toHaveTextContent(
       formatDateTime("2026-08-15T12:00:00Z"),
     );
-    expect(dateField).toHaveClass("sm:col-start-1");
+    expect(dateField).toHaveClass(
+      "flex",
+      "min-w-0",
+      "items-baseline",
+      "justify-between",
+      "gap-3",
+      "sm:block",
+      "sm:col-start-1",
+    );
     expect(dateField?.querySelector("dd")).toHaveClass(
-      "mt-0.5",
-      "sm:mt-1",
+      "m-0",
+      "min-w-0",
       "number-ltr",
       "text-end",
+      "sm:mt-1",
     );
     expect(methodField?.querySelector("dt")).toHaveTextContent("الطريقة");
     expect(methodField?.querySelector("dd")).toHaveTextContent("تحويل بنكي");
     expect(methodField?.querySelector("dd")).toHaveClass(
-      "mt-0.5",
+      "m-0",
+      "min-w-0",
+      "break-words",
       "sm:mt-1",
     );
-    expect(methodField).toHaveClass("sm:col-start-2", "min-w-0");
+    expect(methodField).toHaveClass(
+      "flex",
+      "min-w-0",
+      "items-baseline",
+      "justify-between",
+      "gap-3",
+      "sm:block",
+      "sm:col-start-2",
+    );
     expect(amountField?.querySelector("dt")).toHaveTextContent("المبلغ");
     expect(amountField?.querySelector("dd")).toHaveTextContent("USD 50");
     expect(amountField?.querySelector("dd")).toHaveClass(
-      "mt-0.5",
-      "sm:mt-1",
+      "m-0",
+      "min-w-0",
       "number-ltr",
       "whitespace-nowrap",
+      "sm:mt-1",
     );
-    expect(amountField).toHaveClass("sm:col-start-3", "sm:justify-self-end");
+    expect(amountField).toHaveClass(
+      "flex",
+      "min-w-0",
+      "items-baseline",
+      "justify-between",
+      "gap-3",
+      "text-end",
+      "sm:block",
+      "sm:col-start-3",
+      "sm:justify-self-end",
+    );
   });
 
   it("records a payment and shows a success message", async () => {
