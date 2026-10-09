@@ -44,7 +44,7 @@ export async function storeWithMetadata<T>(
       await provider.delete(storageKey);
     } catch (cleanupError) {
       logger.error(
-        { err: cleanupError, storageKey },
+        { err: cleanupError, event: "storage.cleanup_failed", storageKey },
         "Failed to clean up stored object after metadata persistence failure",
       );
     }

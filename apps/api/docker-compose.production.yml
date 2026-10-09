@@ -9,6 +9,7 @@ services:
       PORT: "3000"
       NODE_ENV: production
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      RELEASE_ID: ${RELEASE_ID:?RELEASE_ID is required}
       CORS_ORIGINS: ${CORS_ORIGINS:?CORS_ORIGINS is required}
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
@@ -85,6 +86,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
       RESTORE_ENVIRONMENT: production
+      RELEASE_ID: ${RELEASE_ID:?RELEASE_ID is required}
       RESTORE_DATABASE: ${RESTORE_DATABASE:-}
       RESTORE_DATABASE_URL: ${RESTORE_DATABASE_URL:-}
       RESTORE_ADMIN_DATABASE_URL: ${RESTORE_ADMIN_DATABASE_URL:-}

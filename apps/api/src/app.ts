@@ -1,4 +1,5 @@
 import express, { type Express } from "express";
+import { randomUUID } from "node:crypto";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
@@ -7,6 +8,8 @@ import { notFoundHandler, errorHandler } from "./middleware";
 import { env, logger } from "./config";
 
 const app: Express = express();
+const REQUEST_ID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 // Production is deployed directly behind one Caddy reverse proxy.
 app.set("trust proxy", env.NODE_ENV === "production" ? 1 : false);
@@ -29,6 +32,15 @@ app.use((_req, res, next) => {
 app.use(
   pinoHttp({
     logger,
+    genReqId(req, res) {
+      const requestId = req.headers["x-request-id"];
+      const id =
+        typeof requestId === "string" && REQUEST_ID_PATTERN.test(requestId)
+          ? requestId
+          : randomUUID();
+      res.setHeader("X-Request-Id", id);
+      return id;
+    },
     serializers: {
       req(req) {
         return {

@@ -85,7 +85,11 @@ describe("storage error boundary", () => {
     ).rejects.toBe(failure);
 
     expect(log).toHaveBeenCalledWith(
-      { err: cleanupFailure, storageKey: "org/document.pdf" },
+      {
+        err: cleanupFailure,
+        event: "storage.cleanup_failed",
+        storageKey: "org/document.pdf",
+      },
       "Failed to clean up stored object after metadata persistence failure",
     );
   });

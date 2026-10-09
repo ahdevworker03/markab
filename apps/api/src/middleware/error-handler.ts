@@ -16,7 +16,7 @@ export function notFoundHandler(
 
 export function errorHandler(
   err: ParserError,
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction,
 ): void {
@@ -31,16 +31,38 @@ export function errorHandler(
   }
 
   if (err.type === "entity.parse.failed") {
-    res.status(400).json({ error: { code: "MALFORMED_JSON", message: "Malformed JSON request body." } });
+    res.status(400).json({
+      error: {
+        code: "MALFORMED_JSON",
+        message: "Malformed JSON request body.",
+      },
+    });
     return;
   }
 
   if (err.type === "entity.too.large") {
-    res.status(413).json({ error: { code: "PAYLOAD_TOO_LARGE", message: "Request body is too large." } });
+    res.status(413).json({
+      error: {
+        code: "PAYLOAD_TOO_LARGE",
+        message: "Request body is too large.",
+      },
+    });
     return;
   }
 
-  logger.error({ err }, "Unhandled error");
+  (req.log ?? logger).error(
+    {
+      err,
+      event:
+        typeof res.locals?.unexpectedErrorEvent === "string"
+          ? res.locals.unexpectedErrorEvent
+          : "api.unexpected_error",
+      requestId: req.id,
+      method: req.method,
+      path: req.path,
+    },
+    "Unhandled error",
+  );
 
   const isProduction = process.env["NODE_ENV"] === "production";
 

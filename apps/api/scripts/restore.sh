@@ -1,6 +1,20 @@
 #!/bin/sh
 set -eu
 
+environment="unknown"
+release="unreleased"
+dump=""
+
+cleanup() {
+  status=$?
+  [ -z "$dump" ] || rm -f "$dump"
+  if [ "$status" -ne 0 ]; then
+    printf 'event=restore.failed environment=%s release=%s status=%s\n' "$environment" "$release" "$status" >&2
+  fi
+}
+
+trap cleanup EXIT INT TERM
+
 fail() {
   printf '%s\n' "$1" >&2
   exit 64
@@ -12,7 +26,7 @@ require() {
 }
 
 case "${RESTORE_ENVIRONMENT:-}" in
-  staging|production) ;;
+  staging|production) environment="$RESTORE_ENVIRONMENT" ;;
   *) fail "RESTORE_ENVIRONMENT must be staging or production." ;;
 esac
 
@@ -58,13 +72,11 @@ fi
 psql_bin="${PSQL_BIN:-psql}"
 pg_restore_bin="${PG_RESTORE_BIN:-pg_restore}"
 aws_bin="${AWS_BIN:-aws}"
+release="${RELEASE_ID:-unreleased}"
+case "$release" in
+  *[!A-Za-z0-9._-]*) release="unreleased" ;;
+esac
 dump="$(mktemp /tmp/markab-restore.XXXXXX)"
-
-cleanup() {
-  rm -f "$dump"
-}
-
-trap cleanup EXIT INT TERM
 
 if [ -z "$source_file" ]; then
   run_aws() {
@@ -98,4 +110,4 @@ DATABASE_URL="$RESTORE_DATABASE_URL" "$prisma" migrate diff \
   --to-schema=prisma/schema.prisma \
   --exit-code
 
-printf 'restore verified: %s\n' "$RESTORE_DATABASE"
+printf 'event=restore.succeeded environment=%s release=%s database=%s\n' "$environment" "$release" "$RESTORE_DATABASE"

@@ -1,6 +1,20 @@
 #!/bin/sh
 set -eu
 
+environment="unknown"
+release="unreleased"
+dump=""
+
+cleanup() {
+  status=$?
+  [ -z "$dump" ] || rm -f "$dump"
+  if [ "$status" -ne 0 ]; then
+    printf 'event=backup.failed environment=%s release=%s status=%s\n' "$environment" "$release" "$status" >&2
+  fi
+}
+
+trap cleanup EXIT INT TERM
+
 fail() {
   printf '%s\n' "$1" >&2
   exit 64
@@ -12,7 +26,7 @@ require() {
 }
 
 case "${BACKUP_ENVIRONMENT:-}" in
-  staging|production) ;;
+  staging|production) environment="$BACKUP_ENVIRONMENT" ;;
   *) fail "BACKUP_ENVIRONMENT must be staging or production." ;;
 esac
 
@@ -53,12 +67,6 @@ dump="$(mktemp /tmp/markab-backup.XXXXXX)"
 pg_dump_bin="${PG_DUMP_BIN:-pg_dump}"
 aws_bin="${AWS_BIN:-aws}"
 
-cleanup() {
-  rm -f "$dump"
-}
-
-trap cleanup EXIT INT TERM
-
 run_aws() {
   AWS_ACCESS_KEY_ID="$BACKUP_R2_ACCESS_KEY_ID" \
   AWS_SECRET_ACCESS_KEY="$BACKUP_R2_SECRET_ACCESS_KEY" \
@@ -79,4 +87,4 @@ run_aws s3 cp --no-progress "$dump" "s3://$BACKUP_R2_BUCKET/$key" \
 run_aws s3api head-object --bucket "$BACKUP_R2_BUCKET" --key "$key" \
   --endpoint-url "$BACKUP_R2_ENDPOINT" >/dev/null
 
-printf 'backup uploaded: s3://%s/%s\n' "$BACKUP_R2_BUCKET" "$key"
+printf 'event=backup.succeeded environment=%s release=%s key=%s\n' "$environment" "$release" "$key"

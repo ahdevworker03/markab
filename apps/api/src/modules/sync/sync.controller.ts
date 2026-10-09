@@ -11,6 +11,7 @@ async function push(
   try {
     res.json(await pushOperations(req.user!.org, req.body as SyncPushInput));
   } catch (error) {
+    res.locals.unexpectedErrorEvent = "sync.push_failed";
     next(error);
   }
 }
@@ -28,6 +29,7 @@ async function pull(
       ),
     );
   } catch (error) {
+    res.locals.unexpectedErrorEvent = "sync.pull_failed";
     next(error);
   }
 }

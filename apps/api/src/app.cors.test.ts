@@ -60,4 +60,20 @@ describe("CORS", () => {
     expect(response.headers["x-powered-by"]).toBeUndefined();
     expect(response.headers["access-control-allow-origin"]).toBeUndefined();
   });
+
+  it("returns a validated request ID and replaces an invalid client value", async () => {
+    const acceptedRequestId = "5ad4e121-5e94-4dd4-a02b-8aa9b6f5ddd1";
+    const accepted = await request(app)
+      .get("/api/healthz")
+      .set("X-Request-Id", acceptedRequestId);
+    const replaced = await request(app)
+      .get("/api/healthz")
+      .set("X-Request-Id", "forged-log-entry");
+
+    expect(accepted.headers["x-request-id"]).toBe(acceptedRequestId);
+    expect(replaced.headers["x-request-id"]).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    );
+    expect(replaced.headers["x-request-id"]).not.toBe("forged-log-entry");
+  });
 });

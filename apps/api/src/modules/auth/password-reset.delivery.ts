@@ -87,6 +87,7 @@ async function deliverPasswordReset(
     logger.error(
       {
         provider: "resend",
+        event: "auth.password_reset_delivery_failed",
         status:
           error instanceof PasswordResetDeliveryError
             ? error.status

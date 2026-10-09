@@ -102,6 +102,13 @@ describe("password reset routes", () => {
     expect(response.text).toBe("");
     expect(token).not.toBe("");
     expect(JSON.stringify(errorLog.mock.calls)).not.toContain(token);
+    expect(errorLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "auth.password_reset_delivery_failed",
+        provider: "resend",
+      }),
+      "Password reset delivery failed",
+    );
   });
 
   it("stores only a token hash and resets the password atomically", async () => {

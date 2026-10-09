@@ -1,7 +1,13 @@
 import type { Request, Response } from "express";
-import { HealthCheckResponse, ReadinessCheckResponse } from "@workspace/api-zod";
+import {
+  HealthCheckResponse,
+  ReadinessCheckResponse,
+} from "@workspace/api-zod";
 import { prisma } from "../../database";
 import { storageProvider } from "../../config/storage";
+import { createReadinessObservability } from "./readiness-observability";
+
+const readinessObservability = createReadinessObservability();
 
 export function healthCheck(_req: Request, res: Response): void {
   const data = HealthCheckResponse.parse({ status: "ok" });
@@ -15,8 +21,12 @@ export async function readinessCheck(
   try {
     void storageProvider;
     await prisma.$queryRaw`SELECT 1`;
+    readinessObservability.available();
     res.json(ReadinessCheckResponse.parse({ status: "ok" }));
   } catch {
-    res.status(503).json(ReadinessCheckResponse.parse({ status: "unavailable" }));
+    readinessObservability.unavailable();
+    res
+      .status(503)
+      .json(ReadinessCheckResponse.parse({ status: "unavailable" }));
   }
 }

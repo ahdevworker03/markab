@@ -14,6 +14,10 @@ export const LOG_REDACTION_PATHS = [
 export const logger = pino({
   level: env.LOG_LEVEL,
   redact: LOG_REDACTION_PATHS,
+  base: {
+    environment: env.NODE_ENV,
+    releaseId: process.env["RELEASE_ID"] ?? "unreleased",
+  },
   ...(isProduction
     ? {}
     : {
