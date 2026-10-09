@@ -93,7 +93,12 @@ function PaymentSummary({
   );
 
   return (
-    <div className={cn("min-w-0 text-right", !desktop && (compact ? "space-y-1" : "space-y-1.5"))}>
+    <div
+      className={cn(
+        "min-w-0 text-right",
+        !desktop && (compact ? "space-y-1" : "space-y-1.5"),
+      )}
+    >
       <div
         dir="ltr"
         className="number-ltr text-right text-sm font-semibold text-foreground"
@@ -104,7 +109,10 @@ function PaymentSummary({
         <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
           <span>
             <span>المتبقي: </span>
-            <span dir="ltr" className="number-ltr inline-block whitespace-nowrap">
+            <span
+              dir="ltr"
+              className="number-ltr inline-block whitespace-nowrap"
+            >
               {formatCurrency(item.outstandingBalance)}
             </span>
           </span>
@@ -115,7 +123,10 @@ function PaymentSummary({
           <div>{paymentStatusSlot}</div>
           <div className="text-xs text-muted-foreground">
             <span>المتبقي: </span>
-            <span dir="ltr" className="number-ltr inline-block whitespace-nowrap">
+            <span
+              dir="ltr"
+              className="number-ltr inline-block whitespace-nowrap"
+            >
               {formatCurrency(item.outstandingBalance)}
             </span>
           </div>
@@ -235,16 +246,24 @@ function RentalDate({ value }: { value: string }) {
 
 function DatePair({ rental }: { rental: RentalResponse }) {
   return (
-    <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2">
-      <div>
-        <div className="mb-1 text-muted-foreground">الاستلام</div>
-        <div className="number-ltr font-medium text-foreground">
+    <div className="grid min-w-0 grid-cols-2 gap-x-3 gap-y-2 text-xs sm:gap-3">
+      <div className="min-w-0">
+        <div className="mb-1 break-words text-muted-foreground">الاستلام</div>
+        <div
+          dir="ltr"
+          className="number-ltr whitespace-nowrap text-end font-medium text-foreground sm:text-start sm:whitespace-normal"
+        >
           {formatDate(rental.pickupDate)}
         </div>
       </div>
-      <div>
-        <div className="mb-1 text-muted-foreground">الإرجاع المتوقع</div>
-        <div className="number-ltr font-medium text-foreground">
+      <div className="min-w-0">
+        <div className="mb-1 break-words text-muted-foreground">
+          الإرجاع المتوقع
+        </div>
+        <div
+          dir="ltr"
+          className="number-ltr whitespace-nowrap text-end font-medium text-foreground sm:text-start sm:whitespace-normal"
+        >
           {formatDate(rental.expectedReturnDate)}
         </div>
       </div>
@@ -334,14 +353,50 @@ export function RentalsDataList({ items, onOpen }: RentalsDataListProps) {
       <div className="divide-y divide-border md:hidden">
         {items.map((item) => (
           <article key={item.rental.id} className="space-y-4 px-4 py-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <User className="size-3.5" aria-hidden="true" /> العميل
+            <div dir="rtl" className="min-w-0 space-y-3">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <User className="size-3.5" aria-hidden="true" /> العميل
+                  </div>
+                  <RentalStatusCluster rental={item.rental} />
                 </div>
-                <RentalIdentity item={item} withPhone />
+                <div className="mt-1.5 flex min-w-0 flex-col items-start">
+                  <div
+                    dir="auto"
+                    className="max-w-full break-words text-sm font-semibold text-foreground"
+                  >
+                    {item.customerName}
+                  </div>
+                  {item.customerPhone && (
+                    <div
+                      dir="ltr"
+                      className="number-ltr mt-0.5 max-w-full break-words text-end text-xs text-muted-foreground"
+                    >
+                      {item.customerPhone}
+                    </div>
+                  )}
+                </div>
               </div>
-              <RentalStatusCluster rental={item.rental} />
+              <div className="min-w-0">
+                <div className="mb-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Car className="size-3.5" aria-hidden="true" /> السيارة
+                </div>
+                <div className="flex min-w-0 flex-col items-start">
+                  <div
+                    dir="auto"
+                    className="max-w-full break-words text-sm font-medium text-foreground"
+                  >
+                    {item.vehicleName}
+                  </div>
+                  <div
+                    dir="ltr"
+                    className="number-ltr mt-0.5 max-w-full break-words text-end text-xs text-muted-foreground"
+                  >
+                    {item.vehiclePlate}
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="rounded-lg bg-muted/45 p-3">
               <DatePair rental={item.rental} />

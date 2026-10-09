@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { RentalResponse } from "@workspace/api-client-react";
 import { RentalsDataList, type RentalListItem } from "./RentalsDataList";
@@ -62,16 +62,17 @@ describe("RentalsDataList", () => {
     const paid = item(0);
     const outstanding = item(125);
     paid.rental = { ...rental, id: "rental-paid" } as RentalResponse;
-    outstanding.rental = { ...rental, id: "rental-outstanding" } as RentalResponse;
+    outstanding.rental = {
+      ...rental,
+      id: "rental-outstanding",
+    } as RentalResponse;
 
-    render(
-      <RentalsDataList items={[paid, outstanding]} onOpen={vi.fn()} />,
-    );
+    render(<RentalsDataList items={[paid, outstanding]} onOpen={vi.fn()} />);
 
     const table = screen.getByRole("table");
-    const slots = screen.getAllByTestId("payment-status-slot").filter((slot) =>
-      table.contains(slot),
-    );
+    const slots = screen
+      .getAllByTestId("payment-status-slot")
+      .filter((slot) => table.contains(slot));
 
     expect(slots).toHaveLength(2);
     expect(slots[0]).toHaveClass("shrink-0");
@@ -125,7 +126,9 @@ describe("RentalsDataList", () => {
         "Mercedes-Benz Sprinter Executive Passenger Van Long Wheelbase",
       vehiclePlate: "LB-RENTAL-FLEET-2026-998877",
     };
-    render(<RentalsDataList items={[longItem]} onOpen={vi.fn()} />);
+    const { container } = render(
+      <RentalsDataList items={[longItem]} onOpen={vi.fn()} />,
+    );
 
     expect(screen.getAllByText(longItem.customerName)[0].className).toContain(
       "truncate text-sm font-medium text-foreground",
@@ -139,6 +142,30 @@ describe("RentalsDataList", () => {
     expect(screen.getAllByText(longItem.vehiclePlate)[0].className).toContain(
       "number-ltr mt-0.5 block truncate text-right",
     );
+
+    const mobileList = container.querySelector(".divide-y.md\\:hidden");
+    expect(mobileList).not.toBeNull();
+    const mobile = within(mobileList as HTMLElement);
+    const customerName = mobile.getByText(longItem.customerName);
+    const customerPhone = mobile.getByText(longItem.customerPhone!);
+    const vehicleName = mobile.getByText(longItem.vehicleName);
+    const vehiclePlate = mobile.getByText(longItem.vehiclePlate);
+    const customerLabel = mobile.getByText("العميل");
+
+    expect(customerName).toHaveAttribute("dir", "auto");
+    expect(customerPhone).toHaveAttribute("dir", "ltr");
+    expect(customerPhone.parentElement).toBe(customerName.parentElement);
+    expect(vehicleName).toHaveAttribute("dir", "auto");
+    expect(vehiclePlate).toHaveAttribute("dir", "ltr");
+    expect(vehiclePlate.parentElement).toBe(vehicleName.parentElement);
+    expect(customerLabel.parentElement?.parentElement).toHaveTextContent(
+      "محجوز",
+    );
+
+    const dateGrid = mobileList?.querySelector(".grid-cols-2");
+    expect(dateGrid?.children).toHaveLength(2);
+    expect(mobile.getByText("01/08/2026")).toHaveAttribute("dir", "ltr");
+    expect(mobile.getByText("05/08/2026")).toHaveAttribute("dir", "ltr");
   });
 
   it("keeps paid, partially paid, and outstanding rentals financially distinct", () => {
