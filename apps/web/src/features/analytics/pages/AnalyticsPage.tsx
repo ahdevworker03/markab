@@ -941,24 +941,32 @@ export default function AnalyticsPage() {
                           className="flex w-full items-start justify-between gap-3 py-3 text-right transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                         >
                           <VehicleIdentity vehicle={vehicle} />
-                          <span className="shrink-0 text-left text-xs text-muted-foreground">
+                          <span
+                            dir="rtl"
+                            className="shrink-0 text-end text-xs text-muted-foreground"
+                          >
                             <span className="block">
-                              السنة:{" "}
+                              <span>السنة:</span>{" "}
                               <strong className="tabular-nums text-foreground">
-                                {formatCurrency(
-                                  analytics.yearlyMaintenanceCost[vehicleId] ??
-                                    0,
-                                )}
+                                <bdi dir="ltr" className="number-ltr">
+                                  {formatCurrency(
+                                    analytics.yearlyMaintenanceCost[
+                                      vehicleId
+                                    ] ?? 0,
+                                  )}
+                                </bdi>
                               </strong>
                             </span>
                             <span className="mt-1 block">
-                              مدى الحياة:{" "}
+                              <span>مدى الحياة:</span>{" "}
                               <strong className="tabular-nums text-foreground">
-                                {formatCurrency(
-                                  analytics.lifetimeMaintenanceCost[
-                                    vehicleId
-                                  ] ?? 0,
-                                )}
+                                <bdi dir="ltr" className="number-ltr">
+                                  {formatCurrency(
+                                    analytics.lifetimeMaintenanceCost[
+                                      vehicleId
+                                    ] ?? 0,
+                                  )}
+                                </bdi>
                               </strong>
                             </span>
                           </span>

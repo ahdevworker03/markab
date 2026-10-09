@@ -327,6 +327,54 @@ describe("AnalyticsPage insights", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("keeps maintenance cost labels RTL and isolates yearly and lifetime amounts LTR", async () => {
+    const { useMaintenance } = await import("@/features/maintenance/hooks");
+    const { useExpenses } = await import("@/features/expenses/hooks");
+    const vehicle = makeVehicle("AVAILABLE");
+    mockApiVehicles([vehicle]);
+    vi.mocked(useExpenses).mockReturnValue({
+      data: { data: [] },
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof useExpenses>);
+    vi.mocked(useMaintenance).mockReturnValue({
+      data: {
+        data: [
+          {
+            ...makeMaintenance(vehicle.id),
+            maintenanceDate: "2024-12-10T00:00:00Z",
+            cost: 100,
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof useMaintenance>);
+
+    render(<AnalyticsPage />);
+
+    const maintenanceCosts = screen
+      .getByRole("heading", { name: "تكاليف الصيانة" })
+      .closest("section")!;
+    const row = within(maintenanceCosts).getByRole("button", {
+      name: /Kia Picanto/,
+    });
+    const rowContent = within(row);
+    const yearlyLabel = rowContent.getByText("السنة:");
+    const yearlyAmount = rowContent.getByText("USD 0");
+    const lifetimeLabel = rowContent.getByText("مدى الحياة:");
+    const lifetimeAmount = rowContent.getByText("USD 100");
+
+    expect(yearlyLabel.parentElement).toContainElement(yearlyAmount);
+    expect(lifetimeLabel.parentElement).toContainElement(lifetimeAmount);
+    expect(yearlyLabel.closest('[dir="rtl"]')).toBeInTheDocument();
+    expect(lifetimeLabel.closest('[dir="rtl"]')).toBeInTheDocument();
+    expect(yearlyAmount).toHaveAttribute("dir", "ltr");
+    expect(lifetimeAmount).toHaveAttribute("dir", "ltr");
+  });
+
   it("renders every supported status from the API fleet", () => {
     mockApiVehicles([
       makeVehicle("AVAILABLE", { id: "00000000-0000-4000-8000-000000000001" }),
