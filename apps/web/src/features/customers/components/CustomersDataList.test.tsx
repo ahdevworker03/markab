@@ -65,13 +65,21 @@ describe("CustomersDataList", () => {
       .getAllByText("الهاتف")
       .at(-1)!
       .closest("article")!;
+    const mobileFields = mobileCard.querySelector(".grid")!;
+    expect(mobileFields).toHaveClass("grid-cols-2", "min-w-0");
     const mobileName = within(mobileCard).getByText(
       "شركة النخبة الدولية لتأجير المركبات Al Noor Fleet Management",
     );
     expect(mobileName).toHaveClass("break-words");
+    expect(within(mobileCard).getByText("الهاتف").parentElement).toHaveClass(
+      "min-w-0",
+    );
     const mobilePhone = within(mobileCard).getByText("+961701234567890");
     expect(mobilePhone).toHaveAttribute("dir", "ltr");
     expect(mobilePhone).toHaveClass("number-ltr", "text-right");
+    expect(within(mobileCard).getByText("الموقع").parentElement).toHaveClass(
+      "min-w-0",
+    );
     const mobileLocation = within(mobileCard).getByText(longCustomer.address);
     expect(mobileLocation).toHaveAttribute("dir", "auto");
     expect(mobileLocation).toHaveClass("min-w-0", "break-words", "text-start");
