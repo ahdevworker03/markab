@@ -109,6 +109,12 @@ describe("RentalDetailPage", () => {
     expect(screen.getByText("رقم الهوية")).toBeInTheDocument();
     expect(screen.getByText("سنة الصنع")).toBeInTheDocument();
     expect(screen.getByText("الاستلام الفعلي")).toBeInTheDocument();
+    const manufacturerLabel = screen.getByText("الشركة المصنعة");
+    expect(manufacturerLabel.parentElement?.parentElement).toHaveClass(
+      "grid-cols-2",
+      "sm:gap-x-6",
+      "sm:gap-y-5",
+    );
     expect(
       screen.queryByText("not-a-customer-field@example.com"),
     ).not.toBeInTheDocument();

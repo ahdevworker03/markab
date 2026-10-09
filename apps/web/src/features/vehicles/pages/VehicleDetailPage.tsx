@@ -115,7 +115,7 @@ export default function VehicleDetailPage({ params }: DetailPageParams) {
         {deleteError && <InlineError>{deleteError}</InlineError>}
         <section aria-label="بيانات السيارة" className="space-y-4">
             <DetailSection title="بيانات السيارة" description="الهوية والمواصفات الأساسية للسيارة.">
-              <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-3 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-4 md:grid-cols-3 md:gap-x-6 md:gap-y-5 lg:grid-cols-4">
                 <KeyValue label="الشركة المصنعة" value={vehicle.make} ltr />
                 <KeyValue label="الطراز" value={vehicle.model} ltr />
                 <KeyValue label="رقم اللوحة" value={vehicle.plateNumber} ltr />
@@ -125,7 +125,7 @@ export default function VehicleDetailPage({ params }: DetailPageParams) {
                 <KeyValue label="نوع الوقود" value={FUEL_TYPE_LABELS[vehicle.fuelType] ?? vehicle.fuelType} />
                 <KeyValue label="عدد المقاعد" value={vehicle.seats} numeric />
                 <KeyValue label="العداد الحالي" value={`${formatNumber(vehicle.currentMileage)} كم`} numeric />
-                {vehicle.notes && <div className="md:col-span-3 lg:col-span-4"><KeyValue label="ملاحظات" value={vehicle.notes} /></div>}
+                {vehicle.notes && <div className="col-span-2 min-w-0 md:col-span-3 lg:col-span-4"><KeyValue label="ملاحظات" value={vehicle.notes} /></div>}
               </div>
             </DetailSection>
 

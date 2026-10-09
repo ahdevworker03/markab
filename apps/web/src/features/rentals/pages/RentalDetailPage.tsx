@@ -416,7 +416,7 @@ export default function RentalDetailPage({ params }: Props) {
             description="الهوية والمواصفات الأساسية للسيارة."
           >
             {vehicle ? (
-              <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-4 sm:gap-x-6 sm:gap-y-5">
                 <KeyValue label="الشركة المصنعة" value={vehicle.make} ltr />
                 <KeyValue label="الطراز" value={vehicle.model} ltr />
                 <KeyValue label="رقم اللوحة" value={vehicle.plateNumber} ltr />
