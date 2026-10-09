@@ -17,38 +17,37 @@ const customer = {
 } as CustomerResponse;
 
 describe("CustomersDataList", () => {
-  it("groups the customer identity without duplicating the phone number", () => {
+  it("shows the customer name, phone, and address without identity or license values", () => {
     render(<CustomersDataList customers={[customer]} onOpen={vi.fn()} />);
 
     const table = screen.getByRole("table");
-    const identityCell = table.querySelector<HTMLTableCellElement>("tbody td")!;
-    const identity = within(identityCell).getByText("أحمد حسن");
-
-    expect(identityCell).not.toHaveTextContent(customer.phone);
-    expect(identity.parentElement).toHaveClass("min-w-0", "text-start");
-    expect(identity.parentElement).not.toHaveClass("flex-1");
-    expect(identity).toHaveClass("break-words");
-    const identityWrapper = identityCell.querySelector("div");
-    expect(identityWrapper).toHaveClass(
-      "flex",
-      "min-w-0",
-      "items-start",
-      "gap-3",
-    );
-    expect(identityWrapper).not.toHaveClass("xl:min-w-[18rem]");
-    expect(identityCell.querySelector("svg")?.parentElement).toHaveClass(
-      "size-9",
-      "shrink-0",
-    );
+    expect(
+      within(table).getByRole("columnheader", { name: "العميل" }),
+    ).toBeInTheDocument();
+    expect(
+      within(table).getByRole("columnheader", { name: "رقم الهاتف" }),
+    ).toBeInTheDocument();
+    expect(
+      within(table).getByRole("columnheader", { name: "الموقع" }),
+    ).toBeInTheDocument();
+    expect(
+      within(table).getByRole("columnheader", { name: "الإجراء" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("أحمد حسن").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(customer.phone).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(customer.address).length).toBeGreaterThan(0);
+    expect(screen.queryByText(customer.nationalId)).toBeNull();
+    expect(screen.queryByText(customer.licenseNumber)).toBeNull();
   });
 
-  it("keeps long mixed-direction names wrapping and identifiers LTR-isolated", () => {
+  it("keeps long customer names and locations contained with an LTR phone", () => {
     const longCustomer = {
       ...customer,
       id: "customer-2",
       firstName: "شركة النخبة الدولية لتأجير المركبات",
       lastName: "Al Noor Fleet Management",
-      phone: "+961701234567890",
+      phone: "+٩٦١۷۰۱۲۳۴۵۶۷۸۹۰",
+      address: "شارع الحمرا، بيروت — Building 24, Floor 7, Near Main Square",
       nationalId: "12345678901234567890",
       licenseNumber: "LB-DRIVER-LICENSE-2026-998877",
     };
@@ -59,42 +58,23 @@ describe("CustomersDataList", () => {
     );
     expect(names[0]).toHaveClass("break-words", "text-sm", "font-medium");
 
-    const table = screen.getByRole("table");
-    for (const value of [
-      longCustomer.phone,
-      longCustomer.nationalId,
-      longCustomer.licenseNumber,
-    ]) {
-      const identifier = within(table).getByText(value);
-      expect(identifier).toHaveAttribute("dir", "ltr");
-      expect(identifier).toHaveClass(
-        "identifier-ltr",
-        "max-w-full",
-        "break-all",
-        "text-start",
-      );
-      expect(identifier).not.toHaveClass("whitespace-nowrap");
-    }
+    expect(screen.queryByText(longCustomer.nationalId)).toBeNull();
+    expect(screen.queryByText(longCustomer.licenseNumber)).toBeNull();
 
-    const mobileCard = screen.getByText("الهوية").closest("article")!;
-    const identityGrid = mobileCard.querySelector(".grid")!;
-    expect(identityGrid).toHaveClass("min-w-0", "sm:grid-cols-2");
-    expect(identityGrid).not.toHaveClass("grid-cols-2");
-
-    for (const value of [
-      longCustomer.nationalId,
-      longCustomer.licenseNumber,
-    ]) {
-      const identifier = within(mobileCard).getByText(value);
-      expect(identifier).toHaveAttribute("dir", "ltr");
-      expect(identifier).toHaveClass(
-        "identifier-ltr",
-        "max-w-full",
-        "break-all",
-        "text-start",
-      );
-      expect(identifier.parentElement?.parentElement).toHaveClass("min-w-0");
-    }
+    const mobileCard = screen
+      .getAllByText("الهاتف")
+      .at(-1)!
+      .closest("article")!;
+    const mobileName = within(mobileCard).getByText(
+      "شركة النخبة الدولية لتأجير المركبات Al Noor Fleet Management",
+    );
+    expect(mobileName).toHaveClass("break-words");
+    const mobilePhone = within(mobileCard).getByText("+961701234567890");
+    expect(mobilePhone).toHaveAttribute("dir", "ltr");
+    expect(mobilePhone).toHaveClass("number-ltr", "text-right");
+    const mobileLocation = within(mobileCard).getByText(longCustomer.address);
+    expect(mobileLocation).toHaveAttribute("dir", "auto");
+    expect(mobileLocation).toHaveClass("min-w-0", "break-words", "text-start");
   });
 
   it("preserves desktop customer table widths and actions", () => {
@@ -102,11 +82,18 @@ describe("CustomersDataList", () => {
 
     const table = screen.getByRole("table");
     expect(table).toHaveClass("min-w-[62rem]", "table-fixed");
-    expect(within(table).getByRole("columnheader", { name: "العميل" })).toHaveClass("w-[20rem]");
-    expect(within(table).getByRole("columnheader", { name: "رقم الهاتف" })).toHaveClass("w-[10rem]", "text-start");
-    expect(within(table).getByRole("columnheader", { name: "رقم الهوية" })).toHaveClass("w-[12rem]", "text-start");
-    expect(within(table).getByRole("columnheader", { name: "رقم الرخصة" })).toHaveClass("w-[12rem]", "text-start");
-    expect(within(table).getByRole("columnheader", { name: "الإجراء" })).toHaveClass("w-[10rem]");
+    expect(
+      within(table).getByRole("columnheader", { name: "العميل" }),
+    ).toHaveClass("w-[20rem]");
+    expect(
+      within(table).getByRole("columnheader", { name: "رقم الهاتف" }),
+    ).toHaveClass("w-[10rem]", "text-start");
+    expect(
+      within(table).getByRole("columnheader", { name: "الموقع" }),
+    ).toHaveClass("w-[20rem]", "text-start");
+    expect(
+      within(table).getByRole("columnheader", { name: "الإجراء" }),
+    ).toHaveClass("w-[10rem]");
   });
 
   it("opens the selected customer", () => {

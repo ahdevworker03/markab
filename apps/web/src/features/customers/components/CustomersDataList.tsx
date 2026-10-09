@@ -1,4 +1,4 @@
-import { ChevronLeft, Phone, UserRound } from "lucide-react";
+import { ChevronLeft, UserRound } from "lucide-react";
 import type { CustomerResponse } from "@workspace/api-client-react";
 
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,10 @@ function CustomerIdentity({ customer }: { customer: CustomerResponse }) {
         <UserRound className="size-4" aria-hidden="true" />
       </span>
       <span className="min-w-0 text-start">
-        <span dir="auto" className="block break-words text-sm font-medium text-foreground">
+        <span
+          dir="auto"
+          className="block break-words text-sm font-medium text-foreground"
+        >
           {fullName}
         </span>
       </span>
@@ -33,11 +36,29 @@ function CustomerIdentity({ customer }: { customer: CustomerResponse }) {
   );
 }
 
-function IdentityValue({ value }: { value: string }) {
+function PhoneValue({ value }: { value: string }) {
+  const westernDigits = value.replace(/[٠-٩۰-۹]/g, (digit) => {
+    const digitCode = digit.charCodeAt(0);
+    const zeroCode = digitCode <= 0x0669 ? 0x0660 : 0x06f0;
+
+    return String.fromCharCode(digitCode - zeroCode + 0x30);
+  });
+
   return (
     <span
       dir="ltr"
-      className="identifier-ltr block max-w-full break-all text-start text-sm font-medium text-foreground"
+      className="number-ltr block max-w-full break-all text-right text-sm font-medium text-foreground"
+    >
+      {westernDigits}
+    </span>
+  );
+}
+
+function LocationValue({ value }: { value: string }) {
+  return (
+    <span
+      dir="auto"
+      className="block min-w-0 break-words text-start text-sm text-foreground"
     >
       {value}
     </span>
@@ -58,11 +79,8 @@ export function CustomersDataList({
               <TableHead className="w-[10rem] min-w-[10rem] text-start">
                 رقم الهاتف
               </TableHead>
-              <TableHead className="w-[12rem] min-w-[12rem] text-start">
-                رقم الهوية
-              </TableHead>
-              <TableHead className="w-[12rem] min-w-[12rem] text-start">
-                رقم الرخصة
+              <TableHead className="w-[20rem] min-w-[20rem] text-start">
+                الموقع
               </TableHead>
               <TableHead className="w-[10rem] min-w-[10rem] text-end">
                 الإجراء
@@ -79,14 +97,11 @@ export function CustomersDataList({
                 <TableCell className="min-w-[20rem]">
                   <CustomerIdentity customer={customer} />
                 </TableCell>
-                <TableCell className="min-w-[10rem] text-end">
-                  <IdentityValue value={customer.phone} />
+                <TableCell className="min-w-[10rem] text-start">
+                  <PhoneValue value={customer.phone} />
                 </TableCell>
-                <TableCell className="min-w-[12rem] text-end">
-                  <IdentityValue value={customer.nationalId} />
-                </TableCell>
-                <TableCell className="min-w-[12rem] text-end">
-                  <IdentityValue value={customer.licenseNumber} />
+                <TableCell className="min-w-[20rem] text-start">
+                  <LocationValue value={customer.address} />
                 </TableCell>
                 <TableCell className="min-w-[10rem] text-end whitespace-nowrap">
                   <Button
@@ -114,21 +129,15 @@ export function CustomersDataList({
             <CustomerIdentity customer={customer} />
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="min-w-0">
-                <div className="ui-label">رقم الهاتف</div>
+                <div className="ui-label">الهاتف</div>
                 <div className="mt-1">
-                  <IdentityValue value={customer.phone} />
+                  <PhoneValue value={customer.phone} />
                 </div>
               </div>
               <div className="min-w-0">
-                <div className="ui-label">رقم الهوية</div>
+                <div className="ui-label">الموقع</div>
                 <div className="mt-1">
-                  <IdentityValue value={customer.nationalId} />
-                </div>
-              </div>
-              <div className="min-w-0">
-                <div className="ui-label">رقم الرخصة</div>
-                <div className="mt-1">
-                  <IdentityValue value={customer.licenseNumber} />
+                  <LocationValue value={customer.address} />
                 </div>
               </div>
             </div>
@@ -151,27 +160,21 @@ export function CustomersDataList({
         {customers.map((customer) => (
           <article key={customer.id} className="space-y-4 px-4 py-4">
             <CustomerIdentity customer={customer} />
-            <div className="grid min-w-0 gap-3 rounded-lg bg-muted/45 p-3 sm:grid-cols-2">
+            <div className="grid min-w-0 gap-2 rounded-lg bg-muted/45 p-3 sm:grid-cols-2">
               <div className="min-w-0">
-                <div className="ui-label">الهوية</div>
+                <div className="ui-label">الهاتف</div>
                 <div className="mt-1">
-                  <IdentityValue value={customer.nationalId} />
+                  <PhoneValue value={customer.phone} />
                 </div>
               </div>
               <div className="min-w-0">
-                <div className="ui-label">الرخصة</div>
+                <div className="ui-label">الموقع</div>
                 <div className="mt-1">
-                  <IdentityValue value={customer.licenseNumber} />
+                  <LocationValue value={customer.address} />
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-between gap-3">
-              <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-                <Phone className="size-3.5 shrink-0" aria-hidden="true" />
-                <span dir="ltr" className="identifier-ltr truncate">
-                  {customer.phone}
-                </span>
-              </span>
+            <div className="flex justify-end">
               <Button
                 type="button"
                 variant="outline"

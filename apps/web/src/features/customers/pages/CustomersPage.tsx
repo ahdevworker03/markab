@@ -60,7 +60,7 @@ export default function CustomersPage() {
       <div className="space-y-4 px-4 pb-6 pt-4 sm:px-6 lg:space-y-5">
         <SectionCard
           title="قائمة العملاء"
-          description="ابحث عن العملاء وراجع بيانات الهوية والرخصة بسرعة."
+          description="ابحث عن العملاء وراجع بيانات التواصل بسرعة."
           className="shadow-none"
         >
           <SearchBar
