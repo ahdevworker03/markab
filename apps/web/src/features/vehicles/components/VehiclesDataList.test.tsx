@@ -52,6 +52,9 @@ describe("VehiclesDataList", () => {
     expect(mobileList).toHaveTextContent("50,000 كم");
     expect(mobileList).toHaveTextContent("أوتوماتيك · 5 مقاعد");
     expect(mobileList).toHaveTextContent("التفاصيل");
+    expect(mobileList?.querySelector("article > div:last-child")).toHaveClass(
+      "items-start",
+    );
   });
 
   it("keeps short and long mixed-language identities in the same right-aligned text stack", () => {

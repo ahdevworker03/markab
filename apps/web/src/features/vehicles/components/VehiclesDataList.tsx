@@ -117,7 +117,7 @@ export function VehiclesDataList({ vehicles, onOpen }: VehiclesDataListProps) {
               <div><div className="ui-label">السنة</div><div className="mt-1"><VehicleYear value={vehicle.year} /></div></div>
               <div><div className="ui-label">العداد</div><div className="mt-1"><Mileage value={vehicle.currentMileage} /></div></div>
             </div>
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Gauge className="size-3.5" aria-hidden="true" />{vehicle.transmission === "AUTOMATIC" ? "أوتوماتيك" : "يدوي"} · {vehicle.seats} مقاعد</div>
               <Button type="button" variant="outline" size="sm" onClick={() => onOpen(vehicle.id)}>التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button>
             </div>

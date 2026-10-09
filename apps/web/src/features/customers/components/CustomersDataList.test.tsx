@@ -66,7 +66,7 @@ describe("CustomersDataList", () => {
       .at(-1)!
       .closest("article")!;
     const mobileFields = mobileCard.querySelector(".grid")!;
-    expect(mobileFields).toHaveClass("grid-cols-2", "min-w-0");
+    expect(mobileFields).toHaveClass("grid-cols-2", "min-w-0", "items-start");
     const mobileName = within(mobileCard).getByText(
       "شركة النخبة الدولية لتأجير المركبات Al Noor Fleet Management",
     );
