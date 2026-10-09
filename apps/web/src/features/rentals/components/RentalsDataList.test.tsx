@@ -158,24 +158,19 @@ describe("RentalsDataList", () => {
     const mobileCard = mobileList?.querySelector("article");
 
     expect(mobileCard).toHaveClass("space-y-2");
-    expect(identityGrid).toHaveClass("grid-cols-2");
-    expect(identityGrid?.children).toHaveLength(2);
+    expect(identityGrid).toHaveClass("grid-cols-2", "gap-y-1.5");
+    expect(identityGrid?.children).toHaveLength(6);
     expect(identityGrid?.children[0]).toContainElement(customerLabel);
     expect(identityGrid?.children[1]).toContainElement(vehicleLabel);
+    expect(identityGrid?.children[0]).toHaveTextContent("محجوز");
+    expect(identityGrid?.children[2]).toContainElement(customerName);
+    expect(identityGrid?.children[3]).toContainElement(vehicleName);
+    expect(identityGrid?.children[4]).toContainElement(customerPhone);
+    expect(identityGrid?.children[5]).toContainElement(vehiclePlate);
     expect(customerName).toHaveAttribute("dir", "auto");
     expect(customerPhone).toHaveAttribute("dir", "ltr");
-    expect(customerPhone.parentElement).toBe(customerName.parentElement);
-    expect(customerName.parentElement).toHaveClass("mt-1");
-    expect(customerPhone).toHaveClass("mt-0.5");
     expect(vehicleName).toHaveAttribute("dir", "auto");
     expect(vehiclePlate).toHaveAttribute("dir", "ltr");
-    expect(vehiclePlate.parentElement).toBe(vehicleName.parentElement);
-    expect(vehicleLabel.parentElement).not.toHaveClass("mb-0.5");
-    expect(vehiclePlate).not.toHaveClass("mt-0.5");
-    expect(customerLabel.parentElement?.parentElement).toHaveTextContent(
-      "محجوز",
-    );
-
     expect(dateGrid).toHaveClass(
       "grid",
       "min-w-0",

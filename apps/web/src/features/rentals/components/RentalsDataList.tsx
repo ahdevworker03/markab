@@ -355,7 +355,7 @@ export function RentalsDataList({ items, onOpen }: RentalsDataListProps) {
           <article key={item.rental.id} className="space-y-2 px-4 py-4">
             <div
               dir="rtl"
-              className="grid min-w-0 grid-cols-2 gap-x-3 gap-y-3"
+              className="grid min-w-0 grid-cols-2 gap-x-3 gap-y-1.5"
             >
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
@@ -364,41 +364,45 @@ export function RentalsDataList({ items, onOpen }: RentalsDataListProps) {
                   </div>
                   <RentalStatusCluster rental={item.rental} />
                 </div>
-                <div className="mt-1 flex min-w-0 flex-col items-start">
-                  <div
-                    dir="auto"
-                    className="max-w-full break-words text-sm font-semibold text-foreground"
-                  >
-                    {item.customerName}
-                  </div>
-                  {item.customerPhone && (
-                    <div
-                      dir="ltr"
-                      className="number-ltr mt-0.5 max-w-full break-words text-end text-xs text-muted-foreground"
-                    >
-                      {item.customerPhone}
-                    </div>
-                  )}
-                </div>
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Car className="size-3.5" aria-hidden="true" /> السيارة
                 </div>
-                <div className="flex min-w-0 flex-col items-start">
-                  <div
-                    dir="auto"
-                    className="max-w-full break-words text-sm font-medium text-foreground"
-                  >
-                    {item.vehicleName}
-                  </div>
-                  <div
+              </div>
+              <div dir="rtl" className="min-w-0 text-start">
+                <span
+                  dir="auto"
+                  className="inline-block max-w-full break-words text-sm font-semibold text-foreground"
+                >
+                  {item.customerName}
+                </span>
+              </div>
+              <div dir="rtl" className="min-w-0 text-start">
+                <span
+                  dir="auto"
+                  className="inline-block max-w-full break-words text-sm font-medium text-foreground"
+                >
+                  {item.vehicleName}
+                </span>
+              </div>
+              <div dir="rtl" className="min-w-0">
+                {item.customerPhone && (
+                  <span
                     dir="ltr"
-                    className="number-ltr max-w-full break-words text-end text-xs text-muted-foreground"
+                    className="number-ltr block max-w-full break-words text-end text-xs text-muted-foreground"
                   >
-                    {item.vehiclePlate}
-                  </div>
-                </div>
+                    {item.customerPhone}
+                  </span>
+                )}
+              </div>
+              <div dir="rtl" className="min-w-0">
+                <span
+                  dir="ltr"
+                  className="number-ltr block max-w-full break-words text-end text-xs text-muted-foreground"
+                >
+                  {item.vehiclePlate}
+                </span>
               </div>
             </div>
             <div className="rounded-lg bg-muted/45 px-3 py-1">
