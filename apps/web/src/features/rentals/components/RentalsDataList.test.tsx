@@ -165,9 +165,13 @@ describe("RentalsDataList", () => {
     expect(customerName).toHaveAttribute("dir", "auto");
     expect(customerPhone).toHaveAttribute("dir", "ltr");
     expect(customerPhone.parentElement).toBe(customerName.parentElement);
+    expect(customerName.parentElement).toHaveClass("mt-1");
+    expect(customerPhone).toHaveClass("mt-0.5");
     expect(vehicleName).toHaveAttribute("dir", "auto");
     expect(vehiclePlate).toHaveAttribute("dir", "ltr");
     expect(vehiclePlate.parentElement).toBe(vehicleName.parentElement);
+    expect(vehicleLabel.parentElement).not.toHaveClass("mb-0.5");
+    expect(vehiclePlate).not.toHaveClass("mt-0.5");
     expect(customerLabel.parentElement?.parentElement).toHaveTextContent(
       "محجوز",
     );

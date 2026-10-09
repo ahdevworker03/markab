@@ -382,7 +382,7 @@ export function RentalsDataList({ items, onOpen }: RentalsDataListProps) {
                 </div>
               </div>
               <div className="min-w-0">
-                <div className="mb-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Car className="size-3.5" aria-hidden="true" /> السيارة
                 </div>
                 <div className="flex min-w-0 flex-col items-start">
@@ -394,7 +394,7 @@ export function RentalsDataList({ items, onOpen }: RentalsDataListProps) {
                   </div>
                   <div
                     dir="ltr"
-                    className="number-ltr mt-0.5 max-w-full break-words text-end text-xs text-muted-foreground"
+                    className="number-ltr max-w-full break-words text-end text-xs text-muted-foreground"
                   >
                     {item.vehiclePlate}
                   </div>
