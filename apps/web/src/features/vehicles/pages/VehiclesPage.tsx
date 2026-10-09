@@ -65,7 +65,7 @@ export default function VehiclesPage() {
 
       <div className="space-y-3 px-4 pb-6 pt-4 sm:px-6 lg:space-y-4">
         <SectionCard className="shadow-none">
-          <div className="space-y-2.5">
+          <div className="space-y-3 sm:space-y-2.5">
             <SearchBar
               placeholder="ابحث بالاسم أو رقم اللوحة أو سنة الصنع..."
               value={search}
@@ -82,10 +82,10 @@ export default function VehiclesPage() {
                   { replace: true },
                 );
               }}
-              className="-mb-0.5 flex-wrap gap-1.5 overflow-visible sm:flex-nowrap sm:overflow-x-auto [&_button]:px-2.5 [&_button]:py-1 [&_button]:text-xs"
+              className="flex-wrap gap-x-1.5 gap-y-2 overflow-visible sm:flex-nowrap sm:gap-y-1.5 sm:overflow-x-auto [&_button]:px-2.5 [&_button]:py-1 [&_button]:text-xs"
             />
             {!isOffline && (
-              <div className="border-t border-border pt-2.5">
+              <div className="border-t border-border pt-3 sm:pt-2.5">
                 <VehicleAvailabilitySection compact />
               </div>
             )}
