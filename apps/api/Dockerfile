@@ -45,7 +45,8 @@ RUN pnpm install --prod --frozen-lockfile --fetch-timeout=600000
 FROM base AS runner
 WORKDIR /app
 
-RUN addgroup --system --gid 1001 nodejs && \
+RUN apk add --no-cache aws-cli postgresql16-client && \
+    addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 appuser
 
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
@@ -63,7 +64,7 @@ RUN set -- ./node_modules/.pnpm/@prisma+client@*/node_modules/@prisma/client && 
     cp -a ./generated-prisma/client "$1" && \
     cp -a ./generated-prisma/.prisma "$(dirname "$(dirname "$1")")/.prisma" && \
     rm -rf ./generated-prisma && \
-    chmod 755 ./apps/api/scripts/migrate.sh
+    chmod 755 ./apps/api/scripts/*.sh
 
 USER appuser
 WORKDIR /app/apps/api

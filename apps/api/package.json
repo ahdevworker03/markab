@@ -11,6 +11,8 @@
     "bootstrap:platform-owner": "pnpm run build && node --enable-source-maps ./dist/bootstrap-platform-owner.mjs",
     "test:migration": "sh scripts/migrate.test.sh",
     "rehearse:migrations": "sh scripts/rehearse-migrations.sh",
+    "test:backup-restore": "sh scripts/backup-restore.test.sh",
+    "rehearse:backup-restore": "sh scripts/rehearse-backup-restore.sh",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "lint": "pnpm exec eslint src",

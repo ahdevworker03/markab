@@ -58,6 +58,47 @@ services:
     networks:
       - production_data
 
+  backup:
+    image: ${API_IMAGE:?API_IMAGE is required}
+    entrypoint: ["./scripts/backup.sh"]
+    profiles: ["backup"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+      BACKUP_ENVIRONMENT: production
+      RELEASE_ID: ${RELEASE_ID:?RELEASE_ID is required}
+      BACKUP_R2_BUCKET: ${BACKUP_R2_BUCKET:?BACKUP_R2_BUCKET is required}
+      BACKUP_R2_PREFIX: backups/production
+      BACKUP_R2_ENDPOINT: ${BACKUP_R2_ENDPOINT:?BACKUP_R2_ENDPOINT is required}
+      BACKUP_R2_ACCESS_KEY_ID: ${BACKUP_R2_ACCESS_KEY_ID:?BACKUP_R2_ACCESS_KEY_ID is required}
+      BACKUP_R2_SECRET_ACCESS_KEY: ${BACKUP_R2_SECRET_ACCESS_KEY:?BACKUP_R2_SECRET_ACCESS_KEY is required}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - production_data
+
+  restore:
+    image: ${API_IMAGE:?API_IMAGE is required}
+    entrypoint: ["./scripts/restore.sh"]
+    profiles: ["recovery"]
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+      RESTORE_ENVIRONMENT: production
+      RESTORE_DATABASE: ${RESTORE_DATABASE:-}
+      RESTORE_DATABASE_URL: ${RESTORE_DATABASE_URL:-}
+      RESTORE_ADMIN_DATABASE_URL: ${RESTORE_ADMIN_DATABASE_URL:-}
+      BACKUP_R2_BUCKET: ${BACKUP_R2_BUCKET:?BACKUP_R2_BUCKET is required}
+      BACKUP_R2_PREFIX: backups/production
+      BACKUP_R2_ENDPOINT: ${BACKUP_R2_ENDPOINT:?BACKUP_R2_ENDPOINT is required}
+      BACKUP_R2_ACCESS_KEY_ID: ${BACKUP_R2_ACCESS_KEY_ID:?BACKUP_R2_ACCESS_KEY_ID is required}
+      BACKUP_R2_SECRET_ACCESS_KEY: ${BACKUP_R2_SECRET_ACCESS_KEY:?BACKUP_R2_SECRET_ACCESS_KEY is required}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - production_data
+
   db:
     image: postgres:16-alpine
     environment:
