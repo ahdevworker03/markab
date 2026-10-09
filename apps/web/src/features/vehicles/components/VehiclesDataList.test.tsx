@@ -56,6 +56,7 @@ describe("VehiclesDataList", () => {
     expect(metadataPanel).toHaveClass("items-start");
     expect(within(metadataPanel as HTMLElement).getByText("العداد").parentElement).toHaveClass(
       "self-start",
+      "text-end",
     );
     expect(mobileList?.querySelector("article > div:last-child")).toHaveClass(
       "items-start",

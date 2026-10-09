@@ -54,11 +54,17 @@ function PhoneValue({ value }: { value: string }) {
   );
 }
 
-function LocationValue({ value }: { value: string }) {
+function LocationValue({
+  value,
+  alignment = "start",
+}: {
+  value: string;
+  alignment?: "start" | "end";
+}) {
   return (
     <span
       dir="auto"
-      className="block min-w-0 break-words text-start text-sm text-foreground"
+      className={`block min-w-0 break-words ${alignment === "end" ? "text-end" : "text-start"} text-sm text-foreground`}
     >
       {value}
     </span>
@@ -170,7 +176,7 @@ export function CustomersDataList({
               <div className="min-w-0 self-start">
                 <div className="ui-label">الموقع</div>
                 <div className="mt-1">
-                  <LocationValue value={customer.address} />
+                  <LocationValue value={customer.address} alignment="end" />
                 </div>
               </div>
             </div>
