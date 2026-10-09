@@ -45,6 +45,20 @@ services:
       staging_data: {}
     restart: unless-stopped
 
+  migrate:
+    image: vehicle-rental-api:test
+    entrypoint: ["./scripts/migrate.sh"]
+    profiles: ["migration"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      MIGRATION_ENVIRONMENT: staging
+      RELEASE_ID: ${RELEASE_ID:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - staging_data
+
   db:
     image: postgres:16-alpine
     environment:

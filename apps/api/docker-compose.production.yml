@@ -44,6 +44,20 @@ services:
       production_data: {}
     restart: unless-stopped
 
+  migrate:
+    image: ${API_IMAGE:?API_IMAGE is required}
+    entrypoint: ["./scripts/migrate.sh"]
+    profiles: ["migration"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      MIGRATION_ENVIRONMENT: production
+      RELEASE_ID: ${RELEASE_ID:?RELEASE_ID is required}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - production_data
+
   db:
     image: postgres:16-alpine
     environment:

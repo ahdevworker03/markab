@@ -23,9 +23,11 @@ COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
 
 COPY . .
 
-WORKDIR /app/apps/api
+WORKDIR /app/lib/db
 RUN DATABASE_URL=postgresql://user:password@localhost:5432/prisma?schema=public \
-    pnpm --filter @workspace/db exec prisma generate
+    ./node_modules/.bin/prisma generate
+
+WORKDIR /app/apps/api
 RUN pnpm run build
 
 FROM base AS production-deps
@@ -48,15 +50,20 @@ RUN addgroup --system --gid 1001 nodejs && \
 
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
+COPY --from=builder /app/apps/api/scripts ./apps/api/scripts
+COPY --from=builder /app/lib/db/prisma ./lib/db/prisma
+COPY --from=builder /app/lib/db/prisma.config.ts ./lib/db/prisma.config.ts
 COPY --from=production-deps /app/node_modules ./node_modules
 COPY --from=production-deps /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=production-deps /app/lib/db/node_modules ./lib/db/node_modules
 COPY --from=builder /app/node_modules/.pnpm/@prisma+client@*/node_modules/@prisma/client ./generated-prisma/client
 COPY --from=builder /app/node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client ./generated-prisma/.prisma/client
 RUN set -- ./node_modules/.pnpm/@prisma+client@*/node_modules/@prisma/client && \
     rm -rf "$1" && \
     cp -a ./generated-prisma/client "$1" && \
     cp -a ./generated-prisma/.prisma "$(dirname "$(dirname "$1")")/.prisma" && \
-    rm -rf ./generated-prisma
+    rm -rf ./generated-prisma && \
+    chmod 755 ./apps/api/scripts/migrate.sh
 
 USER appuser
 WORKDIR /app/apps/api

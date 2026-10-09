@@ -631,10 +631,11 @@ Create reproducible staging/production deployment and operating procedures for t
 The following sequence is mandatory in substance. There is no rolling old/new API overlap across this migration.
 
 1. Stop/drain all old API instances.
-2. Apply the migration.
-3. Start only the compatible new API.
-4. Verify Task API and recurrence behavior.
-5. Deploy/enable the compatible frontend.
+2. Confirm the verified pre-migration backup prerequisite.
+3. Apply the migration and require clean migration status.
+4. Start only the compatible new API and verify readiness.
+5. Verify Task API and recurrence behavior.
+6. Deploy/enable the compatible frontend.
 
 After this migration succeeds, normal rollback to the old API is unsafe because the removed column/type no longer exist. Preferred post-migration recovery is fix-forward on the new API line. Emergency rollback restores the verified pre-migration database backup and redeploys the old API/frontend together under an approved write-loss decision.
 

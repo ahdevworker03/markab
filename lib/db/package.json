@@ -20,12 +20,12 @@
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "argon2": "^0.45.1",
+    "prisma": "^7.9.1",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
     "dotenv-cli": "^11.0.0",
-    "prisma": "^7.9.1",
     "tsx": "catalog:"
   }
 }
