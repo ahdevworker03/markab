@@ -1,7 +1,8 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  setLocation: vi.fn(),
   useVehicleRecord: vi.fn(),
   useVehicleMutations: vi.fn(),
   useVehicleDocuments: vi.fn(),
@@ -10,7 +11,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("wouter", () => ({
-  useLocation: () => ["/vehicles/vehicle-1", vi.fn()],
+  useLocation: () => ["/vehicles/vehicle-1", mocks.setLocation],
 }));
 vi.mock("@/features/vehicles/api-hooks", () => ({
   useVehicleRecord: mocks.useVehicleRecord,
@@ -104,5 +105,53 @@ describe("VehicleDetailPage metadata layout", () => {
       "md:col-span-3",
       "lg:col-span-4",
     );
+  });
+
+  it("aligns the current-rental action with vehicle status and preserves navigation", () => {
+    mocks.useVehicleRecord.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: { data: { ...vehicle, status: "RENTED" } },
+      refetch: vi.fn(),
+    });
+    mocks.useRentalsForVehicle.mockReturnValue({
+      rentals: [{ id: "rental-42", status: "ACTIVE" }],
+    });
+
+    render(<VehicleDetailPage params={{ id: vehicle.id }} />);
+
+    const statusLabel = screen.getByText("حالة السيارة");
+    const rentalLabel = screen.getByText("الإيجار الحالي");
+    const statusBadge = screen.getByText("مؤجرة");
+    const rentalAction = screen.getByRole("button", { name: "عرض الإيجار" });
+    const metadataGrid = statusLabel.parentElement?.parentElement;
+    const statusValueRow = statusBadge.parentElement;
+    const rentalValueRow = rentalAction.parentElement;
+
+    expect(metadataGrid).toHaveClass("grid-cols-2", "items-start");
+    expect(rentalLabel.parentElement?.parentElement).toBe(metadataGrid);
+    expect(statusValueRow).toHaveClass(
+      "mt-1",
+      "flex",
+      "min-h-11",
+      "items-center",
+      "lg:min-h-9",
+    );
+    expect(rentalValueRow).toHaveClass(
+      "mt-1",
+      "flex",
+      "min-h-11",
+      "items-center",
+      "lg:min-h-9",
+    );
+    expect(rentalAction).toHaveClass("border", "whitespace-nowrap");
+    expect(rentalAction.querySelector("svg")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+    expect(statusBadge).toBeInTheDocument();
+
+    fireEvent.click(rentalAction);
+    expect(mocks.setLocation).toHaveBeenCalledWith("/rentals/rental-42");
   });
 });

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Car, Pencil, Trash2 } from "lucide-react";
+import { Car, ChevronLeft, Pencil, Trash2 } from "lucide-react";
 import { useVehicleMutations, useVehicleRecord } from "@/features/vehicles/api-hooks";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -107,7 +107,35 @@ export default function VehicleDetailPage({ params }: DetailPageParams) {
               <span className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Car className="size-7" aria-hidden="true" /></span>
               <div className="min-w-0"><div dir="ltr" className="truncate text-lg font-bold text-foreground">{vehicle.make} {vehicle.model}</div><div dir="ltr" className="number-ltr mt-1 text-sm text-muted-foreground">{vehicle.plateNumber} · {vehicle.year}</div></div>
             </div>
-            <div className="flex flex-wrap items-center gap-3 rounded-lg bg-muted/45 px-3 py-2.5"><div><div className="ui-label mb-1">حالة السيارة</div><StatusBadge status={vehicle.status} /></div>{currentRental ? <div className="border-s border-border ps-3"><div className="ui-label mb-1">الإيجار الحالي</div><Button type="button" variant="ghost" size="sm" onClick={() => setLocation(`/rentals/${currentRental.id}`)}>عرض الإيجار</Button></div> : <p className="border-s border-border ps-3 text-sm text-muted-foreground">لا يوجد إيجار نشط أو حجز مرتبط.</p>}</div>
+            <div className="grid min-w-0 grid-cols-2 items-start gap-x-3 rounded-lg bg-muted/45 px-3 py-2.5">
+              <div className="min-w-0">
+                <div className="ui-label">حالة السيارة</div>
+                <div className="mt-1 flex min-h-11 items-center lg:min-h-9">
+                  <StatusBadge status={vehicle.status} />
+                </div>
+              </div>
+              {currentRental ? (
+                <div className="min-w-0 border-s border-border ps-3">
+                  <div className="ui-label">الإيجار الحالي</div>
+                  <div className="mt-1 flex min-h-11 items-center lg:min-h-9">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 px-2"
+                      onClick={() => setLocation(`/rentals/${currentRental.id}`)}
+                    >
+                      عرض الإيجار
+                      <ChevronLeft className="size-4" aria-hidden="true" />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <p className="min-w-0 self-center border-s border-border ps-3 text-sm text-muted-foreground">
+                  لا يوجد إيجار نشط أو حجز مرتبط.
+                </p>
+              )}
+            </div>
           </div>
         </DetailSection>
 
