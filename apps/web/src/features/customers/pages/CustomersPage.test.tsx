@@ -52,6 +52,7 @@ describe("CustomersPage", () => {
   it("renders only one bounded page of customer records and exposes the next page", () => {
     render(<CustomersPage />);
 
+    expect(screen.getByText("51 عميل")).toBeInTheDocument();
     expect(screen.getByRole("table").querySelectorAll("tbody tr")).toHaveLength(
       50,
     );

@@ -41,7 +41,7 @@ export default function CustomersPage() {
     () => customers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
     [customers, page],
   );
-  const countLabel = `${customers.length} ${customers.length === 1 ? "عميل" : "عملاء"}`;
+  const countLabel = `${customers.length} عميل`;
 
   return (
     <div className="min-h-full">
