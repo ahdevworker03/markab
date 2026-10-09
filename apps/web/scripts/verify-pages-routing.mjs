@@ -78,6 +78,11 @@ const declaredRoutes = [...appRouter.matchAll(/<Route\s+path="([^"]+)"/g)].map(
   ([, route]) => route,
 );
 assert.ok(declaredRoutes.length > 0, "App.tsx must contain routable paths");
+assert.equal(
+  redirects.some(([, destination]) => destination === "/index.html"),
+  false,
+  "SPA proxy rules must target /, not /index.html",
+);
 
 const matchesRule = (pathname, pattern) => {
   if (pattern.endsWith("/*")) {
@@ -131,14 +136,14 @@ for (const route of declaredRoutes) {
     redirects.some(
       ([pattern, target, status]) =>
         matchesRule(concreteRoute, pattern) &&
-        target === "/index.html" &&
+        target === "/" &&
         status === "200",
     ),
-    `React route ${route} must rewrite to /index.html with status 200`,
+    `React route ${route} must rewrite to / with status 200`,
   );
 }
 console.log(
-  `PASS direct navigation/refresh rewrites for ${declaredRoutes.length} declared React paths: ${declaredRoutes.join(", ")}`,
+  `PASS direct navigation/refresh rewrites to / for ${declaredRoutes.length} declared React paths: ${declaredRoutes.join(", ")}`,
 );
 
 const unknownRoute = "/this-application-route-definitely-does-not-exist-123";
