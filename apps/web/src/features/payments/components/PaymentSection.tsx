@@ -312,25 +312,25 @@ export function PaymentSection({ rentalId, totalAmount }: PaymentSectionProps) {
                 <dl
                   key={payment.id}
                   dir="rtl"
-                  className="grid grid-cols-1 gap-x-4 gap-y-2 px-3 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center sm:gap-y-3"
+                  className="grid grid-cols-1 gap-x-4 gap-y-1 px-3 py-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center sm:gap-y-3 sm:py-3"
                 >
                   <div className="min-w-0 sm:col-start-1">
                     <dt className="text-xs text-muted-foreground">
                       تاريخ الدفع
                     </dt>
-                    <dd className="number-ltr m-0 mt-1 text-end text-sm font-medium text-foreground">
+                    <dd className="number-ltr m-0 mt-0.5 text-end text-sm font-medium text-foreground sm:mt-1">
                       {formatDateTime(payment.paymentDate)}
                     </dd>
                   </div>
                   <div className="min-w-0 sm:col-start-2">
                     <dt className="text-xs text-muted-foreground">الطريقة</dt>
-                    <dd className="m-0 mt-1 break-words text-sm font-medium text-foreground">
+                    <dd className="m-0 mt-0.5 break-words text-sm font-medium text-foreground sm:mt-1">
                       {PAYMENT_METHOD_LABELS[payment.method] ?? payment.method}
                     </dd>
                   </div>
                   <div className="min-w-0 text-end sm:col-start-3 sm:justify-self-end">
                     <dt className="text-xs text-muted-foreground">المبلغ</dt>
-                    <dd className="number-ltr m-0 mt-1 whitespace-nowrap text-sm font-bold text-foreground">
+                    <dd className="number-ltr m-0 mt-0.5 whitespace-nowrap text-sm font-bold text-foreground sm:mt-1">
                       {formatCurrency(payment.amount)}
                     </dd>
                   </div>
