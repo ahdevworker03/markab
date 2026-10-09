@@ -312,7 +312,7 @@ export function PaymentSection({ rentalId, totalAmount }: PaymentSectionProps) {
                 <dl
                   key={payment.id}
                   dir="rtl"
-                  className="grid grid-cols-1 gap-x-4 gap-y-3 px-3 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center"
+                  className="grid grid-cols-1 gap-x-4 gap-y-2 px-3 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center sm:gap-y-3"
                 >
                   <div className="min-w-0 sm:col-start-1">
                     <dt className="text-xs text-muted-foreground">

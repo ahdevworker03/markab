@@ -171,7 +171,14 @@ describe("PaymentSection", () => {
     expect(row).toHaveAttribute("dir", "rtl");
     expect(row!).toHaveClass(
       "grid-cols-1",
+      "gap-y-2",
       "sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]",
+      "sm:gap-y-3",
+    );
+    expect(row!).not.toHaveClass(
+      "justify-between",
+      "min-h-full",
+      "min-h-screen",
     );
     const dateField = within(row!).getByText("تاريخ الدفع").closest("div");
     const methodField = within(row!).getByText("تحويل بنكي").closest("div");
@@ -185,13 +192,16 @@ describe("PaymentSection", () => {
     expect(dateField?.querySelector("dd")).toHaveClass("text-end");
     expect(methodField?.querySelector("dt")).toHaveTextContent("الطريقة");
     expect(methodField?.querySelector("dd")).toHaveTextContent("تحويل بنكي");
+    expect(methodField?.querySelector("dd")).toHaveClass("mt-1");
     expect(methodField).toHaveClass("sm:col-start-2", "min-w-0");
     expect(amountField?.querySelector("dt")).toHaveTextContent("المبلغ");
     expect(amountField?.querySelector("dd")).toHaveTextContent("USD 50");
-    expect(amountField).toHaveClass(
-      "sm:col-start-3",
-      "sm:justify-self-end",
+    expect(amountField?.querySelector("dd")).toHaveClass(
+      "mt-1",
+      "number-ltr",
+      "whitespace-nowrap",
     );
+    expect(amountField).toHaveClass("sm:col-start-3", "sm:justify-self-end");
   });
 
   it("records a payment and shows a success message", async () => {
