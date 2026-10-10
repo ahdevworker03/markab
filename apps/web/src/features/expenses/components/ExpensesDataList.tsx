@@ -76,8 +76,8 @@ function DescriptionValue({ expense }: { expense: ExpenseResponse }) {
   return expense.description ? <span className="block max-w-56 truncate text-sm text-foreground" title={expense.description}>{expense.description}</span> : <span className="text-sm text-muted-foreground">—</span>;
 }
 
-function DateValue({ expense }: { expense: ExpenseResponse }) {
-  return <span className="number-ltr whitespace-nowrap text-base font-semibold text-foreground">{formatDate(expense.expenseDate)}</span>;
+function DateValue({ expense, compact = false }: { expense: ExpenseResponse; compact?: boolean }) {
+  return <span className={`number-ltr whitespace-nowrap ${compact ? "text-sm" : "text-base"} font-semibold text-foreground`}>{formatDate(expense.expenseDate)}</span>;
 }
 
 function AmountValue({ expense }: { expense: ExpenseResponse }) {
@@ -131,7 +131,7 @@ export function ExpensesDataList({ items, onOpen }: ExpensesDataListProps) {
         {items.map((item) => (
           <article key={item.expense.id} className="space-y-3 px-4 py-3">
             <div className="flex items-start justify-between gap-3"><ExpenseCategoryBadge category={item.expense.category} /><AmountValue expense={item.expense} /></div>
-            <div className="grid min-w-0 grid-cols-2 items-start gap-3 rounded-lg bg-muted/45 p-3"><div className="min-w-0"><div className="ui-label">التاريخ</div><div className="mt-1"><DateValue expense={item.expense} /></div></div><div className="min-w-0"><div className="ui-label">السيارة</div><div className="mt-1"><VehicleValue item={item} compact /></div></div></div>
+            <div className="grid min-w-0 grid-cols-2 items-start gap-3 rounded-lg bg-muted/45 p-3"><div className="flex min-w-0 flex-col items-start gap-1"><div className="ui-label">التاريخ</div><DateValue expense={item.expense} compact /></div><div className="flex min-w-0 flex-col items-start gap-1"><div className="ui-label">السيارة</div><VehicleValue item={item} compact /></div></div>
             <div className="flex items-center justify-between gap-3 border-t border-border pt-3"><span className="flex min-w-0 items-center gap-1.5 truncate text-xs text-muted-foreground"><CircleDollarSign className="size-3.5 shrink-0" aria-hidden="true" />{item.expense.description || "مصروف مسجّل"}</span><Button className="shrink-0" type="button" variant="outline" size="sm" onClick={() => onOpen(item.expense.id)}>التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button></div>
           </article>
         ))}

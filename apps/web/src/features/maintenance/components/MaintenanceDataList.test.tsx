@@ -32,6 +32,10 @@ describe("MaintenanceDataList mobile cards", () => {
     const mobileCard = mobileList.querySelector("article")!;
     const card = within(mobileCard);
     const metadata = mobileCard.querySelector(".grid-cols-2")!;
+    const typeLabel = card.getByText("النوع");
+    const typeValue = card.getByText("صيانة وقائية");
+    const dateLabel = card.getByText("الموعد");
+    const dateValue = metadata.querySelector('[dir="ltr"]')!;
     const bottomRow = mobileCard.lastElementChild!;
 
     expect(mobileCard).toHaveClass("space-y-3", "px-4", "py-3");
@@ -39,13 +43,14 @@ describe("MaintenanceDataList mobile cards", () => {
     expect(card.getByText("Toyota Corolla")).toHaveAttribute("dir", "ltr");
     expect(card.getByText("BM-1-003")).toHaveAttribute("dir", "ltr");
     expect(card.getByText("مجدولة")).toBeInTheDocument();
-    expect(metadata).toHaveClass("grid-cols-2");
-    expect(card.getByText("النوع").parentElement).toContainElement(
-      card.getByText("صيانة وقائية"),
-    );
-    expect(card.getByText("الموعد").parentElement).toContainElement(
-      metadata.querySelector('[dir="ltr"]'),
-    );
+    expect(metadata).toHaveClass("grid-cols-2", "items-start");
+    expect(typeLabel.parentElement).toContainElement(typeValue);
+    expect(dateLabel.parentElement).toContainElement(dateValue);
+    expect(typeValue.parentElement).toBe(typeLabel.parentElement);
+    expect(dateValue.parentElement?.parentElement).toBe(dateLabel.parentElement);
+    expect(dateValue).toHaveClass("number-ltr");
+    expect(typeLabel.parentElement).toHaveClass("items-start", "gap-1");
+    expect(dateLabel.parentElement).toHaveClass("items-start", "gap-1");
     expect(bottomRow).toContainElement(card.getByText("التكلفة"));
     expect(bottomRow).toContainElement(card.getByText("USD 150"));
     expect(bottomRow).toContainElement(

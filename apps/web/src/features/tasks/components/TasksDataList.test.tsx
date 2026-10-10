@@ -31,9 +31,17 @@ describe("TasksDataList mobile cards", () => {
     const duePanel = mobileCard.querySelector(".rounded-lg")!;
     const footer = mobileCard.lastElementChild!;
     const dueDate = duePanel.querySelector('[dir="ltr"]')!;
+    const title = card.getByText(task.title);
+    const titleBlock = title.parentElement!;
+    const taskId = titleBlock.querySelector('[dir="ltr"]')!;
+    const header = mobileCard.firstElementChild!;
 
     expect(mobileCard).toHaveClass("space-y-3", "px-4", "py-3");
-    expect(card.getByText(task.title)).toBeInTheDocument();
+    expect(title).toBeInTheDocument();
+    expect(header).toHaveClass("items-start");
+    expect(titleBlock).toHaveClass("items-start");
+    expect(title).toHaveClass("w-full", "text-start");
+    expect(taskId).toHaveClass("number-ltr", "w-full", "text-end");
     expect(card.getByText("مكتملة")).toBeInTheDocument();
     expect(duePanel).toHaveClass("px-3", "py-2");
     expect(duePanel).toContainElement(card.getByText("تاريخ الاستحقاق"));

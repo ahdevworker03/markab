@@ -118,7 +118,7 @@ export function MaintenanceDataList({ items, onOpen }: MaintenanceDataListProps)
         {items.map((item) => (
           <article key={item.record.id} className="space-y-3 px-4 py-3">
             <div className="flex items-start justify-between gap-3"><VehicleIdentity item={item} compact /><StatusBadge status={item.record.status} /></div>
-            <div className="grid grid-cols-2 gap-3 rounded-lg bg-muted/45 p-3"><div className="min-w-0"><div className="ui-label">النوع</div><div className="mt-1"><TypeValue record={item.record} /></div></div><div className="min-w-0"><div className="ui-label">الموعد</div><div className="mt-1"><DateValue record={item.record} align="start" /></div></div></div>
+            <div className="grid grid-cols-2 items-start gap-3 rounded-lg bg-muted/45 p-3"><div className="flex min-w-0 flex-col items-start gap-1"><div className="ui-label">النوع</div><TypeValue record={item.record} /></div><div className="flex min-w-0 flex-col items-start gap-1"><div className="ui-label">الموعد</div><DateValue record={item.record} align="start" /></div></div>
             <div className="flex items-end justify-between gap-3 border-t border-border pt-3"><div className="min-w-0"><div className="ui-label">التكلفة</div><div className="mt-1 flex min-w-0 items-center gap-1.5"><CircleDollarSign className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" /><CostValue record={item.record} /></div></div><Button className="shrink-0" type="button" variant="outline" size="sm" onClick={() => onOpen(item.record.id)}>التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button></div>
           </article>
         ))}

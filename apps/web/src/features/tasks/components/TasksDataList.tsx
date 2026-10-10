@@ -16,11 +16,11 @@ interface TasksDataListProps {
 function TaskTitle({ task, compact = false, desktop = false }: { task: TaskResponse; compact?: boolean; desktop?: boolean }) {
   if (compact) {
     return (
-      <span className="flex min-w-0 flex-1 flex-col">
-        <span className="line-clamp-2 text-end text-sm font-semibold leading-5 text-foreground">
+      <span className="flex min-w-0 flex-1 flex-col items-start">
+        <span className="line-clamp-2 w-full text-start text-sm font-semibold leading-5 text-foreground">
           {task.title}
         </span>
-        <span dir="ltr" className="number-ltr mt-1 block max-w-full truncate text-start text-xs text-muted-foreground">
+        <span dir="ltr" className="number-ltr mt-1 block w-full max-w-full truncate text-end text-xs text-muted-foreground">
           #{task.id.slice(0, 8)}
         </span>
       </span>
@@ -72,7 +72,7 @@ export function TasksDataList({ tasks, onOpen }: TasksDataListProps) {
       </div>
 
       <div className="divide-y divide-border md:hidden">
-        {tasks.map((task) => <article key={task.id} className={task.status === "COMPLETED" ? "space-y-3 bg-muted/20 px-4 py-3" : "space-y-3 px-4 py-3"}><div className="flex items-start gap-3"><TaskTitle task={task} compact /><div className="shrink-0 pt-0.5"><TaskStatus task={task} /></div></div><div className="rounded-lg bg-muted/45 px-3 py-2"><div className="ui-label">تاريخ الاستحقاق</div><div className="mt-1"><DueDateValue task={task} /></div></div><div className="flex items-center justify-between gap-3 border-t border-border pt-3"><span className="flex min-w-0 items-center gap-1.5 truncate text-xs text-muted-foreground">{task.status === "COMPLETED" ? <CheckCircle2 className="size-3.5 shrink-0" aria-hidden="true" /> : <Circle className="size-3.5 shrink-0" aria-hidden="true" />}{task.status === "COMPLETED" ? "مهمة مكتملة" : isTaskOverdue(task) ? "مهمة متأخرة" : "مهمة قيد المتابعة"}</span><Button className="shrink-0" type="button" variant="outline" size="sm" onClick={() => onOpen(task.id)}>التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button></div></article>)}
+        {tasks.map((task) => <article key={task.id} className={task.status === "COMPLETED" ? "space-y-3 bg-muted/20 px-4 py-3" : "space-y-3 px-4 py-3"}><div className="flex items-start gap-3"><TaskTitle task={task} compact /><div className="shrink-0"><TaskStatus task={task} /></div></div><div className="rounded-lg bg-muted/45 px-3 py-2"><div className="ui-label">تاريخ الاستحقاق</div><div className="mt-1"><DueDateValue task={task} /></div></div><div className="flex items-center justify-between gap-3 border-t border-border pt-3"><span className="flex min-w-0 items-center gap-1.5 truncate text-xs text-muted-foreground">{task.status === "COMPLETED" ? <CheckCircle2 className="size-3.5 shrink-0" aria-hidden="true" /> : <Circle className="size-3.5 shrink-0" aria-hidden="true" />}{task.status === "COMPLETED" ? "مهمة مكتملة" : isTaskOverdue(task) ? "مهمة متأخرة" : "مهمة قيد المتابعة"}</span><Button className="shrink-0" type="button" variant="outline" size="sm" onClick={() => onOpen(task.id)}>التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button></div></article>)}
       </div>
     </>
   );
