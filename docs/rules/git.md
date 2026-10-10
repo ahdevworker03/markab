@@ -1,135 +1,161 @@
-# Git Conventions
+This document is the single source of truth for repository-specific Git behavior. General Git commands and tooling belong in the `git` skill.
 
-## Table of Contents
+## Branch Model
 
-| # | Section |
-| - | ------- |
-| 1 | [Commits](#commits) |
-| 2 | [Milestone Workflow](#milestone-workflow) |
-| 3 | [Definition of Done](#definition-of-done) |
-| 4 | [Commit Format](#commit-format) |
-| 5 | [Before Every Commit](#before-every-commit) |
-| 6 | [AI Responsibilities](#ai-responsibilities) |
-| 7 | [Branches](#branches) |
-| 8 | [Pull Requests](#pull-requests) |
-| 9 | [History](#history) |
-| 10 | [Synchronization](#synchronization) |
-| 11 | [Repository Safety](#repository-safety) |
+Persistent branches:
 
-These conventions define how version control is used in this repository. General Git workflows and tooling belong in the `git` skill.
+- `main` — production-approved source.
+- `staging` — next release candidate deployed to staging.
+
+Temporary branches:
+
+- `feat/<name>` — new functionality.
+- `fix/<name>` — bug fixes.
+- `perf/<name>` — performance work.
+- `chore/<name>` — infrastructure, deployment, tooling, or maintenance.
+- `docs/<name>` — documentation-only work.
+
+Do not create permanent `develop`, `production`, `release`, or other environment branches unless this policy is explicitly changed.
+
+`main` is not a fallback development branch. Production rollback uses a previously verified production commit or release tag.
+
+## Working Branches
+
+Normal planned work branches from the latest `staging`.
+
+Production hotfixes branch from the latest `main`.
+
+Before implementation:
+
+1. Inspect Git status and current branch.
+2. Confirm the correct base branch.
+3. Create a dedicated working branch.
+4. Keep the branch limited to one coherent task or milestone step.
+
+Do not mix unrelated work in one branch.
+
+## Promotion Flow
+
+Normal flow:
+
+```text
+working branch
+→ staging
+→ staging deployment
+→ staging verification
+→ main
+→ production deployment
+→ production smoke verification
+→ optional release tag
+```
+
+Rules:
+
+- A completed working branch does not merge into `staging` automatically.
+- The agent must stop and report when the branch is ready for staging.
+- Merge to `staging` requires explicit user approval.
+- Staging must be verified against the real affected frontend, API, database, migrations, and supporting services before production promotion.
+- Merge `staging` into `main` only after explicit user approval.
+- Production must receive the same approved code and migrations verified in staging.
+- Production deployment requires explicit user approval.
+- After a successful release, `main` and `staging` should normally converge before new release work begins.
+
+## Hotfixes
+
+Production hotfixes start from `main`.
+
+Normal flow:
+
+```text
+main
+→ fix/<name>
+→ verification
+→ staging verification where practical
+→ main
+→ production
+→ sync fix back into staging
+```
+
+Skipping staging requires explicit user approval.
+
+## Release Tags
+
+Production release tags use:
+
+```text
+vMAJOR.MINOR.PATCH
+```
+
+- `PATCH` — backward-compatible fixes, security patches, small corrections, or performance fixes.
+- `MINOR` — backward-compatible product functionality or meaningful new capabilities.
+- `MAJOR` — intentionally incompatible or breaking product/API changes.
+
+Tags are created only:
+
+- from the production-approved commit on `main`,
+- after production deployment succeeds,
+- after production smoke verification succeeds,
+- with explicit user approval.
+
+Do not tag staging builds, working branches, milestone steps, failed releases, or rolled-back releases.
+
+Release tags are immutable.
 
 ## Commits
 
-- Follow the Conventional Commits specification.
-- Keep each commit focused on a single logical change.
-- Write commit messages in the imperative mood.
-- Avoid mixing unrelated changes in the same commit.
-- Do not create temporary or "WIP" commits unless explicitly requested.
+- Follow Conventional Commits.
+- Keep commits focused.
+- Do not mix unrelated work.
+- Do not create `WIP` commits unless explicitly requested.
+- A milestone step should normally produce one commit.
+- The agent may suggest the commit title and body but must not commit without explicit user approval.
 
-## Milestone Workflow
+Before every commit, review:
 
-This repository follows a milestone-driven, AI-assisted implementation workflow.
+```text
+git status
+git diff
+git diff --staged
+```
 
-Every implementation step follows this exact sequence:
+Verify that only intended files are included and no secrets or unrelated changes are present.
 
-1. Implement the current milestone step.
-2. Perform an AI code review.
-3. Perform a manual code review.
-4. Perform manual testing.
-5. Verify every acceptance criterion.
-6. Commit.
-7. Proceed to the next step.
+## Agent Permissions
 
-Never skip any stage.
+Allowed without additional approval:
 
-The atomic unit of work is **one completed milestone step**, not an arbitrary logical change. A single milestone step should normally produce exactly one commit. Do not split one step into multiple commits unless unrelated work was introduced accidentally. Do not combine multiple milestone steps into one commit.
+- Inspect Git state and history.
+- Create an appropriate working branch.
+- Modify files on the working branch.
+- Run tests, builds, lint, typecheck, and verification.
+- Review diffs.
+- Recommend commit messages, staging promotion, and release versions.
 
-### Definition of Done
+Requires explicit user approval:
 
-A milestone step is complete only if all of the following are true:
+- Stage files for commit.
+- Commit.
+- Push.
+- Merge into `staging`.
+- Merge into `main`.
+- Delete local or remote branches.
+- Create, move, delete, or push release tags.
+- Deploy staging.
+- Deploy production.
 
-- Implementation completed.
-- AI review completed.
-- Manual review completed.
-- Acceptance criteria satisfied.
-- Manual testing completed.
-- No new TypeScript errors introduced.
-- No new lint errors introduced.
-- No existing functionality broken.
-- Git diff reviewed.
-- Ready for commit.
+Forbidden unless explicitly approved for an exceptional case:
 
-If any item fails, the milestone step is NOT complete.
+- Force-push shared branches.
+- Rewrite shared history.
 
-### Commit Format
-
-Commit title format: `feat(m1): complete step X.Y <step name>`
-
-Commit body should contain:
-
-- Implemented: summary of what was built.
-- Verified: Build, TypeScript, Lint, Manual testing, Acceptance criteria.
-
-Only include items actually verified. Never claim verification that was not performed.
-
-### Before Every Commit
-
-Review `git status`, `git diff`, and `git diff --staged`. Ensure:
-
-- Only current milestone files are staged.
-- No accidental files are included.
-- No unrelated refactoring is mixed in.
-- No temporary or generated files are committed.
-- No secrets are committed.
-
-### AI Responsibilities
-
-The AI should:
-
-- Suggest the appropriate commit title.
-- Generate the complete commit body.
-- Summarize the implementation.
-- Verify acceptance criteria based only on available evidence.
-- Clearly distinguish verified facts from assumptions.
-
-The AI should NOT:
-
-- Execute git commit automatically.
-- Push commits automatically.
-- Rewrite Git history.
-- Stage unrelated files.
-- Claim verification without evidence.
-
-The final commit decision always belongs to the developer.
-
-## Branches
-
-- Follow the branch naming convention defined in `project.md`.
-- Create branches from the latest target branch unless instructed otherwise.
-- Keep branch scope limited to a single feature, fix, or task.
-
-## Pull Requests
-
-- Do not open pull requests unless the user requests them.
-- When preparing a pull request, include:
-  - A clear summary.
-  - Testing performed.
-  - Breaking changes, if any.
-  - Related issues or tasks, when applicable.
-
-## History
-
-- Keep commit history clean and easy to understand.
-- Do not rewrite shared history unless explicitly approved.
-- Never force-push shared branches.
-
-## Synchronization
-
-- Ensure the working branch is up to date before merging or pushing when appropriate.
-- Resolve conflicts deliberately rather than automatically.
+When work is complete, the agent must report the branch name, base branch, changes made, verification performed, remaining risks, and whether it is ready for staging promotion.
 
 ## Repository Safety
 
-- Never commit secrets, credentials, API keys, or environment files.
-- Verify generated files before committing them.
-- Respect the repository's ignore rules.
+- Never commit secrets, credentials, tokens, private keys, or sensitive environment files.
+- Never discard unrelated user changes.
+- Never reset, overwrite, or delete uncommitted work without explicit approval.
+- Never use destructive Git commands only to make the working tree appear clean.
+- Resolve conflicts deliberately.
+- Do not move existing production release tags.
+- Confirm the current branch before repository-level changes.

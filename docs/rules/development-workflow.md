@@ -1,16 +1,5 @@
 # Development Workflow
 
-## Table of Contents
-
-| # | Section |
-| - | ------- |
-| 1 | [Preparation](#preparation) |
-| 2 | [Planning](#planning) |
-| 3 | [Implementation](#implementation) |
-| 4 | [Verification](#verification) |
-| 5 | [Documentation](#documentation) |
-| 6 | [Completion](#completion) |
-
 Follow this workflow for any task that modifies code, tests, documentation, or project structure.
 
 ## Preparation

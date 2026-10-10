@@ -1,16 +1,5 @@
 # Database Rules
 
-## Table of Contents
-
-| # | Section |
-| - | ------- |
-| 1 | [Persistence Truth](#persistence-truth) |
-| 2 | [Migrations](#migrations) |
-| 3 | [Conventions](#conventions) |
-| 4 | [Multi-Tenancy](#multi-tenancy) |
-| 5 | [Integrity](#integrity) |
-| 6 | [Safety](#safety) |
-
 These rules govern PostgreSQL persistence through Prisma in this repository. SQL and Prisma specifics belong in the corresponding skills.
 
 ## Persistence Truth

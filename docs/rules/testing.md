@@ -1,11 +1,5 @@
 # Testing Policy
 
-## Table of Contents
-
-| # | Section |
-| - | ------- |
-| 1 | [Requirements](#requirements) |
-
 These rules define the repository's testing requirements. Testing methodology, frameworks, and tooling belong in the `testing` skill.
 
 ## Requirements
