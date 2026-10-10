@@ -13,6 +13,39 @@ const expense = {
 } as ExpenseResponse;
 
 describe("ExpensesDataList", () => {
+  it("groups mobile amount and category, date and vehicle metadata, and footer status with its action", () => {
+    const mobileExpense = { ...expense, description: null } as ExpenseResponse;
+    const { container } = render(
+      <ExpensesDataList
+        items={[{ expense: mobileExpense, vehicleName: "Kia Pilot 3", vehiclePlate: "BM-1-003" }]}
+        onOpen={vi.fn()}
+      />,
+    );
+
+    const mobileList = container.querySelector('[class~="md:hidden"]')!;
+    const mobileCard = mobileList.querySelector("article")!;
+    const card = within(mobileCard);
+    const metadata = mobileCard.querySelector(".grid-cols-2")!;
+    const summary = mobileCard.firstElementChild!;
+    const footer = mobileCard.lastElementChild!;
+
+    expect(mobileCard).toHaveClass("space-y-3", "px-4", "py-3");
+    expect(summary).toContainElement(card.getByText("USD 125"));
+    expect(summary).toContainElement(card.getByText("وقود"));
+    expect(metadata).toHaveClass("grid-cols-2", "items-start");
+    expect(card.getByText("التاريخ").parentElement).toContainElement(
+      metadata.querySelector(".number-ltr"),
+    );
+    expect(card.getByText("السيارة").parentElement).toContainElement(
+      card.getByText("Kia Pilot 3"),
+    );
+    expect(card.getByText("Kia Pilot 3")).toHaveAttribute("dir", "ltr");
+    expect(card.getByText("BM-1-003")).toHaveAttribute("dir", "ltr");
+    expect(mobileList.querySelector("svg.lucide-car")).not.toBeInTheDocument();
+    expect(footer).toContainElement(card.getByText("مصروف مسجّل"));
+    expect(footer).toContainElement(card.getByRole("button", { name: "التفاصيل" }));
+  });
+
   it("aligns vehicle text to the table header and preserves the detail action", () => {
     const onOpen = vi.fn();
     render(

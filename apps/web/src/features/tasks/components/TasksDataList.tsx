@@ -1,4 +1,4 @@
-import { CalendarDays, CheckCircle2, ChevronLeft, Circle, ClipboardList } from "lucide-react";
+import { CheckCircle2, ChevronLeft, Circle, ClipboardList } from "lucide-react";
 import type { TaskResponse } from "@workspace/api-client-react";
 
 import { Button } from "@/components/ui/button";
@@ -72,7 +72,7 @@ export function TasksDataList({ tasks, onOpen }: TasksDataListProps) {
       </div>
 
       <div className="divide-y divide-border md:hidden">
-        {tasks.map((task) => <article key={task.id} className={task.status === "COMPLETED" ? "space-y-4 bg-muted/20 px-4 py-4" : "space-y-4 px-4 py-4"}><div className="flex items-start gap-3"><TaskTitle task={task} compact /><div className="shrink-0 pt-0.5"><TaskStatus task={task} /></div></div><div className="rounded-lg bg-muted/45 p-3"><div className="ui-label">تاريخ الاستحقاق</div><div className="mt-1 flex items-center gap-2"><CalendarDays className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" /><DueDateValue task={task} /></div></div><div className="flex items-center justify-between gap-3"><span className="flex min-w-0 items-center gap-1.5 truncate text-xs text-muted-foreground">{task.status === "COMPLETED" ? <CheckCircle2 className="size-3.5 shrink-0" aria-hidden="true" /> : <Circle className="size-3.5 shrink-0" aria-hidden="true" />}{task.status === "COMPLETED" ? "مهمة مكتملة" : isTaskOverdue(task) ? "مهمة متأخرة" : "مهمة قيد المتابعة"}</span><Button type="button" variant="outline" size="sm" onClick={() => onOpen(task.id)}>التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button></div></article>)}
+        {tasks.map((task) => <article key={task.id} className={task.status === "COMPLETED" ? "space-y-3 bg-muted/20 px-4 py-3" : "space-y-3 px-4 py-3"}><div className="flex items-start gap-3"><TaskTitle task={task} compact /><div className="shrink-0 pt-0.5"><TaskStatus task={task} /></div></div><div className="rounded-lg bg-muted/45 px-3 py-2"><div className="ui-label">تاريخ الاستحقاق</div><div className="mt-1"><DueDateValue task={task} /></div></div><div className="flex items-center justify-between gap-3 border-t border-border pt-3"><span className="flex min-w-0 items-center gap-1.5 truncate text-xs text-muted-foreground">{task.status === "COMPLETED" ? <CheckCircle2 className="size-3.5 shrink-0" aria-hidden="true" /> : <Circle className="size-3.5 shrink-0" aria-hidden="true" />}{task.status === "COMPLETED" ? "مهمة مكتملة" : isTaskOverdue(task) ? "مهمة متأخرة" : "مهمة قيد المتابعة"}</span><Button className="shrink-0" type="button" variant="outline" size="sm" onClick={() => onOpen(task.id)}>التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button></div></article>)}
       </div>
     </>
   );

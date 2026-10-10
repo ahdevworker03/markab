@@ -29,10 +29,16 @@ function dueLabel(record: MaintenanceResponse): { label: string; className: stri
   return { label: `بعد ${formatNumber(days)} يوم`, className: "text-status-warning" };
 }
 
-function VehicleIdentity({ item }: { item: MaintenanceListItem }) {
+function VehicleIdentity({
+  item,
+  compact = false,
+}: {
+  item: MaintenanceListItem;
+  compact?: boolean;
+}) {
   return (
     <div className="flex min-w-0 items-center gap-3">
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Car className="size-4" aria-hidden="true" /></span>
+      {!compact && <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Car className="size-4" aria-hidden="true" /></span>}
       <span className="min-w-0">
         <span dir="ltr" className="block truncate text-sm font-semibold text-foreground">{item.vehicleName}</span>
         <span dir="ltr" className="number-ltr mt-0.5 block text-xs text-muted-foreground">{item.vehiclePlate || "—"}</span>
@@ -47,11 +53,17 @@ function TypeValue({ record }: { record: MaintenanceResponse }) {
   return <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground"><Icon className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />{type.label}</span>;
 }
 
-function DateValue({ record }: { record: MaintenanceResponse }) {
+function DateValue({
+  record,
+  align = "center",
+}: {
+  record: MaintenanceResponse;
+  align?: "center" | "start";
+}) {
   const due = dueLabel(record);
   return (
-    <div className="space-y-1 text-center">
-      <div dir="ltr" className="number-ltr whitespace-nowrap text-sm font-semibold text-foreground">{formatDate(record.maintenanceDate)}</div>
+    <div className={`space-y-1 ${align === "center" ? "text-center" : "text-start"}`}>
+      <div dir="ltr" className={`number-ltr whitespace-nowrap text-sm font-semibold text-foreground ${align === "start" ? "text-start" : ""}`}>{formatDate(record.maintenanceDate)}</div>
       {due && <div className={`text-xs font-medium ${due.className}`}>{due.label}</div>}
     </div>
   );
@@ -104,10 +116,10 @@ export function MaintenanceDataList({ items, onOpen }: MaintenanceDataListProps)
 
       <div className="divide-y divide-border md:hidden">
         {items.map((item) => (
-          <article key={item.record.id} className="space-y-4 px-4 py-4">
-            <div className="flex items-start justify-between gap-3"><VehicleIdentity item={item} /><StatusBadge status={item.record.status} /></div>
-            <div className="grid grid-cols-2 gap-3 rounded-lg bg-muted/45 p-3"><div><div className="ui-label">النوع</div><div className="mt-1"><TypeValue record={item.record} /></div></div><div><div className="ui-label">الموعد</div><div className="mt-1"><DateValue record={item.record} /></div></div></div>
-            <div className="flex items-center justify-between gap-3 border-t border-border pt-3"><div className="min-w-0"><div className="ui-label">التكلفة</div><div className="mt-1 flex items-center gap-1.5"><CircleDollarSign className="size-3.5 text-muted-foreground" aria-hidden="true" /><CostValue record={item.record} /></div></div><Button type="button" variant="outline" size="sm" onClick={() => onOpen(item.record.id)}>التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button></div>
+          <article key={item.record.id} className="space-y-3 px-4 py-3">
+            <div className="flex items-start justify-between gap-3"><VehicleIdentity item={item} compact /><StatusBadge status={item.record.status} /></div>
+            <div className="grid grid-cols-2 gap-3 rounded-lg bg-muted/45 p-3"><div className="min-w-0"><div className="ui-label">النوع</div><div className="mt-1"><TypeValue record={item.record} /></div></div><div className="min-w-0"><div className="ui-label">الموعد</div><div className="mt-1"><DateValue record={item.record} align="start" /></div></div></div>
+            <div className="flex items-end justify-between gap-3 border-t border-border pt-3"><div className="min-w-0"><div className="ui-label">التكلفة</div><div className="mt-1 flex min-w-0 items-center gap-1.5"><CircleDollarSign className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" /><CostValue record={item.record} /></div></div><Button className="shrink-0" type="button" variant="outline" size="sm" onClick={() => onOpen(item.record.id)}>التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button></div>
           </article>
         ))}
       </div>
