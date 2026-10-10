@@ -2,15 +2,14 @@ name: vehicle-rental-staging
 
 services:
   api:
-    image: vehicle-rental-api:test
-    build:
-      context: ../..
-      dockerfile: apps/api/Dockerfile
+    image: ${API_IMAGE:?API_IMAGE is required}
+    labels:
+      org.opencontainers.image.revision: ${RELEASE_ID:?RELEASE_ID is required}
     environment:
       PORT: "3000"
       NODE_ENV: production
       LOG_LEVEL: ${LOG_LEVEL:-info}
-      RELEASE_ID: ${RELEASE_ID:-unreleased}
+      RELEASE_ID: ${RELEASE_ID:?RELEASE_ID is required}
       CORS_ORIGINS: ${CORS_ORIGINS:?CORS_ORIGINS is required}
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
@@ -47,13 +46,13 @@ services:
     restart: unless-stopped
 
   migrate:
-    image: vehicle-rental-api:test
+    image: ${API_IMAGE:?API_IMAGE is required}
     entrypoint: ["./scripts/migrate.sh"]
     profiles: ["migration"]
     environment:
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
       MIGRATION_ENVIRONMENT: staging
-      RELEASE_ID: ${RELEASE_ID:-}
+      RELEASE_ID: ${RELEASE_ID:?RELEASE_ID is required}
     depends_on:
       db:
         condition: service_healthy
@@ -61,14 +60,14 @@ services:
       - staging_data
 
   backup:
-    image: vehicle-rental-api:test
+    image: ${API_IMAGE:?API_IMAGE is required}
     entrypoint: ["./scripts/backup.sh"]
     profiles: ["backup"]
     environment:
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
       POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
       BACKUP_ENVIRONMENT: staging
-      RELEASE_ID: ${RELEASE_ID:-}
+      RELEASE_ID: ${RELEASE_ID:?RELEASE_ID is required}
       BACKUP_R2_BUCKET: ${BACKUP_R2_BUCKET:?BACKUP_R2_BUCKET is required}
       BACKUP_R2_PREFIX: backups/staging
       BACKUP_R2_ENDPOINT: ${BACKUP_R2_ENDPOINT:?BACKUP_R2_ENDPOINT is required}
@@ -81,13 +80,13 @@ services:
       - staging_data
 
   restore:
-    image: vehicle-rental-api:test
+    image: ${API_IMAGE:?API_IMAGE is required}
     entrypoint: ["./scripts/restore.sh"]
     profiles: ["recovery"]
     environment:
       POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
       RESTORE_ENVIRONMENT: staging
-      RELEASE_ID: ${RELEASE_ID:-unreleased}
+      RELEASE_ID: ${RELEASE_ID:?RELEASE_ID is required}
       RESTORE_DATABASE: ${RESTORE_DATABASE:-}
       RESTORE_DATABASE_URL: ${RESTORE_DATABASE_URL:-}
       RESTORE_ADMIN_DATABASE_URL: ${RESTORE_ADMIN_DATABASE_URL:-}
@@ -122,10 +121,13 @@ services:
 
 volumes:
   staging_pgdata:
+    external: true
+    name: vehicle-rental-staging_staging_pgdata
 
 networks:
   markab-edge:
     name: markab-edge
     external: true
   staging_data:
+    name: vehicle-rental-staging_staging_data
     internal: true

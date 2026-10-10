@@ -252,11 +252,14 @@ Authentication details are documented separately in the Authentication Architect
 
 Authentication endpoints are grouped under the `/api/auth/*` prefix.
 
-All endpoints accept and return JSON.
+Login and refresh return JSON access-token data. The server manages the refresh
+session with an `HttpOnly` cookie that is secure in production and scoped to
+`/api/auth`; the web client does not store or send the refresh token directly.
 
 ## POST /api/auth/login
 
-- **Purpose:** Authenticate a user and issue access and refresh tokens.
+- **Purpose:** Authenticate a user, return a short-lived access token, and set
+  the refresh token in the approved `HttpOnly` cookie.
 - **Request body:**
   ```json
   {
@@ -269,30 +272,26 @@ All endpoints accept and return JSON.
   {
     "data": {
       "accessToken": "...",
-      "refreshToken": "...",
       "expiresAt": "2026-01-01T00:00:00.000Z"
     }
   }
   ```
+- The refresh token is not returned in JSON.
 - **Error responses:**
   - `401` Invalid credentials
   - `422` Validation failed
 
 ## POST /api/auth/refresh
 
-- **Purpose:** Exchange a valid refresh token for a new access and refresh token pair. The previous refresh token is invalidated.
-- **Request body:**
-  ```json
-  {
-    "refreshToken": "..."
-  }
-  ```
+- **Purpose:** Read the refresh token from the `HttpOnly` cookie, rotate it,
+  and write the replacement token to that cookie. The previous refresh token
+  is invalidated.
+- **Request body:** None.
 - **Success response:** `200 OK`
   ```json
   {
     "data": {
       "accessToken": "...",
-      "refreshToken": "...",
       "expiresAt": "2026-01-01T00:00:00.000Z"
     }
   }
@@ -303,13 +302,9 @@ All endpoints accept and return JSON.
 
 ## POST /api/auth/logout
 
-- **Purpose:** Revoke the provided refresh token and end the authenticated session.
-- **Request body:**
-  ```json
-  {
-    "refreshToken": "..."
-  }
-  ```
+- **Purpose:** Revoke the refresh session identified by the `HttpOnly` cookie,
+  clear that cookie, and end the authenticated session.
+- **Request body:** None.
 - **Success response:** `204 No Content` (no body)
 - **Error responses:**
   - `422` Validation failed
