@@ -7,9 +7,11 @@ import { useVehicles } from "@/features/vehicles/hooks";
 import type { Vehicle } from "@/data/types";
 import {
   useListCustomers,
+  useListRentals,
   useListVehicles,
   type ExpenseResponse,
   type MaintenanceResponse,
+  type RentalResponse,
   type VehicleResponse,
   type VehicleResponseStatus,
 } from "@workspace/api-client-react";
@@ -395,6 +397,74 @@ describe("AnalyticsPage insights", () => {
       (label) =>
         expect(within(fleetStatus).getAllByText(label).length).toBeGreaterThan(0),
     );
+  });
+
+  it("separates the completed-rentals total from current vehicle groups", () => {
+    const rentedVehicles = [
+      makeVehicle("RENTED", {
+        id: "00000000-0000-4000-8000-000000000011",
+        make: "Toyota",
+        model: "Pilot 1",
+      }),
+      makeVehicle("RENTED", {
+        id: "00000000-0000-4000-8000-000000000012",
+        make: "Hyundai",
+        model: "Pilot 6",
+      }),
+      makeVehicle("RENTED", {
+        id: "00000000-0000-4000-8000-000000000013",
+        make: "Kia",
+        model: "Pilot 11",
+      }),
+      makeVehicle("MAINTENANCE", {
+        id: "00000000-0000-4000-8000-000000000014",
+        make: "Ford",
+        model: "Focus",
+      }),
+      makeVehicle("AVAILABLE", {
+        id: "00000000-0000-4000-8000-000000000015",
+        make: "Honda",
+        model: "Civic",
+      }),
+    ];
+    mockApiVehicles(rentedVehicles);
+    const completedRentals = Array.from({ length: 480 }, (_, index) => ({
+      id: `rental-${index}`,
+      vehicleId: rentedVehicles[0].id,
+      status: "RETURNED" as const,
+    })) as RentalResponse[];
+    vi.mocked(useListRentals).mockReturnValueOnce({
+      data: { data: completedRentals },
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useListRentals>);
+
+    render(<AnalyticsPage />);
+
+    const fleetStatus = screen
+      .getByRole("heading", { name: "حالة السيارات" })
+      .closest("section")!;
+    const statusGrid = fleetStatus.querySelector(".grid-cols-2")!;
+    const completedRentalsRow = within(fleetStatus).getByText(
+      "الإيجارات المكتملة",
+    ).parentElement!;
+    const rentedHeading = within(fleetStatus).getByRole("heading", {
+      name: "السيارات المؤجرة حالياً",
+    });
+    const rentedGroup = rentedHeading.parentElement!;
+    const maintenanceHeading = within(fleetStatus).getByRole("heading", {
+      name: "السيارات قيد الصيانة حالياً",
+    });
+    const maintenanceGroup = maintenanceHeading.parentElement!;
+
+    expect(completedRentalsRow).toHaveTextContent("480");
+    expect(within(rentedGroup).getByRole("button", { name: /Toyota Pilot 1/ })).toBeInTheDocument();
+    expect(within(rentedGroup).getByRole("button", { name: /Hyundai Pilot 6/ })).toBeInTheDocument();
+    expect(within(rentedGroup).getByRole("button", { name: /Kia Pilot 11/ })).toBeInTheDocument();
+    expect(within(maintenanceGroup).getByRole("button", { name: /Ford Focus/ })).toBeInTheDocument();
+    expect(within(statusGrid).getByText("متاحة").parentElement?.querySelector("p")).toHaveTextContent("1");
+    expect(within(statusGrid).getByText("مؤجرة").parentElement?.querySelector("p")).toHaveTextContent("3");
+    expect(within(statusGrid).getByText("في الصيانة").parentElement?.querySelector("p")).toHaveTextContent("1");
   });
 
   it("navigates fleet rows with the API vehicle UUID rather than a display id", () => {

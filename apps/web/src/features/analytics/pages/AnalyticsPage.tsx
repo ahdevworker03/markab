@@ -615,6 +615,26 @@ export default function AnalyticsPage() {
     selectedYear,
     selectedMonth,
   );
+  const fleetVehicleRows = [
+    ...analytics.rentedVehicles.map((vehicle) => ({
+      vehicle,
+      status: "rented" as const,
+    })),
+    ...analytics.maintenanceVehicles.map((vehicle) => ({
+      vehicle,
+      status: "maintenance" as const,
+    })),
+  ].slice(0, 4);
+  const fleetVehicleGroups = [
+    {
+      title: "السيارات المؤجرة حالياً",
+      rows: fleetVehicleRows.filter(({ status }) => status === "rented"),
+    },
+    {
+      title: "السيارات قيد الصيانة حالياً",
+      rows: fleetVehicleRows.filter(({ status }) => status === "maintenance"),
+    },
+  ].filter(({ rows }) => rows.length > 0);
   const financialLoading =
     apiRentalsQuery.isLoading ||
     paymentsQuery.isLoading ||
@@ -1067,41 +1087,38 @@ export default function AnalyticsPage() {
                 ))}
               </div>
               <div className="mt-4 flex items-center justify-between rounded-lg border border-border px-3 py-2.5 text-sm">
-                <span className="text-muted-foreground">إيجارات مكتملة</span>
+                <span className="text-muted-foreground">الإيجارات المكتملة</span>
                 <strong className="tabular-nums text-foreground">
                   {analytics.endedCount}
                 </strong>
               </div>
-              {(analytics.rentedVehicles.length > 0 ||
-                analytics.maintenanceVehicles.length > 0) && (
-                <div className="mt-4 divide-y divide-border border-t border-border">
-                  {[
-                    ...analytics.rentedVehicles.map((vehicle) => ({
-                      vehicle,
-                      status: "rented" as const,
-                    })),
-                    ...analytics.maintenanceVehicles.map((vehicle) => ({
-                      vehicle,
-                      status: "maintenance" as const,
-                    })),
-                  ]
-                    .slice(0, 4)
-                    .map(({ vehicle, status }) => (
-                      <button
-                        key={vehicle.id}
-                        type="button"
-                        onClick={() => navigate(`/vehicles/${vehicle.id}`)}
-                        className="flex w-full items-center justify-between gap-3 py-3 text-right"
-                      >
-                        <StatusBadge status={status} />
-                        <span
-                          dir="ltr"
-                          className="min-w-0 truncate text-sm font-semibold text-foreground"
-                        >
-                          {vehicle.make} {vehicle.model}
-                        </span>
-                      </button>
-                    ))}
+              {fleetVehicleGroups.length > 0 && (
+                <div className="mt-4 space-y-3 border-t border-border pt-3">
+                  {fleetVehicleGroups.map(({ title, rows }) => (
+                    <div key={title}>
+                      <h3 className="mb-1.5 text-xs font-semibold text-muted-foreground">
+                        {title}
+                      </h3>
+                      <div className="divide-y divide-border">
+                        {rows.map(({ vehicle, status }) => (
+                          <button
+                            key={vehicle.id}
+                            type="button"
+                            onClick={() => navigate(`/vehicles/${vehicle.id}`)}
+                            className="flex w-full items-center justify-between gap-3 py-3 text-right"
+                          >
+                            <StatusBadge status={status} />
+                            <span
+                              dir="ltr"
+                              className="min-w-0 truncate text-sm font-semibold text-foreground"
+                            >
+                              {vehicle.make} {vehicle.model}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </SectionCard>

@@ -136,9 +136,9 @@ describe("TasksPage", () => {
       .getAllByText("#mobile-t")
       .find((element) => element.classList.contains("truncate"));
 
-    expect(mobileTitle).toHaveClass("text-end");
-    expect(mobileTitle?.parentElement).toHaveClass("flex-1", "min-w-0");
-    expect(mobileId).toHaveClass("max-w-full", "text-start", "truncate");
+    expect(mobileTitle).toHaveClass("w-full", "text-start");
+    expect(mobileTitle?.parentElement).toHaveClass("flex-1", "min-w-0", "items-start");
+    expect(mobileId).toHaveClass("number-ltr", "max-w-full", "text-end", "truncate");
   });
 
   it("shows a loading state without rendering an empty state", () => {
