@@ -85,7 +85,7 @@ The frontend is independently deployable from the API and must not be hosted fro
 
 The approved production origins are `https://markab-lb.com` for the frontend and `https://api.markab-lb.com` for the API. Staging retains `https://staging.markab-lb.com` and `https://staging-api.markab-lb.com`. This is a topology and hostname decision only; it does not establish DNS, TLS, Cloudflare, or a production deployment.
 
-For the initial pilot, staging and production intentionally share one existing Contabo VPS to minimize cost. They remain separate Compose application projects with distinct API containers, PostgreSQL containers, private database networks, Docker volumes, environment files, database credentials, JWT/refresh secrets, R2 credentials/buckets, frontend/API origins, Pages projects, and Resend configuration. A third small shared-edge Compose project owns Caddy, its state volumes, and the proxy-facing `markab-edge` network. Apart from Caddy, only the API containers join that network; PostgreSQL joins only its matching private database network and has no public host port. Shared Caddy ownership does not weaken environment isolation or allow a staging lifecycle action to restart production ingress. PostgreSQL remains the authoritative system of record.
+For the initial pilot, staging and production intentionally share one existing Contabo VPS to minimize cost. They share only the physical host: separate Compose project names, API containers, PostgreSQL containers, Docker networks, Docker volumes, environment files, database credentials, JWT/refresh secrets, R2 credentials/buckets, frontend/API origins, Pages projects, and Resend configuration are required. Both PostgreSQL containers remain private/internal with no public host port. PostgreSQL remains the authoritative system of record.
 
 This creates one accepted failure domain: host failure, disk exhaustion, Docker daemon failure, or severe host resource pressure can affect both environments. Production moves to a dedicated VPS when measured load, reliability requirements, customer scale, or revenue justify it.
 
@@ -161,6 +161,46 @@ Schema changes should:
 - Preserve existing data.
 
 Database updates should be coordinated with application deployments.
+
+---
+
+# Runtime Network Topology
+
+The pilot deployment uses one Contabo VPS for staging and production while keeping their application environments isolated.
+
+Public HTTP/TLS traffic is owned by a separate shared Caddy edge project:
+
+```text
+vehicle-rental-edge
+```
+
+Caddy is the only deployment component that binds host ports `80` and `443`.
+
+Application stacks connect to the shared external Docker network:
+
+```text
+markab-edge
+```
+
+The staging API is exposed to Caddy on this network through the `staging-api` alias.
+
+Each environment keeps its own private application/data network. Staging uses:
+
+```text
+vehicle-rental-staging_staging_data
+```
+
+PostgreSQL remains connected only to its environment's private data network and is never attached directly to the public edge network or published through a host port.
+
+Backup and restore jobs may additionally use a dedicated outbound-only application network for object-storage access. Staging uses:
+
+```text
+vehicle-rental-staging_backup_egress
+```
+
+This egress network is attached to backup/restore jobs, not to PostgreSQL.
+
+Staging and production must retain separate containers, databases, volumes, credentials, configuration, storage resources, and deployment identities even while they share the same VPS and edge proxy. The shared host remains an accepted pilot-stage failure domain.
 
 ---
 
