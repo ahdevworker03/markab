@@ -1,50 +1,39 @@
 # Project
 
-This repository contains the production codebase for Markab (مَركب), a vehicle rental management platform.
+Markab (مَركب) is an Arabic-first, multi-tenant SaaS platform for vehicle-rental businesses. The repository contains the web application, backend API, shared contract and database packages, tests, and project documentation.
 
-The project follows a documentation-first, API-first, and monorepo architecture. Repository documentation is the primary source of truth for architecture, workflows, and development decisions.
+The product serves day-to-day rental operations, including fleet, customer, rental, payment, maintenance, task, analytics, and reporting workflows. See `docs/product/01-product-vision.md` for product direction and `README.md` for the current technology stack and basic development commands.
 
 ## Product Vision
 
-Build Markab, a production-ready SaaS platform for vehicle rental businesses.
+Build a reliable, production-ready SaaS platform for vehicle-rental businesses, with workflows designed for mobile use, Arabic-first content and right-to-left layouts, multiple isolated tenants, and support for essential offline work.
 
-The platform is designed to be:
-
-- Multi-tenant
-- API-first
-- Mobile-first
-- Offline-first
-- Arabic-first
-- Scalable
-- Maintainable
+Keep product decisions focused on rental-business needs. See the product documentation for target customers, product principles, and longer-term direction.
 
 ## Current Stage
 
-This repository contains the production implementation.
+This repository contains an implemented web application and API, shared workspace packages, automated tests, and operational documentation. Development continues incrementally; verify the current implementation before treating planning documents as evidence that a feature is complete or deployed.
 
-Development follows an incremental approach where architecture, documentation, and API contracts are established before implementation.
+Deployment state is environment-specific and cannot be inferred from the repository contents alone.
 
 ## Repository Architecture
 
-The repository is organized as a monorepo.
+The repository is a pnpm monorepo with two applications and shared libraries:
 
-Major repository areas include:
+- `apps/web` — React and TypeScript web application.
+- `apps/api` — Node.js and Express API.
+- `lib/api-spec` — OpenAPI contract source and client generation configuration.
+- `lib/api-client-react` and `lib/api-zod` — generated API client and validation schemas.
+- `lib/db` — Prisma schema, migrations, and database utilities.
 
-- Applications
-- Shared packages
-- Generated packages
-- Documentation
-- Repository rules
-- AI skills
-
-Follow `monorepo.md` for package boundaries and ownership.
+The workspace is defined by `pnpm-workspace.yaml`. Follow `monorepo.md` for package boundaries and ownership, and `api-contracts.md` for API and generated-code workflows.
 
 ## Repository Structure
 
 ```text
 apps/
-  web/
   api/
+  web/
 
 lib/
   api-spec/
@@ -53,77 +42,61 @@ lib/
   db/
 
 docs/
+  architecture/
+  development-milestones/
+  operations/
+  planning/
+  product/
   rules/
+  superpowers/
+  testing/
 
-.codex/
-  skills/
+assets/
+.agents/skills/
+.codex/config.toml
 ```
 
-Repository structure may evolve, but responsibilities should remain consistent.
+Root package and TypeScript configuration files define shared workspace tooling. Build output and installed dependencies are not source directories.
 
 ## Source of Truth
 
-Different parts of the repository own different responsibilities.
+Use each source for the responsibility it owns:
 
-| Area                         | Source of Truth                  |
-| ---------------------------- | -------------------------------- |
-| Product behavior             | Product documentation            |
-| Architecture                 | Architecture documentation       |
-| API contracts                | `lib/api-spec`                   |
-| Generated API client         | Generated from API specification |
-| Generated validation schemas | Generated from API specification |
-| Shared business logic        | Owning package                   |
-| Repository rules             | `docs/rules/`                    |
-| AI technology knowledge      | `.agents/skills/`                |
+| Area | Source of truth |
+| --- | --- |
+| Current application behavior | Implemented application and API code |
+| Product direction and requirements | `docs/product/` |
+| Architecture and repository workflow | `docs/architecture/` and `docs/rules/` |
+| API contract | `lib/api-spec/openapi.yaml` |
+| Database schema and migrations | `lib/db/prisma/` |
+| Generated API client and validation schemas | Generated from the API contract |
+| Shared business logic | The package that owns the relevant domain responsibility |
+| Technology-specific agent guidance | `.agents/skills/` |
 
-Never duplicate a source of truth.
+When documentation conflicts with implemented behavior, treat the implementation as current repository truth, report the inconsistency, and update documentation only when the task calls for it. Do not make generated artifacts a source of truth.
 
 ## Development Principles
 
 Development in this repository follows these principles:
 
-- Documentation-first
-- API-first
-- Small incremental changes
-- Clear package ownership
-- Single source of truth
-- Simplicity over complexity
-- Consistency over cleverness
-- Long-term maintainability
+- Documentation-first planning with implementation-grounded decisions.
+- API-first contract ownership.
+- Small incremental changes.
+- Clear package ownership and a single source of truth for shared concepts.
+- Simplicity, consistency, and long-term maintainability.
 
 ## Generated Artifacts
 
-Some packages are generated from authoritative sources.
+The API client and validation schemas are generated from the OpenAPI contract in `lib/api-spec`. Do not edit generated output manually; update its source and use the documented generation workflow.
 
-Generated artifacts are not edited manually.
-
-Follow `api-contracts.md` before modifying generated packages.
+Follow `api-contracts.md` before changing API contracts or generated packages.
 
 ## Repository Rules
 
-Repository behavior is defined by the rule files inside `docs/rules/`.
-
-These files define:
-
-- workflow
-- architecture boundaries
-- safety
-- documentation
-- testing
-- coding standards
-- UI/UX expectations
-- monorepo behavior
-- API contract ownership
-- generated code handling
+Repository-specific workflows and constraints are defined in `docs/rules/`. They cover architecture, API contracts, generated code, backend and database work, safety, documentation, testing, coding standards, UI/UX, and Git.
 
 Technology-specific implementation guidance belongs in `.agents/skills/`.
 
 ## Long-Term Goal
 
-Maintain a production-quality repository that remains:
-
-- predictable
-- modular
-- well documented
-- easy to extend
-- safe for AI-assisted development
+Maintain a predictable, modular, well-documented platform that rental businesses can rely on and that contributors can extend safely.
