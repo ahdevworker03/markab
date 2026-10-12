@@ -78,6 +78,7 @@ services:
         condition: service_healthy
     networks:
       - staging_data
+      - backup_egress
 
   restore:
     image: ${API_IMAGE:?API_IMAGE is required}
@@ -100,6 +101,7 @@ services:
         condition: service_healthy
     networks:
       - staging_data
+      - backup_egress
 
   db:
     image: postgres:16-alpine
@@ -131,3 +133,5 @@ networks:
   staging_data:
     name: vehicle-rental-staging_staging_data
     internal: true
+  backup_egress:
+    name: vehicle-rental-staging_backup_egress

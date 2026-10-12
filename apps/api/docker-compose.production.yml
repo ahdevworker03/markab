@@ -78,6 +78,7 @@ services:
         condition: service_healthy
     networks:
       - production_data
+      - production_backup_egress
 
   restore:
     image: ${API_IMAGE:?API_IMAGE is required}
@@ -100,6 +101,7 @@ services:
         condition: service_healthy
     networks:
       - production_data
+      - production_backup_egress
 
   db:
     image: postgres:16-alpine
@@ -125,6 +127,7 @@ networks:
     external: true
   production_data:
     internal: true
+  production_backup_egress: {}
 
 volumes:
   production_pgdata:
