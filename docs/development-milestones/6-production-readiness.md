@@ -606,6 +606,19 @@ Create reproducible staging/production deployment and operating procedures for t
 - `GET /api/healthz` is dependency-free liveness. `GET /api/readyz` checks PostgreSQL connectivity and initialized storage configuration without probing Resend or mutating storage; `SIGTERM`/`SIGINT` drain the listener, disconnect Prisma, and use a bounded forced-exit fallback.
 - Prisma migrations are version controlled and `db:migrate:deploy` exists in `lib/db`, but there is no production release orchestration. The Task recurrence migration removes the legacy recurrence column and is incompatible with overlapping old/new API versions.
 
+### Production Pilot Release Sequence
+
+1. Complete the mutation retry/idempotency audit for high-risk mutations.
+2. Provision isolated production infrastructure.
+3. Add production deployment automation/CD with a manual approval gate.
+4. Deploy production and verify it using controlled QA accounts.
+5. Execute the core Step 66 online E2E/manual release checks.
+6. Make the pilot go/no-go decision.
+7. Onboard the first real client for a controlled trial.
+8. Continue Step 64 offline qualification in parallel.
+
+Step 64 remains **PAUSED / OPEN**, and offline-first remains **not production-qualified** until the reconnect P95 gate passes. This open gate does not block production infrastructure work, production deployment, or a controlled online-first pilot; it blocks offline-first production qualification and full Milestone 6 completion. This sequence does not complete Step 65 or Milestone 6.
+
 ### Scope
 
 - Produce reproducible frontend and API artifacts using frozen dependencies, current generated artifacts, production configuration validation, and immutable release identifiers.
