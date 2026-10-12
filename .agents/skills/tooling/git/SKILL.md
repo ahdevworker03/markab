@@ -5,6 +5,10 @@ description: Git workflow for this repository, including milestone-based commits
 
 # Git
 
+## Rules
+
+- Follow git rules in docs/rules/git.md when working with git.
+
 ## Purpose
 
 This skill guides the agent in using Git effectively for version control in a collaborative monorepo environment. Git is the foundation of modern software development, enabling teams to work concurrently, maintain history, and manage releases. The skill covers branching strategies, commit conventions, pull request workflows, merge strategies, conflict resolution, and integration with monorepo tooling. The goal is to maintain a clean, navigable history and enable smooth collaboration.
