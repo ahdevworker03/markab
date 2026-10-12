@@ -2,26 +2,26 @@
 
 ## Table of Contents
 
-| # | Section |
-| - | ------- |
-| 1 | [Purpose](#purpose) |
-| 2 | [Deployment Goals](#deployment-goals) |
-| 3 | [Deployment Philosophy](#deployment-philosophy) |
-| 4 | [System Components](#system-components) |
-| 5 | [Environment Strategy](#environment-strategy) |
-| 6 | [Configuration Management](#configuration-management) |
-| 7 | [Build Process](#build-process) |
-| 8 | [Deployment Process](#deployment-process) |
-| 9 | [Database Deployment](#database-deployment) |
-| 10 | [File Storage](#file-storage) |
-| 11 | [Monitoring](#monitoring) |
-| 12 | [Logging](#logging) |
-| 13 | [Backups](#backups) |
-| 14 | [Disaster Recovery](#disaster-recovery) |
-| 15 | [Scalability](#scalability) |
-| 16 | [Security](#security) |
-| 17 | [Future Expansion](#future-expansion) |
-| 18 | [Guiding Principle](#guiding-principle) |
+| #   | Section                                               |
+| --- | ----------------------------------------------------- |
+| 1   | [Purpose](#purpose)                                   |
+| 2   | [Deployment Goals](#deployment-goals)                 |
+| 3   | [Deployment Philosophy](#deployment-philosophy)       |
+| 4   | [System Components](#system-components)               |
+| 5   | [Environment Strategy](#environment-strategy)         |
+| 6   | [Configuration Management](#configuration-management) |
+| 7   | [Build Process](#build-process)                       |
+| 8   | [Deployment Process](#deployment-process)             |
+| 9   | [Database Deployment](#database-deployment)           |
+| 10  | [File Storage](#file-storage)                         |
+| 11  | [Monitoring](#monitoring)                             |
+| 12  | [Logging](#logging)                                   |
+| 13  | [Backups](#backups)                                   |
+| 14  | [Disaster Recovery](#disaster-recovery)               |
+| 15  | [Scalability](#scalability)                           |
+| 16  | [Security](#security)                                 |
+| 17  | [Future Expansion](#future-expansion)                 |
+| 18  | [Guiding Principle](#guiding-principle)               |
 
 ## Purpose
 
@@ -70,14 +70,14 @@ Each component has a clearly defined responsibility.
 
 The approved production topology deploys each component as follows:
 
-| Component               | Technology                          | Production Location                                      |
-| ----------------------- | ----------------------------------- | -------------------------------------------------------- |
-| Frontend                | React + TypeScript + Vite           | Cloudflare Pages (assets delivered via Cloudflare CDN)   |
-| Backend API             | Node.js + Express + Prisma + Docker | Production-specific Compose project on the existing Contabo VPS |
-| Database                | PostgreSQL                          | Separate production container on the existing Contabo VPS (private/internal access) |
-| Object Storage          | S3-compatible (Cloudflare R2)       | Cloudflare R2                                            |
-| Edge / Network          | Cloudflare                          | DNS, proxying, TLS, DDoS, edge rate limiting             |
-| VPS Runtime             | Docker (Docker Compose)             | Existing Contabo VPS with isolated staging and production Compose projects |
+| Component      | Technology                          | Production Location                                                                 |
+| -------------- | ----------------------------------- | ----------------------------------------------------------------------------------- |
+| Frontend       | React + TypeScript + Vite           | Cloudflare Pages (assets delivered via Cloudflare CDN)                              |
+| Backend API    | Node.js + Express + Prisma + Docker | Production-specific Compose project on the existing Contabo VPS                     |
+| Database       | PostgreSQL                          | Separate production container on the existing Contabo VPS (private/internal access) |
+| Object Storage | S3-compatible (Cloudflare R2)       | Cloudflare R2                                                                       |
+| Edge / Network | Cloudflare                          | DNS, proxying, TLS, DDoS, edge rate limiting                                        |
+| VPS Runtime    | Docker (Docker Compose)             | Existing Contabo VPS with isolated staging and production Compose projects          |
 
 The initial backend/database capacity target is approximately 4 vCPU, 8 GB RAM, and 80 GB storage. The exact Contabo plan may evolve; the architecture records the required capacity and provider rather than a specific plan identifier.
 
@@ -192,13 +192,17 @@ vehicle-rental-staging_staging_data
 
 PostgreSQL remains connected only to its environment's private data network and is never attached directly to the public edge network or published through a host port.
 
-Backup and restore jobs may additionally use a dedicated outbound-only application network for object-storage access. Staging uses:
+Backup and restore jobs require the environment's private data network for PostgreSQL and a separate outbound network for R2 access. Staging and production each define their own Compose-managed egress network:
 
 ```text
 vehicle-rental-staging_backup_egress
+vehicle-rental-production_production_backup_egress
 ```
 
-This egress network is attached to backup/restore jobs, not to PostgreSQL.
+Attach each egress network only to that environment's backup/restore jobs, not
+to PostgreSQL or the API. PostgreSQL remains only on its private internal data
+network and never joins `markab-edge` or an egress network. Staging and
+production egress networks remain distinct.
 
 Staging and production must retain separate containers, databases, volumes, credentials, configuration, storage resources, and deployment identities even while they share the same VPS and edge proxy. The shared host remains an accepted pilot-stage failure domain.
 
@@ -267,7 +271,12 @@ Backup procedures should:
 - Be tested periodically.
 - Support reliable restoration.
 
-Backup retention is defined during Milestone 6, and restore procedures are tested before production approval.
+The approved recovery policy uses a daily automated PostgreSQL backup stored
+off the VPS in private Cloudflare R2, with 30 daily backups retained. The
+recovery point objective (RPO) is 24 hours and the recovery time objective
+(RTO) is 4 hours. Periodically verify restore procedures using an isolated
+target before production approval; see the backup/restore runbook for operating
+procedures and evidence.
 
 Business continuity depends on verified backups.
 
