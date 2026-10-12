@@ -1035,6 +1035,8 @@ export interface CreatePaymentRequest {
   amount: number;
   payment_date: string;
   method: CreatePaymentRequestMethod;
+  /** Client-generated identity for this logical payment submission */
+  operation_id: string;
 }
 
 export type TaskResponseStatus =

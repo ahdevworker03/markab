@@ -49,6 +49,7 @@ export function PaymentSection({ rentalId, totalAmount }: PaymentSectionProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [operationId, setOperationId] = useState<string | null>(null);
 
   function clearError(key: string) {
     if (!errors[key]) return;
@@ -73,7 +74,7 @@ export function PaymentSection({ rentalId, totalAmount }: PaymentSectionProps) {
   }
 
   async function handleSubmit() {
-    if (mutations.create.isPending || !validate()) return;
+    if (mutations.create.isPending || !operationId || !validate()) return;
     setFormError(null);
 
     try {
@@ -83,6 +84,7 @@ export function PaymentSection({ rentalId, totalAmount }: PaymentSectionProps) {
           amount: Number(amount),
           payment_date: toISO(paymentDate),
           method: method as PaymentResponse["method"],
+          operation_id: operationId,
         },
       });
       setSuccessMsg("تم تسجيل الدفعة.");
@@ -90,6 +92,7 @@ export function PaymentSection({ rentalId, totalAmount }: PaymentSectionProps) {
       setAmount("");
       setPaymentDate("");
       setMethod("");
+      setOperationId(null);
     } catch (error) {
       setFormError(getApiErrorMessage(error).title);
     }
@@ -150,6 +153,7 @@ export function PaymentSection({ rentalId, totalAmount }: PaymentSectionProps) {
               setShowForm(true);
               setFormError(null);
               setSuccessMsg(null);
+              setOperationId(crypto.randomUUID());
             }}
           >
             <Plus className="size-4" aria-hidden="true" />
@@ -277,7 +281,10 @@ export function PaymentSection({ rentalId, totalAmount }: PaymentSectionProps) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setShowForm(false)}
+                onClick={() => {
+                  setShowForm(false);
+                  setOperationId(null);
+                }}
                 disabled={mutations.create.isPending}
               >
                 إلغاء

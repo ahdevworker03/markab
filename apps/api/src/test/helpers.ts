@@ -14,6 +14,7 @@ async function cleanup(): Promise<void> {
   await prisma.auditLog.deleteMany({});
   await prisma.syncOperationReceipt.deleteMany({});
   await prisma.employeeInvitation.deleteMany({});
+  await prisma.paymentOperationReceipt.deleteMany({});
   await prisma.payment.deleteMany({});
   await prisma.task.deleteMany({});
   await prisma.maintenanceSchedule.deleteMany({});

@@ -89,6 +89,10 @@ export const CreatePaymentBody = zod.object({
   amount: zod.number().gt(createPaymentBodyAmountExclusiveMin),
   payment_date: zod.coerce.date(),
   method: zod.enum(["CASH", "CARD", "TRANSFER", "OTHER"]),
+  operation_id: zod
+    .string()
+    .uuid()
+    .describe("Client-generated identity for this logical payment submission"),
 });
 
 export const CreatePaymentResponse = zod.object({

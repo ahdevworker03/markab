@@ -12,4 +12,6 @@ export interface CreatePaymentRequest {
   amount: number;
   payment_date: Date;
   method: CreatePaymentRequestMethod;
+  /** Client-generated identity for this logical payment submission */
+  operation_id: string;
 }

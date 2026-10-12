@@ -1,6 +1,11 @@
 import { AppError } from "../../shared";
 import { Decimal } from "@prisma/client/runtime/client";
-import { retrySerializable, transaction } from "../../database";
+import { createHash } from "node:crypto";
+import {
+  isUniqueConstraintError,
+  retrySerializable,
+  transaction,
+} from "../../database";
 import * as repo from "./payment.repository";
 import type {
   PaymentResponse,
@@ -138,9 +143,46 @@ async function createPayment(
 
   const amount = new Decimal(input.amount.toString());
 
+  const requestFingerprint = createHash("sha256")
+    .update(
+      JSON.stringify({
+        rental_id: rentalId,
+        amount: amount.toFixed(),
+        payment_date: input.payment_date.toISOString(),
+        method: input.method,
+      }),
+    )
+    .digest("hex");
+
+  const reconcile = async (): Promise<PaymentResponse | null> => {
+    const receipt = await repo.findOperationReceipt(
+      orgId,
+      input.operation_id,
+    );
+    if (!receipt) return null;
+    if (receipt.request_fingerprint !== requestFingerprint) {
+      throw new AppError(
+        409,
+        "PAYMENT_OPERATION_PAYLOAD_MISMATCH",
+        "Payment operation ID was reused with a different request.",
+      );
+    }
+    return toResponse(receipt.payment);
+  };
+
+  const existing = await reconcile();
+  if (existing) return existing;
+
   const run = () =>
     transaction(
       async (tx) => {
+        const receipt = await repo.findOperationReceipt(
+          orgId,
+          input.operation_id,
+          tx,
+        );
+        if (receipt) return null;
+
         const rentalInTransaction = await repo.findRental(rentalId, orgId, tx);
 
         if (!rentalInTransaction) {
@@ -163,7 +205,7 @@ async function createPayment(
           );
         }
 
-        return repo.create(
+        const payment = await repo.create(
           {
             organization_id: orgId,
             rental_id: rentalId,
@@ -173,13 +215,34 @@ async function createPayment(
           },
           tx,
         );
+        await repo.createOperationReceipt(
+          {
+            organization_id: orgId,
+            operation_id: input.operation_id,
+            request_fingerprint: requestFingerprint,
+            payment_id: payment.id,
+          },
+          tx,
+        );
+        return payment;
       },
       { isolationLevel: "Serializable" },
     );
 
-  const payment = await retrySerializable(run);
+  try {
+    const payment = await retrySerializable(run);
+    if (payment) return toResponse(payment);
+  } catch (error) {
+    if (!isUniqueConstraintError(error)) throw error;
+  }
 
-  return toResponse(payment);
+  const replay = await reconcile();
+  if (replay) return replay;
+  throw new AppError(
+    500,
+    "PAYMENT_OPERATION_RACE_FAILED",
+    "Payment operation reconciliation failed.",
+  );
 }
 
 export {

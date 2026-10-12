@@ -23,8 +23,9 @@ function isForeignKeyError(error: unknown): boolean {
 
 function isTransactionConflictError(error: unknown): boolean {
   return (
-    error instanceof PrismaClientKnownRequestError &&
-    (error as PrismaClientKnownRequestError).code === "P2034"
+    (error instanceof PrismaClientKnownRequestError &&
+      (error as PrismaClientKnownRequestError).code === "P2034") ||
+    (error instanceof Error && error.message === "TransactionWriteConflict")
   );
 }
 

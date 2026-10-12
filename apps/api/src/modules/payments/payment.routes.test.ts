@@ -1,20 +1,31 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import request from "supertest";
 import app from "../../app";
 import { prisma } from "../../database";
 import { generateAccessToken } from "../../modules/auth";
 import { cleanup } from "../../test/helpers";
 import { GetOutstandingBalancesResponse } from "@workspace/api-zod";
+import * as paymentRepository from "./payment.repository";
 
 describe("payment routes", () => {
   let rentalId: string;
   let token: string;
 
-  function recordPayment(amount: number, paymentDate = "2026-08-02T09:00:00Z") {
+  function recordPayment(
+    amount: number,
+    paymentDate = "2026-08-02T09:00:00Z",
+    method = "CASH",
+    operationId = crypto.randomUUID(),
+  ) {
     return request(app)
       .post(`/api/rentals/${rentalId}/payments`)
       .set("Authorization", `Bearer ${token}`)
-      .send({ amount, payment_date: paymentDate, method: "CASH" });
+      .send({
+        amount,
+        payment_date: paymentDate,
+        method,
+        operation_id: operationId,
+      });
   }
 
   beforeEach(async () => {
@@ -90,6 +101,7 @@ describe("payment routes", () => {
         amount: 100,
         payment_date: "2026-08-02T09:00:00Z",
         method: "CASH",
+        operation_id: crypto.randomUUID(),
       });
 
     expect(res.status).toBe(201);
@@ -111,6 +123,7 @@ describe("payment routes", () => {
         amount: 100,
         payment_date: "2026-08-02T09:00:00Z",
         method: "CASH",
+        operation_id: crypto.randomUUID(),
       });
 
     const res = await request(app)
@@ -127,6 +140,90 @@ describe("payment routes", () => {
 
     expect(response.status).toBe(201);
     expect(response.body.data.amount).toBe(125);
+  });
+
+  it("replays the original payment without creating another record", async () => {
+    const operationId = "00000000-0000-4000-8000-000000000001";
+
+    const first = await recordPayment(125, undefined, "CASH", operationId);
+    const replay = await recordPayment(125, undefined, "CASH", operationId);
+
+    expect(first.status).toBe(201);
+    expect(replay.status).toBe(201);
+    expect(replay.body.data.id).toBe(first.body.data.id);
+    await expect(
+      prisma.payment.count({ where: { rental_id: rentalId } }),
+    ).resolves.toBe(1);
+  });
+
+  it("allows only one concurrent payment for the same operation", async () => {
+    const operationId = "00000000-0000-4000-8000-000000000002";
+
+    const responses = await Promise.all([
+      recordPayment(125, undefined, "CASH", operationId),
+      recordPayment(125, undefined, "CASH", operationId),
+    ]);
+
+    expect(responses.map((response) => response.status)).toEqual([201, 201]);
+    expect(responses[0].body.data.id).toBe(responses[1].body.data.id);
+    await expect(
+      prisma.payment.count({ where: { rental_id: rentalId } }),
+    ).resolves.toBe(1);
+  });
+
+  it("rejects a reused payment operation with a different amount", async () => {
+    const operationId = "00000000-0000-4000-8000-000000000003";
+
+    expect(
+      (await recordPayment(125, undefined, "CASH", operationId)).status,
+    ).toBe(201);
+    const changed = await recordPayment(100, undefined, "CASH", operationId);
+
+    expect(changed.status).toBe(409);
+    expect(changed.body.error.code).toBe("PAYMENT_OPERATION_PAYLOAD_MISMATCH");
+  });
+
+  it("rejects a reused payment operation with a different date or method", async () => {
+    const operationId = "00000000-0000-4000-8000-000000000004";
+
+    expect(
+      (await recordPayment(125, "2026-08-02T09:00:00Z", "CASH", operationId))
+        .status,
+    ).toBe(201);
+    const changedDate = await recordPayment(
+      125,
+      "2026-08-03T09:00:00Z",
+      "CASH",
+      operationId,
+    );
+    const changedMethod = await recordPayment(
+      125,
+      "2026-08-02T09:00:00Z",
+      "CARD",
+      operationId,
+    );
+
+    expect(changedDate.status).toBe(409);
+    expect(changedMethod.status).toBe(409);
+    expect(changedDate.body.error.code).toBe(
+      "PAYMENT_OPERATION_PAYLOAD_MISMATCH",
+    );
+    expect(changedMethod.body.error.code).toBe(
+      "PAYMENT_OPERATION_PAYLOAD_MISMATCH",
+    );
+  });
+
+  it("rolls back the payment when receipt creation fails", async () => {
+    vi.spyOn(paymentRepository, "createOperationReceipt").mockRejectedValueOnce(
+      new Error("receipt write failed"),
+    );
+
+    const response = await recordPayment(125);
+
+    expect(response.status).toBe(500);
+    await expect(
+      prisma.payment.count({ where: { rental_id: rentalId } }),
+    ).resolves.toBe(0);
   });
 
   it("includes multiple partial payments in the remaining balance", async () => {
@@ -212,6 +309,7 @@ describe("payment routes", () => {
         amount: 50,
         payment_date: "2026-08-02T09:00:00Z",
         method: "CASH",
+        operation_id: crypto.randomUUID(),
       });
 
     const res = await request(app)
@@ -327,6 +425,7 @@ describe("payment routes", () => {
         amount: 0,
         payment_date: "2026-08-02T09:00:00Z",
         method: "CASH",
+        operation_id: crypto.randomUUID(),
       });
 
     expect(res.status).toBe(422);
@@ -340,6 +439,7 @@ describe("payment routes", () => {
         amount: 100,
         payment_date: "2026-08-02T09:00:00Z",
         method: "STRIPE",
+        operation_id: crypto.randomUUID(),
       });
 
     expect(res.status).toBe(422);
@@ -397,6 +497,7 @@ describe("payment routes", () => {
         amount: 10,
         payment_date: "2026-08-02T09:00:00Z",
         method: "CASH",
+        operation_id: crypto.randomUUID(),
       });
 
     expect(res.status).toBe(404);

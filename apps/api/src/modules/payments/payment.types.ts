@@ -29,6 +29,7 @@ export interface CreatePaymentInput {
   amount: number;
   payment_date: Date;
   method: PaymentMethod;
+  operation_id: string;
 }
 
 export interface RentalPaymentsResult {

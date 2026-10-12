@@ -62,6 +62,7 @@ describe("payment service", () => {
         amount: 100,
         payment_date: new Date("2026-08-02T09:00:00Z"),
         method: "CASH",
+        operation_id: crypto.randomUUID(),
       });
 
       expect(payment.rentalId).toBe(rentalId);
@@ -74,11 +75,13 @@ describe("payment service", () => {
         amount: 100,
         payment_date: new Date("2026-08-02T09:00:00Z"),
         method: "CASH",
+        operation_id: crypto.randomUUID(),
       });
       await createPayment(rentalId, ctx.orgId, {
         amount: 50,
         payment_date: new Date("2026-08-03T09:00:00Z"),
         method: "TRANSFER",
+        operation_id: crypto.randomUUID(),
       });
 
       const result = await listRentalPayments(rentalId, ctx.orgId);
@@ -93,6 +96,7 @@ describe("payment service", () => {
           amount: 10,
           payment_date: new Date("2026-08-02T09:00:00Z"),
           method: "CASH",
+          operation_id: crypto.randomUUID(),
         }),
       ).rejects.toThrow("Rental not found");
     });
@@ -103,6 +107,7 @@ describe("payment service", () => {
           amount: 10,
           payment_date: new Date("2026-08-02T09:00:00Z"),
           method: "CASH",
+          operation_id: crypto.randomUUID(),
         }),
       ).rejects.toThrow("Rental not found");
     });
@@ -113,6 +118,7 @@ describe("payment service", () => {
           amount: 0,
           payment_date: new Date("2026-08-02T09:00:00Z"),
           method: "CASH",
+          operation_id: crypto.randomUUID(),
         }),
       ).rejects.toThrow("strictly greater than zero");
     });
@@ -123,6 +129,7 @@ describe("payment service", () => {
           amount: -5,
           payment_date: new Date("2026-08-02T09:00:00Z"),
           method: "CASH",
+          operation_id: crypto.randomUUID(),
         }),
       ).rejects.toThrow("strictly greater than zero");
     });
@@ -133,6 +140,7 @@ describe("payment service", () => {
           amount: 10,
           payment_date: new Date("2026-08-02T09:00:00Z"),
           method: "STRIPE" as never,
+          operation_id: crypto.randomUUID(),
         }),
       ).rejects.toThrow("Invalid payment method");
     });
@@ -146,11 +154,13 @@ describe("payment service", () => {
         amount: 100,
         payment_date: new Date("2026-08-02T09:00:00Z"),
         method: "CASH",
+        operation_id: crypto.randomUUID(),
       });
       await createPayment(otherRental, ctx.orgId, {
         amount: 50,
         payment_date: new Date("2026-08-02T09:00:00Z"),
         method: "CARD",
+        operation_id: crypto.randomUUID(),
       });
 
       const result = await listRentalPayments(rentalId, ctx.orgId);
@@ -171,11 +181,13 @@ describe("payment service", () => {
         amount: 100,
         payment_date: new Date("2026-08-02T09:00:00Z"),
         method: "CASH",
+        operation_id: crypto.randomUUID(),
       });
       await createPayment(rentalId, ctx.orgId, {
         amount: 50,
         payment_date: new Date("2026-08-03T09:00:00Z"),
         method: "TRANSFER",
+        operation_id: crypto.randomUUID(),
       });
 
       const result = await listRentalPayments(rentalId, ctx.orgId);
@@ -188,11 +200,13 @@ describe("payment service", () => {
         amount: 0.1,
         payment_date: new Date("2026-08-02T09:00:00Z"),
         method: "CASH",
+        operation_id: crypto.randomUUID(),
       });
       await createPayment(smallRental, ctx.orgId, {
         amount: 0.2,
         payment_date: new Date("2026-08-03T09:00:00Z"),
         method: "TRANSFER",
+        operation_id: crypto.randomUUID(),
       });
 
       const result = await listRentalPayments(smallRental, ctx.orgId);
@@ -206,6 +220,7 @@ describe("payment service", () => {
         amount: 100,
         payment_date: new Date("2026-08-02T09:00:00Z"),
         method: "CASH",
+        operation_id: crypto.randomUUID(),
       });
       await prisma.payment.update({
         where: { id: payment.id },
@@ -226,11 +241,13 @@ describe("payment service", () => {
         amount: 100,
         payment_date: new Date("2026-08-02T09:00:00Z"),
         method: "CASH",
+        operation_id: crypto.randomUUID(),
       });
       await createPayment(otherRental, ctx.orgId, {
         amount: 50,
         payment_date: new Date("2026-08-02T09:00:00Z"),
         method: "CARD",
+        operation_id: crypto.randomUUID(),
       });
 
       const payments = await listPayments(ctx.orgId);
@@ -243,6 +260,7 @@ describe("payment service", () => {
         amount: 99,
         payment_date: new Date("2026-08-02T09:00:00Z"),
         method: "CASH",
+        operation_id: crypto.randomUUID(),
       });
 
       const payments = await listPayments(ctx.orgId);

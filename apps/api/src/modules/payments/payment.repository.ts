@@ -79,6 +79,34 @@ async function create(
   return client.payment.create({ data });
 }
 
+async function findOperationReceipt(
+  organizationId: string,
+  operationId: string,
+  client: TxClient = prisma,
+) {
+  return client.paymentOperationReceipt.findUnique({
+    where: {
+      organization_id_operation_id: {
+        organization_id: organizationId,
+        operation_id: operationId,
+      },
+    },
+    include: { payment: true },
+  });
+}
+
+async function createOperationReceipt(
+  data: {
+    organization_id: string;
+    operation_id: string;
+    request_fingerprint: string;
+    payment_id: string;
+  },
+  client: TxClient,
+) {
+  return client.paymentOperationReceipt.create({ data });
+}
+
 export {
   findById,
   findRental,
@@ -87,4 +115,6 @@ export {
   findOutstandingRentals,
   sumOutstandingPayments,
   create,
+  findOperationReceipt,
+  createOperationReceipt,
 };

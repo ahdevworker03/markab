@@ -273,6 +273,7 @@ describe("PaymentSection", () => {
           amount: 50,
           payment_date: "2026-08-15T12:00:00.000Z",
           method: "CASH",
+          operation_id: expect.any(String),
         },
       });
     });
@@ -339,6 +340,36 @@ describe("PaymentSection", () => {
     expect(
       await screen.findByText("لا يمكن أن تتجاوز الدفعة الرصيد المستحق."),
     ).toBeInTheDocument();
+  });
+
+  it("reuses the operation ID when retrying a failed payment", async () => {
+    const create = mockCreate();
+    create.mutateAsync
+      .mockRejectedValueOnce(makeApiError("Temporary failure"))
+      .mockResolvedValueOnce(undefined);
+    mockData([], 120);
+
+    render(<PaymentSection rentalId="r1" />);
+
+    withFixedDate(() =>
+      fireEvent.click(screen.getByRole("button", { name: /تسجيل دفعة/ })),
+    );
+    fireEvent.change(screen.getByLabelText(/المبلغ/), {
+      target: { value: "50" },
+    });
+    selectDate("2026-08-15");
+    fireEvent.change(screen.getByLabelText(/طريقة الدفع/), {
+      target: { value: "CASH" },
+    });
+
+    fireEvent.click(screen.getByText("تسجيل الدفعة"));
+    await screen.findByText("تعذر تنفيذ الطلب. حاول مرة أخرى.");
+    fireEvent.click(screen.getByText("تسجيل الدفعة"));
+
+    await waitFor(() => expect(create.mutateAsync).toHaveBeenCalledTimes(2));
+    expect(create.mutateAsync.mock.calls[1]?.[0]?.data.operation_id).toBe(
+      create.mutateAsync.mock.calls[0]?.[0]?.data.operation_id,
+    );
   });
 
   it("hides the record-payment button for non-owner users", () => {

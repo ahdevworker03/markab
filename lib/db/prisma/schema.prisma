@@ -20,21 +20,22 @@ model Organization {
   updated_at           DateTime           @updatedAt
   deleted_at           DateTime?
 
-  users                   User[]
-  customers               Customer[]
-  vehicles                Vehicle[]
-  rentals                 Rental[]
-  contracts               Contract[]
-  documents               Document[]
-  photos                  Photo[]
-  maintenance             Maintenance[]
-  maintenance_schedules   MaintenanceSchedule[]
-  expenses                Expense[]
-  payments                Payment[]
-  tasks                   Task[]
-  audit_logs              AuditLog[]
-  employee_invitations    EmployeeInvitation[]
-  sync_operation_receipts SyncOperationReceipt[]
+  users                      User[]
+  customers                  Customer[]
+  vehicles                   Vehicle[]
+  rentals                    Rental[]
+  contracts                  Contract[]
+  documents                  Document[]
+  photos                     Photo[]
+  maintenance                Maintenance[]
+  maintenance_schedules      MaintenanceSchedule[]
+  expenses                   Expense[]
+  payments                   Payment[]
+  tasks                      Task[]
+  audit_logs                 AuditLog[]
+  employee_invitations       EmployeeInvitation[]
+  sync_operation_receipts    SyncOperationReceipt[]
+  payment_operation_receipts PaymentOperationReceipt[]
 
   @@index([deleted_at])
 }
@@ -483,10 +484,25 @@ model Payment {
   updated_at      DateTime      @updatedAt
   deleted_at      DateTime?
 
+  operation_receipt PaymentOperationReceipt?
+
   @@index([organization_id])
   @@index([rental_id])
   @@index([deleted_at])
   @@index([payment_date])
+}
+
+model PaymentOperationReceipt {
+  id                  String       @id @default(uuid()) @db.Uuid
+  organization_id     String       @db.Uuid
+  organization        Organization @relation(fields: [organization_id], references: [id], onDelete: Restrict)
+  operation_id        String       @db.Uuid
+  request_fingerprint String
+  payment_id          String       @unique @db.Uuid
+  payment             Payment      @relation(fields: [payment_id], references: [id], onDelete: Restrict)
+  created_at          DateTime     @default(now())
+
+  @@unique([organization_id, operation_id])
 }
 
 model Task {

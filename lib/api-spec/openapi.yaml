@@ -6044,10 +6044,15 @@ components:
         method:
           type: string
           enum: [CASH, CARD, TRANSFER, OTHER]
+        operation_id:
+          type: string
+          format: uuid
+          description: Client-generated identity for this logical payment submission
       required:
         - amount
         - payment_date
         - method
+        - operation_id
 
     TaskResponse:
       type: object
