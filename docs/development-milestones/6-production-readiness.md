@@ -601,21 +601,34 @@ Create reproducible staging/production deployment and operating procedures for t
 
 ### Current State
 
-- Vite can build static frontend assets and the API has a multi-stage non-root Dockerfile; the final runtime image currently copies only `dist` and `package.json` and must be proven and corrected.
-- Development Compose provides PostgreSQL but omits auth/email/storage production configuration, migration execution, durable object storage, and an API health check.
+- The production API image was verified non-root and matched the deployed release revision; production frontend delivery was verified through its separate Cloudflare Pages project.
+- Development Compose remains a local development setup; it does not provide the production-only auth/email/storage configuration, migration/release orchestration, durable object storage, or production health/readiness checks.
 - `GET /api/healthz` is dependency-free liveness. `GET /api/readyz` checks PostgreSQL connectivity and initialized storage configuration without probing Resend or mutating storage; `SIGTERM`/`SIGINT` drain the listener, disconnect Prisma, and use a bounded forced-exit fallback.
-- Prisma migrations are version controlled and `db:migrate:deploy` exists in `lib/db`, but there is no production release orchestration. The Task recurrence migration removes the legacy recurrence column and is incompatible with overlapping old/new API versions.
+- Prisma migrations are version controlled; all 37 applied successfully to the fresh production database. Deployment is still operator-driven; production deployment automation/CD with a manual approval gate remains open. The Task recurrence migration removes the legacy recurrence column and is incompatible with overlapping old/new API versions.
+
+**Production state recorded 2026-10-13:** The first production release is
+deployed and the release artifact, 37 migrations, public API health/readiness,
+frontend/domain, production platform-owner bootstrap/reset, controlled
+disposable-tenant QA, private R2 file smoke, production backup/isolated restore,
+daily backup timer, observability, synthetic probes, alert rules/routing, and
+controlled alert email have passed. The release used
+`ef83d6a9ddab10b91d1f101523ee085782bcc8f0`; detailed evidence belongs to the
+[production baseline](../operations/production-baseline.md) and the Step 65
+operational runbooks.
+
+**Remaining:** Production deployment automation/CD with a manual approval
+gate remains open, so Step 65 is not complete and no production release tag is
+approved by this record. Step 66 is next for core online release verification
+and pilot go/no-go. Step 64 remains **PAUSED / OPEN**: reconnect/reconciliation
+P95 `<= 10,000 ms` has not passed, and offline-first is not production-qualified.
 
 ### Production Pilot Release Sequence
 
-1. Complete the mutation retry/idempotency audit for high-risk mutations.
-2. Provision isolated production infrastructure.
-3. Add production deployment automation/CD with a manual approval gate.
-4. Deploy production and verify it using controlled QA accounts.
-5. Execute the core Step 66 online E2E/manual release checks.
-6. Make the pilot go/no-go decision.
-7. Onboard the first real client for a controlled trial.
-8. Continue Step 64 offline qualification in parallel.
+1. Complete production deployment automation/CD with a manual approval gate.
+2. Execute the core Step 66 online E2E/manual release checks, including Platform Admin/status and password-reset release boundaries.
+3. Make the pilot go/no-go decision after those checks.
+4. Onboard the first real client only after the explicit go decision.
+5. Continue Step 64 offline qualification in parallel.
 
 Step 64 remains **PAUSED / OPEN**, and offline-first remains **not production-qualified** until the reconnect P95 gate passes. This open gate does not block production infrastructure work, production deployment, or a controlled online-first pilot; it blocks offline-first production qualification and full Milestone 6 completion. This sequence does not complete Step 65 or Milestone 6.
 
