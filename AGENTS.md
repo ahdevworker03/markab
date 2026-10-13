@@ -14,7 +14,8 @@ Read this first, then load only the rule files and project sources relevant to t
 4. Follow references only when directly relevant.
 5. Load authoritative product, architecture, milestone, or testing documents when the task depends on them.
 6. Before any task modifies repository files, read `docs/rules/git.md`.
-7. If sources conflict, apply the source-of-truth and priority rules below instead of guessing.
+7. Before committing, pushing, merging, deleting a branch, tagging, or deploying, re-read `docs/rules/git.md` and follow its approval and promotion workflow exactly.
+8. If sources conflict, apply the source-of-truth and priority rules below instead of guessing.
 
 ---
 
