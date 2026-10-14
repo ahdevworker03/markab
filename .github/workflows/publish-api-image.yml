@@ -4,23 +4,33 @@ on:
   workflow_dispatch:
     inputs:
       release_sha:
-        description: Full 40-character commit SHA to build and publish
+        description: Full 40-character commit SHA to build and verify
         required: true
         type: string
+      verification_mode:
+        description: Production publication requires approved main CI; candidate does not set the production image status
+        required: true
+        default: production
+        type: choice
+        options:
+          - production
+          - candidate
 
 permissions:
   actions: read
   contents: read
   packages: write
-  statuses: write
 
 env:
-  IMAGE_NAME: ghcr.io/ahdevworker03/markab-api
+  IMAGE_NAME: ${{ inputs.verification_mode == 'candidate' && 'ghcr.io/ahdevworker03/markab-api-candidate' || 'ghcr.io/ahdevworker03/markab-api' }}
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      source_sha: ${{ steps.source.outputs.sha }}
+      image_digest: ${{ steps.build.outputs.digest }}
 
     steps:
       - name: Validate requested release SHA
@@ -50,6 +60,7 @@ jobs:
           echo "sha=$ACTUAL_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Require approved main commit and passing CI
+        if: inputs.verification_mode == 'production'
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_SHA: ${{ steps.source.outputs.sha }}
@@ -109,6 +120,7 @@ jobs:
           runtime_user="$(docker image inspect --format '{{.Config.User}}' "$IMAGE_REF")"
           test -n "$runtime_user"
           test "$runtime_user" != root
+          test "$(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$IMAGE_REF")" = "${{ steps.source.outputs.sha }}"
 
           docker network create "$network"
           docker run -d --name "$database" --network "$network" --network-alias db \
@@ -146,7 +158,7 @@ jobs:
           image_size="$(docker image inspect --format '{{.Size}}' "$IMAGE_REF")"
           memory_usage="$(docker stats --no-stream --format '{{.MemUsage}}' "$api")"
           {
-            echo '### Published API image'
+            echo '### ${{ inputs.verification_mode == 'candidate' && 'Candidate API image verification' || 'Published API image' }}'
             echo
             echo "- Source SHA: \\`${{ steps.source.outputs.sha }}\\`"
             echo "- Image: \\`$IMAGE_REF\\`"
@@ -155,11 +167,19 @@ jobs:
             echo "- Idle memory: \\`$memory_usage\\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
+  record-release:
+    name: Record verified production image
+    needs: publish
+    if: inputs.verification_mode == 'production'
+    runs-on: ubuntu-latest
+    permissions:
+      statuses: write
+    steps:
       - name: Record verified release image on commit
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_SHA: ${{ steps.source.outputs.sha }}
-          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+          RELEASE_SHA: ${{ needs.publish.outputs.source_sha }}
+          IMAGE_DIGEST: ${{ needs.publish.outputs.image_digest }}
         run: |
           gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$RELEASE_SHA" \
             -f state=success -f context=markab/api-image \
