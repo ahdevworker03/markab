@@ -604,7 +604,7 @@ Create reproducible staging/production deployment and operating procedures for t
 - The production API image was verified non-root and matched the deployed release revision; production frontend delivery was verified through its separate Cloudflare Pages project.
 - Development Compose remains a local development setup; it does not provide the production-only auth/email/storage configuration, migration/release orchestration, durable object storage, or production health/readiness checks.
 - `GET /api/healthz` is dependency-free liveness. `GET /api/readyz` checks PostgreSQL connectivity and initialized storage configuration without probing Resend or mutating storage; `SIGTERM`/`SIGINT` drain the listener, disconnect Prisma, and use a bounded forced-exit fallback.
-- Prisma migrations are version controlled; all 37 applied successfully to the fresh production database. Deployment is still operator-driven; production deployment automation/CD with a manual approval gate remains open. The Task recurrence migration removes the legacy recurrence column and is incompatible with overlapping old/new API versions.
+- Prisma migrations are version controlled; all 37 applied successfully to the fresh production database. Manual-gated production deployment automation is implemented but has no controlled execution/rehearsal evidence yet, so the Step 65 automation gap remains open. The Task recurrence migration removes the legacy recurrence column and is incompatible with overlapping old/new API versions.
 
 **Production state recorded 2026-10-13:** The first production release is
 deployed and the release artifact, 37 migrations, public API health/readiness,
@@ -616,8 +616,9 @@ controlled alert email have passed. The release used
 [production baseline](../operations/production-baseline.md) and the Step 65
 operational runbooks.
 
-**Remaining:** Production deployment automation/CD with a manual approval
-gate remains open, so Step 65 is not complete and no production release tag is
+**Remaining:** Execute and record a controlled run of the manual production
+deployment workflow, including CI/image identity, backup, API stop, migration,
+readiness, Pages, and smoke evidence as specified in the [release runbook](../operations/step-65-migration-release-runbook.md). Step 65 is not complete and no production release tag is
 approved by this record. Step 66 is next for core online release verification
 and pilot go/no-go. Step 64 remains **PAUSED / OPEN**: reconnect/reconciliation
 P95 `<= 10,000 ms` has not passed, and offline-first is not production-qualified.

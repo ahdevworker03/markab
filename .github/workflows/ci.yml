@@ -69,6 +69,9 @@ jobs:
       - run: pnpm run db:generate
       - run: pnpm run typecheck:libs
       - run: pnpm --filter @workspace/db exec prisma migrate deploy
+      - run: pnpm --filter @workspace/db exec prisma migrate status
+      - run: pnpm --filter @workspace/api-server test:migration
+      - run: pnpm --filter @workspace/api-server test:backup-restore
       - run: pnpm --filter @workspace/api-server test
       - run: pnpm --filter @workspace/api-server typecheck
       - run: pnpm --filter @workspace/api-server lint
@@ -110,4 +113,21 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: git diff --check
+      - name: Scan committed secrets without printing matches
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: secret
+          severity: HIGH,CRITICAL
+          format: json
+          output: trivy-secrets.json
+          exit-code: "0"
+      - name: Block committed high/critical secrets
+        run: |
+          set -euo pipefail
+          if jq -e 'any(.Results[]?; (.Secrets // []) | length > 0)' trivy-secrets.json >/dev/null; then
+            jq -r '[.Results[]? | select((.Secrets // []) | length > 0) | "\(.Target): \([.Secrets[] | \"\(.RuleID) (\(.Severity))\"] | join(\", \"))"] | .[]' trivy-secrets.json
+            exit 1
+          fi
       - run: pnpm audit --prod
