@@ -1,0 +1,168 @@
+name: Deploy production
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_sha:
+        description: Approved full 40-character main commit SHA
+        required: true
+        type: string
+      api_digest:
+        description: Published API sha256 digest (64 lowercase hex characters)
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+  packages: read
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: production
+    env:
+      RELEASE_SHA: ${{ inputs.release_sha }}
+      API_DIGEST: ${{ inputs.api_digest }}
+      IMAGE_NAME: ghcr.io/ahdevworker03/markab-api
+    steps:
+      - name: Check out deployment procedure
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate release and CI evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$API_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          git fetch origin main
+          git cat-file -e "$RELEASE_SHA^{commit}"
+          git merge-base --is-ancestor "$RELEASE_SHA" origin/main
+          gh api -X GET "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs" \
+            -f head_sha="$RELEASE_SHA" -f branch=main \
+            | jq -e --arg sha "$RELEASE_SHA" \
+              '.workflow_runs | map(select(.head_sha == $sha and .head_branch == "main")) | max_by(.created_at) | .conclusion == "success"' >/dev/null \
+            || { echo "CI has no passing main run for $RELEASE_SHA" >&2; exit 1; }
+          gh api -X GET "repos/$GITHUB_REPOSITORY/commits/$RELEASE_SHA/statuses" \
+            | jq -e --arg digest "$API_DIGEST" \
+              'any(.context == "markab/api-image" and .state == "success" and .description == $digest)' >/dev/null \
+            || { echo 'No successful image verification status matches the requested digest.' >&2; exit 1; }
+
+      - name: Check out exact release source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_sha }}
+          path: release
+
+      - name: Verify checked out source
+        run: test "$(git -C release rev-parse HEAD)" = "$RELEASE_SHA"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Verify immutable API image revision
+        run: |
+          image="$IMAGE_NAME@$API_DIGEST"
+          docker pull "$image"
+          test "$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image")" = "$RELEASE_SHA"
+          echo "release=$RELEASE_SHA image=$image" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "11.15.0"
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: release/pnpm-lock.yaml
+
+      - name: Build matching production frontend
+        working-directory: release
+        env:
+          VITE_API_URL: https://api.markab-lb.com
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --filter @workspace/web build
+          printf '{"release_id":"%s"}\n' "$RELEASE_SHA" > apps/web/dist/public/release.json
+          grep -RFl 'https://api.markab-lb.com' apps/web/dist/public/assets >/dev/null
+
+      - name: Verify Pages cannot auto deploy from main
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_ACCOUNT_ID" && test -n "$CLOUDFLARE_API_TOKEN"
+          curl --fail --silent --show-error --max-time 20 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/vehicle-rental-production" \
+            | jq -e '.success == true and .result.name == "vehicle-rental-production" and (.result.source == null or .result.source.type == "direct_upload" or (.result.source.config.production_branch == "main" and .result.source.config.production_deployments_enabled == false))' >/dev/null
+
+      - name: Install pinned SSH host identity
+        env:
+          SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.PROD_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          test -n "$SSH_KEY" && test -n "$SSH_KNOWN_HOSTS"
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/id_production"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/id_production" "$HOME/.ssh/known_hosts"
+
+      - name: Stop, back up, migrate, and start exact API image
+        id: api_deploy
+        env:
+          PROD_SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
+          PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
+        run: |
+          set -euo pipefail
+          test -n "$PROD_SSH_HOST" && test -n "$PROD_SSH_USER"
+          compose_hash=$(sha256sum release/apps/api/docker-compose.production.yml | cut -d ' ' -f 1)
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -i "$HOME/.ssh/id_production" \
+            "$PROD_SSH_USER@$PROD_SSH_HOST" bash -s -- \
+            "$RELEASE_SHA" "$IMAGE_NAME@$API_DIGEST" "$compose_hash" \
+            < apps/api/scripts/deploy-production.sh
+
+      - name: Deploy matching frontend to production Pages
+        working-directory: release
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          pnpm dlx wrangler@4 pages deploy apps/web/dist/public \
+            --project-name=vehicle-rental-production --branch=main \
+            --commit-hash="$RELEASE_SHA"
+
+      - name: Non-destructive production smoke
+        run: |
+          set -euo pipefail
+          curl -fsSL --max-time 20 https://markab-lb.com/ | grep -qi '<!doctype html>'
+          curl -fsSL --max-time 20 https://markab-lb.com/platform | grep -qi '<!doctype html>'
+          curl -fsS --max-time 20 https://api.markab-lb.com/api/healthz | jq -e '.status == "ok"' >/dev/null
+          curl -fsS --max-time 20 https://api.markab-lb.com/api/readyz | jq -e '.status == "ok"' >/dev/null
+          curl -fsS --max-time 20 -D /tmp/markab-api-headers \
+            -H 'Origin: https://markab-lb.com' https://api.markab-lb.com/api/readyz >/dev/null
+          grep -qi '^access-control-allow-origin: https://markab-lb.com' /tmp/markab-api-headers
+          curl -fsS --max-time 20 "https://markab-lb.com/release.json?release=$RELEASE_SHA" \
+            | jq -e --arg sha "$RELEASE_SHA" '.release_id == $sha' >/dev/null
+          echo "Production smoke passed for $RELEASE_SHA" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Report post-API failure boundary
+        if: failure() && steps.api_deploy.outcome == 'success'
+        run: |
+          echo 'The new API and schema are active. Do not start the previous API or restore the database automatically. Investigate Pages/smoke failure and fix forward; emergency restore requires an explicit operator decision about post-backup write loss.' >&2

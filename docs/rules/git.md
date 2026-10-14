@@ -49,6 +49,51 @@ working branch
 → optional release tag
 ```
 
+Add this under `## Promotion Flow`:
+
+### Agent Promotion Workflow
+
+Normal work:
+
+```text
+latest staging
+→ working branch
+→ push working branch
+→ merge into staging
+→ delete working branch
+→ verify staging
+→ merge staging into main
+→ production only after explicit user approval
+```
+
+Required sequence:
+
+1. Create the working branch from the latest `staging`.
+2. Complete the task and verification on that branch.
+3. Before push, inspect:
+   - `git status`
+   - `git diff`
+   - `git diff --staged`
+4. With explicit user approval, commit and push the working branch to GitHub.
+5. Before staging promotion, inspect the exact branch delta against `origin/staging`:
+   - commits unique to the working branch;
+   - changed files;
+   - whether `staging` has moved independently.
+6. With explicit user approval, merge or replay the working branch onto current `staging`.
+7. Push `staging` only with explicit user approval.
+8. Confirm the working branch has no unique work remaining in it, then delete the local and remote working branch only with explicit user approval.
+9. Before promoting `staging` to `main`, inspect the complete `origin/main...origin/staging` commit and file delta and resolve any branch divergence deliberately.
+10. With explicit user approval, merge `staging` into `main` and push `main`.
+11. Confirm `main` contains the exact approved staging state. After promotion, `main` and `staging` should normally converge before new release work begins.
+12. A merge to `main` does not authorize production deployment. If the change is intended for production, stop and request explicit user approval before deployment.
+13. After approved production deployment, perform production smoke verification. Release tags may be created only afterward and only with explicit user approval.
+
+When a working branch is significantly behind `staging`, do not blindly merge stale history. Reconcile it deliberately; for a small isolated change, replaying/cherry-picking the intended commit onto current `staging` may be preferable.
+
+The agent must stop for explicit user approval before each protected action already listed in `Agent Permissions`: commit, push, merge, branch deletion, staging deployment, production deployment, or release tagging.
+
+---
+
 Rules:
 
 - A completed working branch does not merge into `staging` automatically.

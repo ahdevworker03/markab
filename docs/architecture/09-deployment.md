@@ -341,7 +341,6 @@ Cloudflare provides the edge/network layer: DNS, proxying, HTTPS/TLS, DDoS prote
 
 The deployment architecture should support future capabilities such as:
 
-- Automated CI/CD pipelines.
 - Multiple production regions.
 - Load balancing.
 - Content Delivery Networks (CDNs).

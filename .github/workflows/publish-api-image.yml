@@ -6,12 +6,13 @@ on:
       release_sha:
         description: Full 40-character commit SHA to build and publish
         required: true
-        default: 28f88fc501cb99ab1281436c6d341bc6040b6e45
         type: string
 
 permissions:
+  actions: read
   contents: read
   packages: write
+  statuses: write
 
 env:
   IMAGE_NAME: ghcr.io/ahdevworker03/markab-api
@@ -48,6 +49,17 @@ jobs:
           test "$ACTUAL_SHA" = "$REQUESTED_SHA"
           echo "sha=$ACTUAL_SHA" >> "$GITHUB_OUTPUT"
 
+      - name: Require approved main commit and passing CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          git merge-base --is-ancestor "$RELEASE_SHA" origin/main
+          gh api -X GET "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs" \
+            -f head_sha="$RELEASE_SHA" -f branch=main \
+            | jq -e --arg sha "$RELEASE_SHA" \
+              '.workflow_runs | map(select(.head_sha == $sha and .head_branch == "main")) | max_by(.created_at) | .conclusion == "success"' >/dev/null
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -69,6 +81,14 @@ jobs:
           labels: org.opencontainers.image.revision=${{ steps.source.outputs.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Block actionable high/critical API image vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
 
       - name: Verify published image
         env:
@@ -134,3 +154,14 @@ jobs:
             echo "- Image size: \\`$image_size bytes\\`"
             echo "- Idle memory: \\`$memory_usage\\`"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Record verified release image on commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ steps.source.outputs.sha }}
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$RELEASE_SHA" \
+            -f state=success -f context=markab/api-image \
+            -f description="$IMAGE_DIGEST" \
+            -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
