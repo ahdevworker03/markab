@@ -46,6 +46,8 @@ FROM base AS runner
 WORKDIR /app
 
 RUN apk add --no-cache aws-cli postgresql16-client && \
+    rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack && \
+    rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack && \
     addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 appuser
 
