@@ -1,7 +1,6 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import {
-  isUniqueConstraintError,
   retrySerializable,
   transaction,
   type TxClient,
@@ -120,6 +119,29 @@ function result(
   };
 }
 
+function recordedResult(
+  operation: SyncOperationInput,
+  receipt: {
+    outcome: "APPLIED" | "CONFLICT" | "REJECTED";
+    result_code: string;
+    resource_type: "CUSTOMER" | "RENTAL" | null;
+    resource_id: string | null;
+  },
+): SyncResult {
+  const status =
+    receipt.outcome === "APPLIED"
+      ? "DUPLICATE"
+      : receipt.outcome === "CONFLICT"
+        ? "CONFLICT"
+        : "REJECTED";
+  const code =
+    receipt.outcome === "APPLIED"
+      ? "SYNC_DUPLICATE"
+      : (receipt.result_code as SyncResult["code"]);
+
+  return result(operation, status, code, receipt.resource_type);
+}
+
 function hasMatchingPayload(operation: SyncOperationInput): boolean {
   const payloads = [
     operation.customer_create,
@@ -177,22 +199,29 @@ async function reconciliationResult(
     const customer = await repo.findCustomer(
       organizationId,
       receipt.resource_id,
+      undefined,
+      true,
     );
     return {
-      ...result(operation, "DUPLICATE", "SYNC_DUPLICATE", "CUSTOMER"),
+      ...recordedResult(operation, receipt),
       ...(customer ? { customer: toCustomerResponse(customer) } : {}),
     };
   }
 
   if (receipt.resource_type === "RENTAL" && receipt.resource_id) {
-    const rental = await repo.findRental(organizationId, receipt.resource_id);
+    const rental = await repo.findRental(
+      organizationId,
+      receipt.resource_id,
+      undefined,
+      true,
+    );
     return {
-      ...result(operation, "DUPLICATE", "SYNC_DUPLICATE", "RENTAL"),
+      ...recordedResult(operation, receipt),
       ...(rental ? { rental: toRentalResponse(rental) } : {}),
     };
   }
 
-  return result(operation, "DUPLICATE", "SYNC_DUPLICATE");
+  return recordedResult(operation, receipt);
 }
 
 async function resolveRentalCustomerId(
@@ -336,6 +365,7 @@ async function createReceiptForResult(
       operation_id: operation.operation_id,
       request_fingerprint: requestFingerprint,
       operation_type: operation.type,
+      result_code: operationResult.code,
       outcome:
         operationResult.status === "APPLIED"
           ? "APPLIED"
@@ -404,6 +434,7 @@ async function executeOperation(
         : undefined,
     );
 
+  let transactionError: unknown;
   try {
     const operationResult =
       operation.type === "RENTAL_CREATE"
@@ -411,7 +442,7 @@ async function executeOperation(
         : await run();
     if (operationResult) return operationResult;
   } catch (error) {
-    if (!isUniqueConstraintError(error)) throw error;
+    transactionError = error;
   }
 
   const winner = await reconciliationResult(
@@ -420,6 +451,7 @@ async function executeOperation(
     requestFingerprint,
   );
   if (winner) return winner;
+  if (transactionError) throw transactionError;
   throw new AppError(
     500,
     "SYNC_RECEIPT_RACE_FAILED",
