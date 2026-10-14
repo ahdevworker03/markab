@@ -1,0 +1,5 @@
+ALTER TABLE "SyncOperationReceipt"
+ADD COLUMN "result_code" TEXT NOT NULL DEFAULT 'SYNC_OPERATION_INVALID';
+
+ALTER TABLE "SyncOperationReceipt"
+ALTER COLUMN "result_code" DROP DEFAULT;

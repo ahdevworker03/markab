@@ -1,9 +1,10 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import request from "supertest";
 import app from "../../app";
 import { prisma } from "../../database";
 import { generateAccessToken } from "../auth";
 import { cleanup } from "../../test/helpers";
+import * as syncRepository from "./sync.repository";
 
 describe("sync push routes", () => {
   let organizationId: string;
@@ -47,6 +48,8 @@ describe("sync push routes", () => {
       role: "OWNER",
     });
   });
+
+  afterEach(() => vi.restoreAllMocks());
 
   function push(operations: unknown[], bearerToken = token) {
     return request(app)
@@ -138,6 +141,37 @@ describe("sync push routes", () => {
     ).resolves.toBe(1);
   });
 
+  it("recovers concurrent identical customer creates as the same authoritative result", async () => {
+    const operation = customerCreate("00000000-0000-4000-8000-000000000009");
+
+    const [first, second] = await Promise.all([
+      push([operation]),
+      push([operation]),
+    ]);
+
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    expect(first.body.results[0]).toMatchObject({
+      status: expect.stringMatching(/APPLIED|DUPLICATE/),
+      resource_type: "CUSTOMER",
+      customer: { firstName: "Amina" },
+    });
+    expect(second.body.results[0]).toMatchObject({
+      status: expect.stringMatching(/APPLIED|DUPLICATE/),
+      resource_type: "CUSTOMER",
+      customer: { firstName: "Amina" },
+    });
+    expect(first.body.results[0].customer.id).toBe(
+      second.body.results[0].customer.id,
+    );
+    await expect(
+      prisma.customer.count({ where: { organization_id: organizationId } }),
+    ).resolves.toBe(1);
+    await expect(
+      prisma.syncOperationReceipt.count({ where: { organization_id: organizationId } }),
+    ).resolves.toBe(1);
+  });
+
   it("rejects a reused operation ID with a different payload", async () => {
     const operationId = "00000000-0000-4000-8000-000000000002";
     await push([customerCreate(operationId)]).expect(200);
@@ -152,6 +186,127 @@ describe("sync push routes", () => {
       code: "SYNC_OPERATION_PAYLOAD_MISMATCH",
       resource_type: null,
     });
+  });
+
+  it("rolls back an operation when receipt persistence fails and allows a later retry", async () => {
+    const operation = customerCreate("00000000-0000-4000-8000-000000000014");
+    vi.spyOn(syncRepository, "createReceipt").mockRejectedValueOnce(
+      new Error("receipt write failed"),
+    );
+
+    await push([operation]).expect(500);
+    await expect(
+      prisma.customer.count({ where: { organization_id: organizationId } }),
+    ).resolves.toBe(0);
+    await expect(
+      prisma.syncOperationReceipt.count({ where: { organization_id: organizationId } }),
+    ).resolves.toBe(0);
+
+    await push([operation])
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.results[0]).toMatchObject({
+          status: "APPLIED",
+          customer: { firstName: "Amina" },
+        });
+      });
+    await expect(
+      prisma.customer.count({ where: { organization_id: organizationId } }),
+    ).resolves.toBe(1);
+    await expect(
+      prisma.syncOperationReceipt.count({ where: { organization_id: organizationId } }),
+    ).resolves.toBe(1);
+  });
+
+  it("replays a rejected operation with its original machine-readable result", async () => {
+    const operation = {
+      operation_id: "00000000-0000-4000-8000-000000000015",
+      type: "CUSTOMER_UPDATE" as const,
+      customer_update: {
+        customer_id: "00000000-0000-4000-8000-000000000016",
+        expected_updated_at: "2030-01-01T00:00:00.000Z",
+        first_name: "Amina",
+        last_name: "Haddad",
+        phone: "70123456",
+        address: "Beirut",
+        national_id: "MISSING-NID",
+        license_number: "MISSING-LIC",
+        license_expiry_date: "2030-01-01T00:00:00.000Z",
+      },
+    };
+
+    const first = await push([operation]).expect(200);
+    const replay = await push([operation]).expect(200);
+
+    expect(first.body.results[0]).toMatchObject({
+      status: "REJECTED",
+      code: "CUSTOMER_NOT_FOUND",
+    });
+    expect(replay.body.results[0]).toMatchObject({
+      status: "REJECTED",
+      code: "CUSTOMER_NOT_FOUND",
+    });
+  });
+
+  it("isolates the same operation ID across authenticated organizations", async () => {
+    const otherOrganization = await prisma.organization.create({
+      data: { name: "Other sync organization" },
+    });
+    const otherUser = await prisma.user.create({
+      data: {
+        organization_id: otherOrganization.id,
+        email: "other-sync-owner@example.com",
+        password_hash: "hash",
+        role: "OWNER",
+      },
+    });
+    const otherToken = generateAccessToken({
+      sub: otherUser.id,
+      org: otherOrganization.id,
+      role: "OWNER",
+    });
+    const operation = customerCreate("00000000-0000-4000-8000-000000000017");
+
+    const first = await push([operation]).expect(200);
+    const second = await push([operation], otherToken).expect(200);
+
+    expect(first.body.results[0]).toMatchObject({ status: "APPLIED" });
+    expect(second.body.results[0]).toMatchObject({ status: "APPLIED" });
+    expect(first.body.results[0].customer.id).not.toBe(
+      second.body.results[0].customer.id,
+    );
+    await expect(
+      prisma.syncOperationReceipt.count({
+        where: { operation_id: operation.operation_id },
+      }),
+    ).resolves.toBe(2);
+  });
+
+  it("replays an applied create with its original identity after soft deletion", async () => {
+    const operation = customerCreate("00000000-0000-4000-8000-000000000018");
+    const first = await push([operation]).expect(200);
+    const customerId = first.body.results[0].customer.id as string;
+
+    await request(app)
+      .delete(`/api/customers/${customerId}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(204);
+
+    const replay = await push([operation]).expect(200);
+    expect(replay.body.results[0]).toMatchObject({
+      status: "DUPLICATE",
+      code: "SYNC_DUPLICATE",
+      resource_type: "CUSTOMER",
+      customer: { id: customerId },
+    });
+    await expect(
+      prisma.customer.count({
+        where: { organization_id: organizationId, deleted_at: null },
+      }),
+    ).resolves.toBe(0);
+    await expect(
+      prisma.customer.count({ where: { organization_id: organizationId } }),
+    ).resolves.toBe(1);
   });
 
   it("returns the current customer when an offline update is stale", async () => {

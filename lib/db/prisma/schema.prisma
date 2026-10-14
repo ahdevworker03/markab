@@ -238,6 +238,7 @@ model SyncOperationReceipt {
   operation_id            String               @db.Uuid
   request_fingerprint     String
   operation_type          SyncOperationType
+  result_code             String
   outcome                 SyncOperationOutcome
   resource_type           SyncResourceType?
   resource_id             String?              @db.Uuid
