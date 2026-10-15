@@ -48,6 +48,7 @@ async function createReceipt(
     operation_id: string;
     request_fingerprint: string;
     operation_type: "CUSTOMER_CREATE" | "CUSTOMER_UPDATE" | "RENTAL_CREATE";
+    result_code: string;
     outcome: "APPLIED" | "CONFLICT" | "REJECTED";
     resource_type: "CUSTOMER" | "RENTAL" | null;
     resource_id: string | null;
@@ -70,12 +71,13 @@ async function findCustomer(
   organizationId: string,
   customerId: string,
   tx: DbClient = prisma,
+  includeDeleted = false,
 ) {
   return tx.customer.findFirst({
     where: {
       id: customerId,
       organization_id: organizationId,
-      deleted_at: null,
+      ...(includeDeleted ? {} : { deleted_at: null }),
     },
   });
 }
@@ -84,9 +86,14 @@ async function findRental(
   organizationId: string,
   rentalId: string,
   tx: DbClient = prisma,
+  includeDeleted = false,
 ) {
   return tx.rental.findFirst({
-    where: { id: rentalId, organization_id: organizationId, deleted_at: null },
+    where: {
+      id: rentalId,
+      organization_id: organizationId,
+      ...(includeDeleted ? {} : { deleted_at: null }),
+    },
   });
 }
 

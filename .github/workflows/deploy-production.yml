@@ -144,7 +144,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          pnpm dlx wrangler@4 pages deploy apps/web/dist/public \
+          pnpm dlx wrangler@4.150.0 pages deploy apps/web/dist/public \
             --project-name=vehicle-rental-production --branch=main \
             --commit-hash="$RELEASE_SHA"
 

@@ -158,13 +158,13 @@ jobs:
           image_size="$(docker image inspect --format '{{.Size}}' "$IMAGE_REF")"
           memory_usage="$(docker stats --no-stream --format '{{.MemUsage}}' "$api")"
           {
-            echo '### ${{ inputs.verification_mode == 'candidate' && 'Candidate API image verification' || 'Published API image' }}'
-            echo
-            echo "- Source SHA: \\`${{ steps.source.outputs.sha }}\\`"
-            echo "- Image: \\`$IMAGE_REF\\`"
-            echo "- Runtime user: \\`$runtime_user\\`"
-            echo "- Image size: \\`$image_size bytes\\`"
-            echo "- Idle memory: \\`$memory_usage\\`"
+            printf '%s\n' '### ${{ inputs.verification_mode == 'candidate' && 'Candidate API image verification' || 'Published API image' }}'
+            printf '\n'
+            printf '%s%s%s\n' '- Source SHA: `' '${{ steps.source.outputs.sha }}' '`'
+            printf '%s%s%s\n' '- Image: `' "$IMAGE_REF" '`'
+            printf '%s%s%s\n' '- Runtime user: `' "$runtime_user" '`'
+            printf '%s%s%s\n' '- Image size: `' "$image_size bytes" '`'
+            printf '%s%s%s\n' '- Idle memory: `' "$memory_usage" '`'
           } >> "$GITHUB_STEP_SUMMARY"
 
   record-release:
