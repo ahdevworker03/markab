@@ -80,10 +80,32 @@ describe("CustomersDataList", () => {
     expect(within(mobileCard).getByText("الموقع").parentElement).toHaveClass(
       "min-w-0",
       "self-start",
+      "text-right",
     );
     const mobileLocation = within(mobileCard).getByText(longCustomer.address);
     expect(mobileLocation).toHaveAttribute("dir", "auto");
-    expect(mobileLocation).toHaveClass("min-w-0", "break-words", "text-start");
+    expect(mobileLocation).toHaveClass("min-w-0", "break-words");
+    expect(mobileLocation).not.toHaveClass("text-start");
+  });
+
+  it("anchors location fields regardless of the address text direction", () => {
+    const addresses = ["بيروت", "Tripoli", "123 Main St، طرابلس"];
+    const customers = addresses.map((address, index) => ({
+      ...customer,
+      id: `customer-location-${index}`,
+      address,
+    }));
+    render(<CustomersDataList customers={customers} onOpen={vi.fn()} />);
+
+    for (const address of addresses) {
+      for (const location of screen.getAllByText(address)) {
+        expect(location).toHaveAttribute("dir", "auto");
+        expect(location).not.toHaveClass("text-start");
+        expect(
+          location.closest("td") ?? location.parentElement?.parentElement,
+        ).toHaveClass("text-right");
+      }
+    }
   });
 
   it("preserves desktop customer table widths and actions", () => {
@@ -99,7 +121,7 @@ describe("CustomersDataList", () => {
     ).toHaveClass("w-[10rem]", "text-start");
     expect(
       within(table).getByRole("columnheader", { name: "الموقع" }),
-    ).toHaveClass("w-[20rem]", "text-start");
+    ).toHaveClass("w-[20rem]", "text-right");
     expect(
       within(table).getByRole("columnheader", { name: "الإجراء" }),
     ).toHaveClass("w-[10rem]");
