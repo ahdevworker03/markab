@@ -162,7 +162,7 @@ export function CustomersDataList({
         {customers.map((customer) => (
           <article key={customer.id} className="space-y-4 px-4 py-4">
             <CustomerIdentity customer={customer} />
-            <div className="grid min-w-0 grid-cols-2 items-start gap-2 rounded-lg bg-muted/45 p-3">
+            <div className="grid min-w-0 grid-cols-[calc(50%-0.25rem)_7rem] items-start gap-2 rounded-lg bg-muted/45 p-3">
               <div className="min-w-0">
                 <div className="ui-label">الهاتف</div>
                 <div className="mt-1">

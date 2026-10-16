@@ -66,7 +66,11 @@ describe("CustomersDataList", () => {
       .at(-1)!
       .closest("article")!;
     const mobileFields = mobileCard.querySelector(".grid")!;
-    expect(mobileFields).toHaveClass("grid-cols-2", "min-w-0", "items-start");
+    expect(mobileFields).toHaveClass(
+      "grid-cols-[calc(50%-0.25rem)_7rem]",
+      "min-w-0",
+      "items-start",
+    );
     const mobileName = within(mobileCard).getByText(
       "شركة النخبة الدولية لتأجير المركبات Al Noor Fleet Management",
     );
@@ -91,7 +95,7 @@ describe("CustomersDataList", () => {
     expect(mobileLocation.parentElement).toHaveClass("w-full", "text-right");
   });
 
-  it("uses a full-width location wrapper for every address direction", () => {
+  it("keeps every location direction in the fixed mobile location column", () => {
     const addresses = ["بيروت", "طرابلس", "Tripoli", "123 Main St، طرابلس"];
     const customers = addresses.map((address, index) => ({
       ...customer,
@@ -104,6 +108,15 @@ describe("CustomersDataList", () => {
     expect(
       within(table).getByRole("columnheader", { name: "الموقع" }),
     ).toHaveClass("text-right");
+
+    const mobileCard = screen
+      .getAllByText("الهاتف")
+      .at(-1)!
+      .closest("article")!;
+    expect(mobileCard.querySelector(".grid")).toHaveClass(
+      "grid-cols-[calc(50%-0.25rem)_7rem]",
+      "gap-2",
+    );
 
     for (const address of addresses) {
       const locations = screen.getAllByText(address);
