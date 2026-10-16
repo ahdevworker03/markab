@@ -56,12 +56,14 @@ function PhoneValue({ value }: { value: string }) {
 
 function LocationValue({ value }: { value: string }) {
   return (
-    <span
-      dir="auto"
-      className="block min-w-0 break-words text-start text-sm text-foreground"
-    >
-      {value}
-    </span>
+    <div className="w-full text-right">
+      <span
+        dir="auto"
+        className="inline-block max-w-full break-words text-sm text-foreground"
+      >
+        {value}
+      </span>
+    </div>
   );
 }
 
@@ -79,7 +81,7 @@ export function CustomersDataList({
               <TableHead className="w-[10rem] min-w-[10rem] text-start">
                 رقم الهاتف
               </TableHead>
-              <TableHead className="w-[20rem] min-w-[20rem] text-start">
+              <TableHead className="w-[20rem] min-w-[20rem] text-right">
                 الموقع
               </TableHead>
               <TableHead className="w-[10rem] min-w-[10rem] text-end">
