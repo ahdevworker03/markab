@@ -162,14 +162,17 @@ export function CustomersDataList({
         {customers.map((customer) => (
           <article key={customer.id} className="space-y-4 px-4 py-4">
             <CustomerIdentity customer={customer} />
-            <div className="grid min-w-0 grid-cols-[calc(50%-0.25rem)_7rem] items-start gap-2 rounded-lg bg-muted/45 p-3">
-              <div className="min-w-0">
+            <div
+              dir="ltr"
+              className="grid min-w-0 grid-cols-[7rem_minmax(0,1fr)_calc(50%-0.25rem)] items-start gap-2 rounded-lg bg-muted/45 p-3"
+            >
+              <div className="col-start-3 min-w-0 text-right">
                 <div className="ui-label">الهاتف</div>
                 <div className="mt-1">
                   <PhoneValue value={customer.phone} />
                 </div>
               </div>
-              <div className="min-w-0 self-start">
+              <div className="col-start-1 min-w-0 self-start text-right">
                 <div className="ui-label">الموقع</div>
                 <div className="mt-1">
                   <LocationValue value={customer.address} />
