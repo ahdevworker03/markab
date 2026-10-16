@@ -58,7 +58,7 @@ function LocationValue({ value }: { value: string }) {
   return (
     <span
       dir="auto"
-      className="block min-w-0 break-words text-sm text-foreground"
+      className="block min-w-0 break-words text-start text-sm text-foreground"
     >
       {value}
     </span>
@@ -79,7 +79,7 @@ export function CustomersDataList({
               <TableHead className="w-[10rem] min-w-[10rem] text-start">
                 رقم الهاتف
               </TableHead>
-              <TableHead className="w-[20rem] min-w-[20rem] text-right">
+              <TableHead className="w-[20rem] min-w-[20rem] text-start">
                 الموقع
               </TableHead>
               <TableHead className="w-[10rem] min-w-[10rem] text-end">
@@ -100,7 +100,7 @@ export function CustomersDataList({
                 <TableCell className="min-w-[10rem] text-start">
                   <PhoneValue value={customer.phone} />
                 </TableCell>
-                <TableCell className="min-w-[20rem] text-right">
+                <TableCell className="min-w-[20rem] text-start">
                   <LocationValue value={customer.address} />
                 </TableCell>
                 <TableCell className="min-w-[10rem] text-end whitespace-nowrap">
@@ -134,7 +134,7 @@ export function CustomersDataList({
                   <PhoneValue value={customer.phone} />
                 </div>
               </div>
-              <div className="min-w-0 text-right">
+              <div className="min-w-0">
                 <div className="ui-label">الموقع</div>
                 <div className="mt-1">
                   <LocationValue value={customer.address} />
@@ -167,7 +167,7 @@ export function CustomersDataList({
                   <PhoneValue value={customer.phone} />
                 </div>
               </div>
-              <div className="min-w-0 self-start text-right">
+              <div className="min-w-0 self-start">
                 <div className="ui-label">الموقع</div>
                 <div className="mt-1">
                   <LocationValue value={customer.address} />
