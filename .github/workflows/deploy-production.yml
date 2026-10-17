@@ -110,8 +110,8 @@ jobs:
           test -n "$CLOUDFLARE_ACCOUNT_ID" && test -n "$CLOUDFLARE_API_TOKEN"
           curl --fail --silent --show-error --max-time 20 \
             -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/vehicle-rental-production" \
-            | jq -e '.success == true and .result.name == "vehicle-rental-production" and (.result.source == null or .result.source.type == "direct_upload" or (.result.source.config.production_branch == "main" and .result.source.config.production_deployments_enabled == false))' >/dev/null
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/markab-production" \
+            | jq -e '.success == true and .result.name == "markab-production" and (.result.source == null or .result.source.type == "direct_upload" or (.result.source.config.production_branch == "main" and .result.source.config.production_deployments_enabled == false))' >/dev/null
 
       - name: Install pinned SSH host identity
         env:
@@ -146,7 +146,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           pnpm dlx wrangler@4.150.0 pages deploy apps/web/dist/public \
-            --project-name=vehicle-rental-production --branch=main \
+            --project-name=markab-production --branch=main \
             --commit-hash="$RELEASE_SHA"
 
       - name: Non-destructive production smoke
