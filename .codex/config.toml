@@ -26,9 +26,6 @@ enabled = true
 url = "https://mcp.cloudflare.com/mcp"
 enabled = true
 
-[mcp_servers.cloudflare.headers]
-Authorization = "Bearer ${env:CLOUDFLARE_API_TOKEN}"
-
 [mcp_servers.postgresql]
 command = "npx"
 args = [
