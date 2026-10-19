@@ -1,4 +1,4 @@
-FROM node:22-alpine AS base
+FROM node:22-trixie-slim AS base
 
 FROM base AS deps
 RUN corepack enable && corepack prepare pnpm@11.15.0 --activate
@@ -45,11 +45,13 @@ RUN pnpm install --prod --frozen-lockfile --fetch-timeout=600000
 FROM base AS runner
 WORKDIR /app
 
-RUN apk add --no-cache aws-cli postgresql16-client && \
-    rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack && \
-    rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack && \
-    addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 appuser
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends awscli postgresql-client && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn* && \
+    rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/pnpm /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg && \
+    groupadd --system --gid 1001 nodejs && \
+    useradd --system --uid 1001 --gid nodejs appuser
 
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
