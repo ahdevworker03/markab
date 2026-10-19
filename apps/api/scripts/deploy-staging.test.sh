@@ -42,9 +42,10 @@ migration_started=$(line_of 'migration_started=1')
 [ "$restart" -lt "$migration_started" ]
 grep -Fq 'migration_started == 0' "$script"
 
-grep -Fq 'vehicle-rental-staging' "$runbook"
+grep -Fq '/pages/projects/markab-staging' "$runbook"
+grep -Fq '.result.name == "markab-staging"' "$runbook"
 grep -Fq 'VITE_API_URL=https://staging-api.markab-lb.com' "$runbook"
-grep -Fq -- '--project-name=vehicle-rental-staging' "$runbook"
+grep -Fq -- '--project-name=markab-staging' "$runbook"
 grep -Fq -- '--commit-hash="$release_sha"' "$runbook"
 grep -Fq 'pnpm dlx wrangler@4.150.0 pages deploy' "$runbook"
 ! grep -Fq 'wrangler@4 pages deploy' "$runbook"
