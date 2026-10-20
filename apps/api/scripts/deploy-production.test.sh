@@ -28,16 +28,23 @@ case "$command $*" in
   "compose "*" ps -q api")
     if [ -f "$state/new-api" ]; then printf 'new-api-id\n'; else printf 'old-api-id\n'; fi
     ;;
-  "compose "*" pull api migrate backup") exit 0 ;;
+  "compose "*" pull api migrate backup") [ "${SCENARIO:?}" != image-pull-failure ] || exit 1 ;;
   "compose "*" stop -t 30 api") : > "$state/old-stopped" ;;
   "compose "*" --profile backup run --rm --no-deps backup")
+    : > "$state/backup"
     [ "${SCENARIO:?}" != backup-failure ] || exit 1
     [ "$SCENARIO" != backup-evidence-missing ] || { printf 'backup completed\n'; exit 0; }
     printf 'event=backup.succeeded environment=production release=%s key=backups/production/test.dump\n' "$RELEASE_ID"
     ;;
-  "compose "*" run --rm --no-deps migrate deploy") [ "$SCENARIO" != migration-failure ] || exit 1 ;;
+  "compose "*" run --rm --no-deps migrate deploy")
+    : > "$state/migration"
+    [ "$SCENARIO" != migration-failure ] || exit 1
+    ;;
   "compose "*" run --rm --no-deps migrate status") exit 0 ;;
-  "compose "*" up -d --no-deps --force-recreate api") : > "$state/new-api" ;;
+  "compose "*" up -d --no-deps --force-recreate api")
+    [ "$SCENARIO" != api-startup-failure ] || exit 1
+    : > "$state/new-api"
+    ;;
   "image inspect "*) printf '%s\n' "$RELEASE_ID" ;;
   "inspect -f "*)
     format=$2
@@ -60,6 +67,8 @@ esac
 EOF
 cat > "$tmp/bin/curl" <<'EOF'
 #!/bin/sh
+[ "${FAKE_DOCKER_STATE:?}" ]
+: > "$FAKE_DOCKER_STATE/readiness"
 [ "${SCENARIO:?}" != readiness-failure ]
 EOF
 cat > "$tmp/bin/flock" <<'EOF'
@@ -89,6 +98,17 @@ run_case() {
   [ "$status" -eq "$expected_status" ] || { cat "$output" >&2; exit 1; }
 }
 
+run_case image-pull-failure 1
+test ! -e "$tmp/image-pull-failure.state/old-stopped"
+test ! -e "$tmp/image-pull-failure.state/backup"
+test ! -e "$tmp/image-pull-failure.state/migration"
+test ! -e "$tmp/image-pull-failure.state/new-api"
+test ! -e "$tmp/image-pull-failure.state/readiness"
+! grep -F 'event=old_api.stopped' "$tmp/image-pull-failure.output" >/dev/null
+! grep -F 'event=backup.succeeded' "$tmp/image-pull-failure.output" >/dev/null
+! grep -F 'event=migration.deploy.succeeded' "$tmp/image-pull-failure.output" >/dev/null
+! grep -F 'event=api.ready' "$tmp/image-pull-failure.output" >/dev/null
+
 run_case backup-failure 1
 grep -F 'event=previous_api.restarted' "$tmp/backup-failure.output" >/dev/null
 
@@ -98,6 +118,17 @@ grep -F 'event=previous_api.restarted' "$tmp/backup-evidence-missing.output" >/d
 run_case migration-failure 1
 grep -F 'Migration may have changed the schema.' "$tmp/migration-failure.output" >/dev/null
 ! grep -F 'event=previous_api.restarted' "$tmp/migration-failure.output" >/dev/null
+
+run_case api-startup-failure 1
+test -e "$tmp/api-startup-failure.state/old-stopped"
+test -e "$tmp/api-startup-failure.state/backup"
+test -e "$tmp/api-startup-failure.state/migration"
+test ! -e "$tmp/api-startup-failure.state/new-api"
+test ! -e "$tmp/api-startup-failure.state/readiness"
+grep -F 'event=migration.deploy.succeeded' "$tmp/api-startup-failure.output" >/dev/null
+grep -F 'Migration may have changed the schema.' "$tmp/api-startup-failure.output" >/dev/null
+! grep -F 'event=previous_api.restarted' "$tmp/api-startup-failure.output" >/dev/null
+! grep -F 'event=api.ready' "$tmp/api-startup-failure.output" >/dev/null
 
 run_case readiness-failure 1
 grep -F 'New API readiness failed; frontend deployment remains blocked.' "$tmp/readiness-failure.output" >/dev/null
