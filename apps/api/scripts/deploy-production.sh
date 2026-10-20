@@ -40,6 +40,7 @@ stopped=0
 migration_started=0
 on_exit() {
   status=$?
+  trap - EXIT
   if (( status != 0 )); then
     if (( stopped == 1 && migration_started == 0 )); then
       if [[ $(docker inspect -f '{{.State.Status}}' "$old_id") == exited ]]; then
@@ -64,6 +65,7 @@ on_exit() {
     fi
     echo "event=deployment.failed release=$release_sha status=$status" >&2
   fi
+  exit "$status"
 }
 trap on_exit EXIT
 
