@@ -4,6 +4,7 @@ set -eu
 root="$(CDPATH= cd -- "$(dirname "$0")/../../.." && pwd)"
 script="$root/apps/api/scripts/deploy-staging.sh"
 runbook="$root/docs/operations/step-65-staging-deployment-runbook.md"
+pages_workflow="$root/.github/workflows/deploy-staging-pages.yml"
 
 bash -n "$script"
 
@@ -42,23 +43,26 @@ migration_started=$(line_of 'migration_started=1')
 [ "$restart" -lt "$migration_started" ]
 grep -Fq 'migration_started == 0' "$script"
 
-grep -Fq '/pages/projects/markab-staging' "$runbook"
-grep -Fq '.result.name == "markab-staging"' "$runbook"
+grep -Fq 'Only after the API script emits `event=api.ready`, dispatch' "$runbook"
+grep -Fq 'Actions performs the exact-SHA frontend build' "$runbook"
 grep -Fq 'VITE_API_URL=https://staging-api.markab-lb.com' "$runbook"
-grep -Fq -- '--project-name=markab-staging' "$runbook"
-grep -Fq -- '--commit-hash="$release_sha"' "$runbook"
-grep -Fq 'pnpm dlx wrangler@4.150.0 pages deploy' "$runbook"
-! grep -Fq 'wrangler@4 pages deploy' "$runbook"
-grep -Fq 'stays Git-integrated' "$runbook"
-grep -Fq 'Do not delete, recreate,' "$runbook"
-grep -Fq 'or convert the Pages project.' "$runbook"
+grep -Fq 'CLOUDFLARE_API_TOKEN' "$runbook"
+grep -Fq 'vehicle-rental-staging.pages.dev' "$runbook"
+grep -Fq 'STAGING_PAGES_PROJECT: markab-staging' "$pages_workflow"
+grep -Fq 'production_branch == "staging"' "$pages_workflow"
+grep -Fq 'production_deployments_enabled == false' "$pages_workflow"
+grep -Fq 'preview_deployment_setting == "none"' "$pages_workflow"
+grep -Fq 'pnpm dlx wrangler@4.150.0 pages deploy' "$pages_workflow"
+! grep -Fq 'wrangler@4 pages deploy' "$pages_workflow"
+grep -Fq 'Git-integrated project' "$runbook"
+grep -Fq 'delete, recreate, or convert the Pages project.' "$runbook"
 grep -Fq 'event=api.ready' "$runbook"
 grep -Fq 'https://staging.markab-lb.com/platform' "$runbook"
 grep -Fq 'https://staging-api.markab-lb.com' "$runbook"
 ! grep -Fq 'vehicle-rental-production' "$runbook"
 runbook_api_ready=$(grep -n -m 1 -F 'event=api.ready' "$runbook" | cut -d: -f1)
-frontend_upload=$(grep -n -m 1 -F 'pnpm dlx wrangler@4.150.0 pages deploy' "$runbook" | cut -d: -f1)
-[ "$runbook_api_ready" -lt "$frontend_upload" ]
+pages_dispatch=$(grep -n -m 1 -F 'Only after the API script emits `event=api.ready`, dispatch' "$runbook" | cut -d: -f1)
+[ "$runbook_api_ready" -lt "$pages_dispatch" ]
 
 if "$script" not-a-sha ghcr.io/ahdevworker03/markab-api-candidate@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa >/dev/null 2>&1; then
   echo 'invalid release SHA unexpectedly passed' >&2
