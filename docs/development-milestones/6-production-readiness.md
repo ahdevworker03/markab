@@ -2,7 +2,7 @@
 
 **Status:** In progress
 
-**Current Step:** Step 65 — Production Deployment, Migrations, and Operations. Step 64 is **PAUSED / OPEN**: its reconnect P95 gate remains `<= 10,000 ms` and has not passed. Production-readiness infrastructure work may continue, but offline-first is not production-qualified or closed.
+**Current Step:** Step 66 — Regression Hardening, Release Verification, and Documentation. Step 64 is **PAUSED / OPEN**: its reconnect P95 gate remains `<= 10,000 ms` and has not passed. Offline-first is not production-qualified or closed.
 
 ## Milestone Goal
 
@@ -604,7 +604,7 @@ Create reproducible staging/production deployment and operating procedures for t
 - The production API image was verified non-root and matched the deployed release revision; production frontend delivery was verified through its separate Cloudflare Pages project.
 - Development Compose remains a local development setup; it does not provide the production-only auth/email/storage configuration, migration/release orchestration, durable object storage, or production health/readiness checks.
 - `GET /api/healthz` is dependency-free liveness. `GET /api/readyz` checks PostgreSQL connectivity and initialized storage configuration without probing Resend or mutating storage; `SIGTERM`/`SIGINT` drain the listener, disconnect Prisma, and use a bounded forced-exit fallback.
-- Prisma migrations are version controlled; all 37 applied successfully to the fresh production database. Manual-gated production deployment automation is implemented but has no controlled execution/rehearsal evidence yet, so the Step 65 automation gap remains open. The Task recurrence migration removes the legacy recurrence column and is incompatible with overlapping old/new API versions.
+- Prisma migrations are version controlled; the controlled production release on 2026-10-21 applied the 38th migration and verified a clean post-migration status. The Task recurrence migration removes the legacy recurrence column and is incompatible with overlapping old/new API versions.
 
 **Production state recorded 2026-10-13:** The first production release is
 deployed and the release artifact, 37 migrations, public API health/readiness,
@@ -616,22 +616,30 @@ controlled alert email have passed. The release used
 [production baseline](../operations/production-baseline.md) and the Step 65
 operational runbooks.
 
-**Remaining:** Execute and record a controlled run of the manual production
-deployment workflow, including CI/image identity, backup, API stop, migration,
-readiness, Pages, and smoke evidence as specified in the [release runbook](../operations/step-65-migration-release-runbook.md). Step 65 is not complete and no production release tag is
-approved by this record. Step 66 is next for core online release verification
-and pilot go/no-go. Step 64 remains **PAUSED / OPEN**: reconnect/reconciliation
-P95 `<= 10,000 ms` has not passed, and offline-first is not production-qualified.
+**Controlled release recorded 2026-10-21:** Manual workflow run `39553488868`
+deployed `0eb97a24026ba6d50ca842799e024e881c6910a5` with immutable API image
+`sha256:b9351e757d21d05c6f5e40b8513c310c80d592159763ce296c8150eeb85d5a8f`.
+It created and remotely verified the pre-migration backup, stopped the previous
+API without overlap, applied `20261014121000_add_sync_receipt_result_code`,
+verified clean migration status and API readiness, deployed the matching Pages
+artifact, and passed automated smoke. Controlled manual production QA then
+verified login, root/platform/login, an authenticated page, and production-only
+API/origin traffic.
+
+**Step 65 is complete.** No production release tag is approved by this record.
+Step 66 is next for core online release verification and pilot go/no-go. Step 64
+remains **PAUSED / OPEN**: reconnect/reconciliation P95 `<= 10,000 ms` has not
+passed, and offline-first is not production-qualified.
 
 ### Production Pilot Release Sequence
 
-1. Complete production deployment automation/CD with a manual approval gate.
+1. Completed: production deployment automation/CD with a manual approval gate.
 2. Execute the core Step 66 online E2E/manual release checks, including Platform Admin/status and password-reset release boundaries.
 3. Make the pilot go/no-go decision after those checks.
 4. Onboard the first real client only after the explicit go decision.
 5. Continue Step 64 offline qualification in parallel.
 
-Step 64 remains **PAUSED / OPEN**, and offline-first remains **not production-qualified** until the reconnect P95 gate passes. This open gate does not block production infrastructure work, production deployment, or a controlled online-first pilot; it blocks offline-first production qualification and full Milestone 6 completion. This sequence does not complete Step 65 or Milestone 6.
+Step 64 remains **PAUSED / OPEN**, and offline-first remains **not production-qualified** until the reconnect P95 gate passes. This open gate does not block Step 66 or a controlled online-first pilot; it blocks offline-first production qualification and full Milestone 6 completion.
 
 ### Scope
 
@@ -796,6 +804,6 @@ Milestone 6 is complete only when all of the following are true:
 
 **Status:** In progress
 
-**Current Step:** Step 65 — Production Deployment, Migrations, and Operations. Step 64 is **PAUSED / OPEN**: its reconnect P95 gate remains `<= 10,000 ms` and has not passed. Production-readiness infrastructure work may continue, but offline-first is not production-qualified or closed.
+**Current Step:** Step 66 — Regression Hardening, Release Verification, and Documentation. Step 64 is **PAUSED / OPEN**: its reconnect P95 gate remains `<= 10,000 ms` and has not passed. Offline-first is not production-qualified or closed.
 
 **Entry Gate:** Complete Milestone 5.8 Step 56 and final human product QA before Step 57 begins.
