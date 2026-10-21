@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { VehicleResponse } from "@workspace/api-client-react";
 import { VehiclesDataList } from "./VehiclesDataList";
 
@@ -15,6 +15,18 @@ const vehicle = {
   currentMileage: 50000,
   status: "AVAILABLE",
 } as unknown as VehicleResponse;
+
+const initialViewportWidth = window.innerWidth;
+
+function setViewportWidth(width: number, notify = false) {
+  Object.defineProperty(window, "innerWidth", {
+    configurable: true,
+    value: width,
+  });
+  if (notify) window.dispatchEvent(new Event("resize"));
+}
+
+afterEach(() => setViewportWidth(initialViewportWidth));
 
 describe("VehiclesDataList", () => {
   it("shows vehicle identity, approved status, and Western mileage formatting", () => {
@@ -34,29 +46,55 @@ describe("VehiclesDataList", () => {
     expect(onOpen).toHaveBeenCalledWith("vehicle-1");
   });
 
+  it("renders only the mobile vehicle list at a mobile viewport", () => {
+    setViewportWidth(393);
+
+    render(<VehiclesDataList vehicles={[vehicle]} onOpen={vi.fn()} />);
+
+    expect(screen.getAllByText("Toyota Yaris")).toHaveLength(1);
+    expect(screen.getAllByText("TEST-8237")).toHaveLength(1);
+  });
+
+  it("changes the rendered list when the viewport crosses a breakpoint", () => {
+    setViewportWidth(393);
+    render(<VehiclesDataList vehicles={[vehicle]} onOpen={vi.fn()} />);
+
+    expect(
+      screen.getByRole("button", { name: "التفاصيل" }),
+    ).toBeInTheDocument();
+
+    act(() => setViewportWidth(1024, true));
+
+    expect(
+      screen.getByRole("button", { name: "عرض التفاصيل" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "التفاصيل" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("omits the decorative car icon only from the mobile identity card", () => {
+    setViewportWidth(393);
     const { container } = render(
       <VehiclesDataList vehicles={[vehicle]} onOpen={vi.fn()} />,
     );
 
     const mobileList = container.querySelector('[class~="md:hidden"]');
-    const tabletList = container.querySelector('[class~="md:block"]');
-    const desktopTable = container.querySelector('[class~="xl:block"]');
 
     expect(mobileList?.querySelector("svg.lucide-car")).not.toBeInTheDocument();
-    expect(tabletList?.querySelector("svg.lucide-car")).toBeInTheDocument();
-    expect(desktopTable?.querySelector("svg.lucide-car")).toBeInTheDocument();
     expect(mobileList).toHaveTextContent("Toyota Yaris");
     expect(mobileList).toHaveTextContent("TEST-8237");
     expect(mobileList).toHaveTextContent("متاحة");
     expect(mobileList).toHaveTextContent("50,000 كم");
     expect(mobileList).toHaveTextContent("أوتوماتيك · 5 مقاعد");
     expect(mobileList).toHaveTextContent("التفاصيل");
-    const metadataPanel = mobileList?.querySelector("article > .grid.grid-cols-2");
-    expect(metadataPanel).toHaveClass("items-start");
-    expect(within(metadataPanel as HTMLElement).getByText("العداد").parentElement).toHaveClass(
-      "self-start",
+    const metadataPanel = mobileList?.querySelector(
+      "article > .grid.grid-cols-2",
     );
+    expect(metadataPanel).toHaveClass("items-start");
+    expect(
+      within(metadataPanel as HTMLElement).getByText("العداد").parentElement,
+    ).toHaveClass("self-start");
     expect(mobileList?.querySelector("article > div:last-child")).toHaveClass(
       "items-start",
     );
@@ -72,7 +110,9 @@ describe("VehiclesDataList", () => {
     } as VehicleResponse;
     const name = `${longVehicle.make} ${longVehicle.model}`;
 
-    render(<VehiclesDataList vehicles={[vehicle, longVehicle]} onOpen={vi.fn()} />);
+    render(
+      <VehiclesDataList vehicles={[vehicle, longVehicle]} onOpen={vi.fn()} />,
+    );
 
     for (const identityName of screen.getAllByText(name)) {
       const identityStack = identityName.parentElement;
@@ -83,6 +123,8 @@ describe("VehiclesDataList", () => {
       expect(plate?.classList.contains("truncate")).toBe(true);
       expect(plate?.classList.contains("text-right")).toBe(true);
     }
-    expect(screen.getAllByText(longVehicle.plateNumber).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(longVehicle.plateNumber).length).toBeGreaterThan(
+      0,
+    );
   });
 });

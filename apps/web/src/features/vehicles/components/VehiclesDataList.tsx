@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Car, ChevronLeft, Gauge, Settings2 } from "lucide-react";
 import type { VehicleResponse } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,26 @@ import { formatNumber } from "@/lib/format";
 interface VehiclesDataListProps {
   vehicles: VehicleResponse[];
   onOpen: (vehicleId: string) => void;
+}
+
+type VehicleListLayout = "desktop" | "tablet" | "mobile";
+
+function getVehicleListLayout(): VehicleListLayout {
+  if (window.innerWidth >= 1280) return "desktop";
+  if (window.innerWidth >= 768) return "tablet";
+  return "mobile";
+}
+
+function useVehicleListLayout(): VehicleListLayout {
+  const [layout, setLayout] = useState(getVehicleListLayout);
+
+  useEffect(() => {
+    const updateLayout = () => setLayout(getVehicleListLayout());
+    window.addEventListener("resize", updateLayout);
+    return () => window.removeEventListener("resize", updateLayout);
+  }, []);
+
+  return layout;
 }
 
 function VehicleIdentity({
@@ -53,77 +74,85 @@ function Mileage({ value }: { value: number }) {
 }
 
 export function VehiclesDataList({ vehicles, onOpen }: VehiclesDataListProps) {
+  const layout = useVehicleListLayout();
+
   return (
     <>
-      <div className="hidden xl:block">
-        <Table className="min-w-[73rem] table-fixed">
-          <TableHeader className="bg-muted/45">
-            <TableRow>
-              <TableHead className="w-[22rem] min-w-[22rem]">السيارة</TableHead>
-              <TableHead className="w-[9rem] min-w-[9rem]">الحالة</TableHead>
-              <TableHead className="w-[16rem] min-w-[16rem]">المواصفات</TableHead>
-              <TableHead className="w-[6rem] min-w-[6rem] text-end">السنة</TableHead>
-              <TableHead className="w-[10rem] min-w-[10rem] text-end">العداد</TableHead>
-              <TableHead className="w-[10rem] min-w-[10rem] text-end">الإجراء</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {vehicles.map((vehicle) => (
-              <TableRow key={vehicle.id}>
-                <TableCell className="min-w-[22rem]"><VehicleIdentity vehicle={vehicle} /></TableCell>
-                <TableCell className="min-w-[9rem]"><StatusBadge status={vehicle.status} /></TableCell>
-                <TableCell className="min-w-[16rem]"><VehicleSpecification vehicle={vehicle} /></TableCell>
-                <TableCell className="min-w-[6rem] text-end"><VehicleYear value={vehicle.year} /></TableCell>
-                <TableCell className="min-w-[10rem] text-end"><Mileage value={vehicle.currentMileage} /></TableCell>
-                <TableCell className="min-w-[10rem] text-end whitespace-nowrap">
-                  <Button type="button" variant="outline" size="sm" onClick={(event) => { event.stopPropagation(); onOpen(vehicle.id); }}>
-                    عرض التفاصيل
-                    <ChevronLeft className="size-4" aria-hidden="true" />
-                  </Button>
-                </TableCell>
+      {layout === "desktop" && (
+        <div className="hidden xl:block">
+          <Table className="min-w-[73rem] table-fixed">
+            <TableHeader className="bg-muted/45">
+              <TableRow>
+                <TableHead className="w-[22rem] min-w-[22rem]">السيارة</TableHead>
+                <TableHead className="w-[9rem] min-w-[9rem]">الحالة</TableHead>
+                <TableHead className="w-[16rem] min-w-[16rem]">المواصفات</TableHead>
+                <TableHead className="w-[6rem] min-w-[6rem] text-end">السنة</TableHead>
+                <TableHead className="w-[10rem] min-w-[10rem] text-end">العداد</TableHead>
+                <TableHead className="w-[10rem] min-w-[10rem] text-end">الإجراء</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {vehicles.map((vehicle) => (
+                <TableRow key={vehicle.id}>
+                  <TableCell className="min-w-[22rem]"><VehicleIdentity vehicle={vehicle} /></TableCell>
+                  <TableCell className="min-w-[9rem]"><StatusBadge status={vehicle.status} /></TableCell>
+                  <TableCell className="min-w-[16rem]"><VehicleSpecification vehicle={vehicle} /></TableCell>
+                  <TableCell className="min-w-[6rem] text-end"><VehicleYear value={vehicle.year} /></TableCell>
+                  <TableCell className="min-w-[10rem] text-end"><Mileage value={vehicle.currentMileage} /></TableCell>
+                  <TableCell className="min-w-[10rem] text-end whitespace-nowrap">
+                    <Button type="button" variant="outline" size="sm" onClick={(event) => { event.stopPropagation(); onOpen(vehicle.id); }}>
+                      عرض التفاصيل
+                      <ChevronLeft className="size-4" aria-hidden="true" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
-      <div className="hidden divide-y divide-border md:block xl:hidden">
-        {vehicles.map((vehicle) => (
-          <article key={vehicle.id} className="space-y-4 px-4 py-4 sm:px-5">
-            <div className="flex items-start justify-between gap-4">
-              <VehicleIdentity vehicle={vehicle} />
-              <StatusBadge status={vehicle.status} />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div><div className="ui-label">المواصفات</div><div className="mt-1"><VehicleSpecification vehicle={vehicle} /></div></div>
-              <div><div className="ui-label">السنة</div><div className="mt-1"><VehicleYear value={vehicle.year} /></div></div>
-              <div><div className="ui-label">العداد الحالي</div><div className="mt-1"><Mileage value={vehicle.currentMileage} /></div></div>
-            </div>
-            <div className="flex justify-end border-t border-border pt-3">
-              <Button type="button" variant="outline" size="sm" onClick={() => onOpen(vehicle.id)}>عرض التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button>
-            </div>
-          </article>
-        ))}
-      </div>
+      {layout === "tablet" && (
+        <div className="hidden divide-y divide-border md:block xl:hidden">
+          {vehicles.map((vehicle) => (
+            <article key={vehicle.id} className="space-y-4 px-4 py-4 sm:px-5">
+              <div className="flex items-start justify-between gap-4">
+                <VehicleIdentity vehicle={vehicle} />
+                <StatusBadge status={vehicle.status} />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div><div className="ui-label">المواصفات</div><div className="mt-1"><VehicleSpecification vehicle={vehicle} /></div></div>
+                <div><div className="ui-label">السنة</div><div className="mt-1"><VehicleYear value={vehicle.year} /></div></div>
+                <div><div className="ui-label">العداد الحالي</div><div className="mt-1"><Mileage value={vehicle.currentMileage} /></div></div>
+              </div>
+              <div className="flex justify-end border-t border-border pt-3">
+                <Button type="button" variant="outline" size="sm" onClick={() => onOpen(vehicle.id)}>عرض التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
 
-      <div className="divide-y divide-border md:hidden">
-        {vehicles.map((vehicle) => (
-          <article key={vehicle.id} className="space-y-4 px-4 py-4">
-            <div className="flex items-start justify-between gap-3">
-              <VehicleIdentity vehicle={vehicle} showIcon={false} />
-              <StatusBadge status={vehicle.status} />
-            </div>
-            <div className="grid grid-cols-2 items-start gap-3 rounded-lg bg-muted/45 p-3">
-              <div><div className="ui-label">السنة</div><div className="mt-1"><VehicleYear value={vehicle.year} /></div></div>
-              <div className="self-start"><div className="ui-label">العداد</div><div className="mt-1"><Mileage value={vehicle.currentMileage} /></div></div>
-            </div>
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Gauge className="size-3.5" aria-hidden="true" />{vehicle.transmission === "AUTOMATIC" ? "أوتوماتيك" : "يدوي"} · {vehicle.seats} مقاعد</div>
-              <Button type="button" variant="outline" size="sm" onClick={() => onOpen(vehicle.id)}>التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button>
-            </div>
-          </article>
-        ))}
-      </div>
+      {layout === "mobile" && (
+        <div className="divide-y divide-border md:hidden">
+          {vehicles.map((vehicle) => (
+            <article key={vehicle.id} className="space-y-4 px-4 py-4">
+              <div className="flex items-start justify-between gap-3">
+                <VehicleIdentity vehicle={vehicle} showIcon={false} />
+                <StatusBadge status={vehicle.status} />
+              </div>
+              <div className="grid grid-cols-2 items-start gap-3 rounded-lg bg-muted/45 p-3">
+                <div><div className="ui-label">السنة</div><div className="mt-1"><VehicleYear value={vehicle.year} /></div></div>
+                <div className="self-start"><div className="ui-label">العداد</div><div className="mt-1"><Mileage value={vehicle.currentMileage} /></div></div>
+              </div>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Gauge className="size-3.5" aria-hidden="true" />{vehicle.transmission === "AUTOMATIC" ? "أوتوماتيك" : "يدوي"} · {vehicle.seats} مقاعد</div>
+                <Button type="button" variant="outline" size="sm" onClick={() => onOpen(vehicle.id)}>التفاصيل<ChevronLeft className="size-4" aria-hidden="true" /></Button>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
     </>
   );
 }
