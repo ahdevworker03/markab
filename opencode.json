@@ -10,7 +10,7 @@
     "context7": {
       "type": "local",
       "command": ["npx", "-y", "@upstash/context7-mcp"],
-      "enabled": true,
+      "enabled": false,
       "timeout": 180000,
       "environment": {
         "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}"
@@ -19,7 +19,7 @@
 
     "playwright": {
       "type": "local",
-      "command": ["npx", "-y", "@playwright/mcp"],
+      "command": ["npx", "-y", "@playwright/mcp", "--cdp-endpoint=chrome"],
       "enabled": true,
       "timeout": 180000
     },
@@ -31,7 +31,7 @@
         "-c",
         "GITHUB_TOKEN=\"$(gh auth token)\" npx -y github-mcp-server-js"
       ],
-      "enabled": true,
+      "enabled": false,
       "timeout": 180000,
       "environment": {
         "GITHUB_PERMISSION": "read-write",
@@ -42,7 +42,7 @@
     "openapi": {
       "type": "local",
       "command": ["uvx", "awslabs.openapi-mcp-server@latest"],
-      "enabled": true,
+      "enabled": false,
       "timeout": 180000,
       "environment": {
         "API_NAME": "vehicle-rental-api",
@@ -58,20 +58,20 @@
     "shadcn": {
       "type": "local",
       "command": ["npx", "-y", "shadcn@latest", "mcp"],
-      "enabled": true,
+      "enabled": false,
       "timeout": 180000
     },
 
     "21st": {
       "type": "remote",
       "url": "https://21st.dev/api/mcp",
-      "enabled": true
+      "enabled": false
     },
 
     "cloudflare": {
       "type": "remote",
       "url": "https://mcp.cloudflare.com/mcp",
-      "enabled": true,
+      "enabled": false,
       "headers": {
         "Authorization": "Bearer {env:CLOUDFLARE_API_TOKEN}"
       }
@@ -85,21 +85,21 @@
         "@modelcontextprotocol/server-postgres",
         "postgresql://postgres:postgres@localhost:5432/vehicle_rental"
       ],
-      "enabled": true,
+      "enabled": false,
       "timeout": 180000
     },
 
     "docker": {
       "type": "local",
       "command": ["npx", "-y", "@alisaitteke/docker-mcp"],
-      "enabled": true,
+      "enabled": false,
       "timeout": 180000
     },
 
     "contabo": {
       "type": "local",
       "command": ["npx", "-y", "@kieksme/contabo-mcp"],
-      "enabled": true,
+      "enabled": false,
       "timeout": 180000,
       "environment": {
         "CONTABO_CLIENT_ID": "{env:CONTABO_CLIENT_ID}",
@@ -112,7 +112,7 @@
     "chrome-devtools": {
       "type": "local",
       "command": ["npx", "-y", "chrome-devtools-mcp@latest"],
-      "enabled": true,
+      "enabled": false,
       "timeout": 180000
     }
   }
