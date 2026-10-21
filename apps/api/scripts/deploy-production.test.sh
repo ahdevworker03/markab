@@ -34,6 +34,7 @@ case "$command $*" in
     : > "$state/backup"
     [ "${SCENARIO:?}" != backup-failure ] || exit 1
     [ "$SCENARIO" != backup-evidence-missing ] || { printf 'backup completed\n'; exit 0; }
+    [ "$SCENARIO" != stdin-draining-backup ] || cat >/dev/null
     printf 'event=backup.succeeded environment=production release=%s key=backups/production/test.dump\n' "$RELEASE_ID"
     ;;
   "compose "*" run --rm --no-deps migrate deploy")
@@ -98,6 +99,23 @@ run_case() {
   [ "$status" -eq "$expected_status" ] || { cat "$output" >&2; exit 1; }
 }
 
+run_stdin_case() {
+  scenario=$1
+  expected_status=$2
+  output="$tmp/$scenario.output"
+  state="$tmp/$scenario.state"
+  mkdir "$state"
+  cp "$script" "$tmp/$scenario.sh"
+  sed -i "s|cd /opt/markab/production|cd $tmp/production|" "$tmp/$scenario.sh"
+
+  set +e
+  PATH="$tmp/bin:$PATH" FAKE_DOCKER_STATE="$state" SCENARIO="$scenario" \
+    bash -s -- "$release_sha" "$image" "$compose_hash" <"$tmp/$scenario.sh" >"$output" 2>&1
+  status=$?
+  set -e
+  [ "$status" -eq "$expected_status" ] || { cat "$output" >&2; exit 1; }
+}
+
 run_case image-pull-failure 1
 test ! -e "$tmp/image-pull-failure.state/old-stopped"
 test ! -e "$tmp/image-pull-failure.state/backup"
@@ -136,6 +154,9 @@ grep -F 'Migration may have changed the schema.' "$tmp/readiness-failure.output"
 
 run_case success 0
 grep -F "event=api.ready release=$release_sha image=$image" "$tmp/success.output" >/dev/null
+
+run_stdin_case stdin-draining-backup 0
+grep -F "event=api.ready release=$release_sha image=$image" "$tmp/stdin-draining-backup.output" >/dev/null
 
 api_deploy_line=$(grep -n -m 1 'id: api_deploy' "$workflow" | cut -d: -f1)
 pages_deploy_line=$(grep -n -m 1 'name: Deploy matching frontend to production Pages' "$workflow" | cut -d: -f1)

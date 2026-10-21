@@ -74,15 +74,15 @@ stopped=1
 [[ $(docker inspect -f '{{.State.Status}}' "$old_id") == exited ]]
 echo "event=old_api.stopped release=$old_release"
 
-backup_output=$("${compose[@]}" --profile backup run --rm --no-deps backup)
+backup_output=$("${compose[@]}" --profile backup run --rm --no-deps backup </dev/null)
 backup_line=$(printf '%s\n' "$backup_output" | grep -E "^event=backup\.succeeded environment=production release=$release_sha key=backups/production/.*\.dump$")
 [[ -n $backup_line ]]
 echo "$backup_line"
 
 migration_started=1
-"${compose[@]}" run --rm --no-deps migrate deploy
+"${compose[@]}" run --rm --no-deps migrate deploy </dev/null
 echo "event=migration.deploy.succeeded release=$release_sha"
-"${compose[@]}" run --rm --no-deps migrate status
+"${compose[@]}" run --rm --no-deps migrate status </dev/null
 echo "event=migration.status.clean release=$release_sha"
 
 "${compose[@]}" up -d --no-deps --force-recreate api >/dev/null
