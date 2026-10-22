@@ -20,6 +20,12 @@ test("seeds the deterministic E2E owner", async () => {
         customer: {
           upsert: (input: { create: Record<string, unknown> }) => Promise<void>;
         };
+        vehicle: {
+          upsert: (input: { create: Record<string, unknown> }) => Promise<void>;
+        };
+        rental: {
+          upsert: (input: { create: Record<string, unknown> }) => Promise<void>;
+        };
       }) => Promise<void>,
     ) =>
       callback({
@@ -38,6 +44,16 @@ test("seeds the deterministic E2E owner", async () => {
             calls.push({ model: "customer", data: create });
           },
         },
+        vehicle: {
+          upsert: async ({ create }) => {
+            calls.push({ model: "vehicle", data: create });
+          },
+        },
+        rental: {
+          upsert: async ({ create }) => {
+            calls.push({ model: "rental", data: create });
+          },
+        },
       }),
   };
 
@@ -48,7 +64,7 @@ test("seeds the deterministic E2E owner", async () => {
     const result = await seedE2e(prisma as never);
 
     assert.equal(result.ownerEmail, "owner-e2e@markab.local");
-    assert.equal(calls.length, 7);
+    assert.equal(calls.length, 15);
     assert.equal(calls[1]!.data.email, "owner-e2e@markab.local");
     assert.deepEqual(
       calls
@@ -64,7 +80,19 @@ test("seeds the deterministic E2E owner", async () => {
     );
     assert.equal(
       calls.at(-1)?.data.organization_id,
-      "00000000-0000-4000-8000-000000000003",
+      "00000000-0000-4000-8000-000000000001",
+    );
+    assert.deepEqual(
+      calls
+        .filter((call) => call.model === "rental")
+        .map((call) => call.data.status),
+      ["RESERVED", "RESERVED", "RESERVED"],
+    );
+    assert.deepEqual(
+      calls
+        .filter((call) => call.model === "vehicle")
+        .map((call) => call.data.status),
+      ["AVAILABLE", "RESERVED", "RESERVED", "RESERVED"],
     );
   } finally {
     for (const key of Object.keys(process.env)) delete process.env[key];

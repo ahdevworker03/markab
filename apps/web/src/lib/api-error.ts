@@ -107,6 +107,12 @@ function extractBody(error: unknown): ApiErrorBody | null {
 export function getApiErrorMessage(error: unknown): ApiErrorMessage {
   if (error instanceof ApiError) {
     const body = extractBody(error);
+    if (
+      body?.error?.code === "VEHICLE_UNAVAILABLE" &&
+      new URL(error.url, "http://localhost").pathname.startsWith("/api/rentals")
+    ) {
+      return { title: "هذه السيارة غير متاحة في الفترة المحددة." };
+    }
     const errorMessage = body?.error?.code
       ? API_ERROR_MESSAGES[body.error.code]
       : undefined;
