@@ -2,7 +2,7 @@
 
 **Status:** In progress
 
-**Current Step:** Step 66 — Regression Hardening, Release Verification, and Documentation. Step 64 is **PAUSED / OPEN**: its reconnect P95 gate remains `<= 10,000 ms` and has not passed. Offline-first is not production-qualified or closed.
+**Current Step:** Step 66 — Regression Hardening, Release Verification, and Documentation. Step 64 is **PAUSED / OPEN**: its reconnect P95 gate remains `<= 10,000 ms` and has not passed, and offline customer/vehicle search cannot yet be qualified during coordinator retry windows. Offline-first is not production-qualified or closed.
 
 ## Milestone Goal
 
@@ -553,6 +553,12 @@ Measure the completed product against approved pilot targets, fix verified bottl
 
 **Decision.** Pause further Step 64 performance investigation. Do not close the step or weaken/remove the <=10-second P95 requirement. Continue production-readiness work toward controlled real-customer testing: staging and production backend/API/database setup, migrations, backup/restore verification, TLS/domain, R2/email, monitoring/logging, smoke testing, and controlled-pilot preparation. Initial customer pilots are online-first; offline operation must not yet be promised as production-qualified. Return to Step 64 after initial customer validation, or earlier if real customer use makes offline reliability/performance operationally important.
 
+### Offline Search Retry-State Limitation (2026-10-22)
+
+Offline customer and vehicle search are part of the approved offline scope. A focused native IndexedDB search benchmark could not produce valid 5-warmup + 30-sample distributions under current production retry semantics. Browser-wide offline pauses TanStack mutations before the production queue fallback. With the browser online, a genuine transport failure correctly queues the offline customer update and the sync coordinator reaches `offline`; its automatic retry then transitions through `synchronizing`. During that status, `isOffline` becomes false, local IndexedDB reads are disabled, API reads become eligible again, and the search completion marker unmounts/resets. The benchmark therefore cannot hold a stable offline IndexedDB search window through retry periods.
+
+This is a confirmed offline-state/retry semantics limitation, not a benchmark instrumentation defect and not evidence of an online-product performance problem. It does not block the controlled online-first pilot. It keeps offline-first production qualification and full Milestone 6 closure open until the semantics are resolved or explicitly redesigned. This limitation is separate from the reconnect/reconciliation P95 `<= 10,000 ms` gate above; neither item is considered passed by the other.
+
 ### Scope
 
 - Re-run the Step 57 baseline with the completed platform/security/offline implementation and representative pilot data.
@@ -639,7 +645,7 @@ passed, and offline-first is not production-qualified.
 4. Onboard the first real client only after the explicit go decision.
 5. Continue Step 64 offline qualification in parallel.
 
-Step 64 remains **PAUSED / OPEN**, and offline-first remains **not production-qualified** until the reconnect P95 gate passes. This open gate does not block Step 66 or a controlled online-first pilot; it blocks offline-first production qualification and full Milestone 6 completion.
+Step 64 remains **PAUSED / OPEN**, and offline-first remains **not production-qualified** until both the reconnect P95 gate passes and the offline search retry-state limitation is resolved or explicitly redesigned. These open items do not block Step 66 or a controlled online-first pilot; they block offline-first production qualification and full Milestone 6 completion.
 
 ### Scope
 
