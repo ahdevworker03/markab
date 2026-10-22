@@ -1,3 +1,5 @@
+import { appendFile, mkdir } from "node:fs/promises";
+import { join } from "node:path";
 import { env, logger } from "../../config";
 
 interface PasswordResetDelivery {
@@ -7,6 +9,7 @@ interface PasswordResetDelivery {
 
 const testDeliveries: PasswordResetDelivery[] = [];
 const RESEND_TIMEOUT_MS = 10_000;
+const E2E_RESET_URL = new URL("http://127.0.0.1:4173/password-reset");
 
 type PasswordResetDeliveryHandler = (
   email: string,
@@ -23,6 +26,21 @@ class PasswordResetDeliveryError extends Error {
   constructor(readonly status?: number) {
     super("Password reset delivery failed.");
   }
+}
+
+async function appendE2eResetDelivery(
+  mailDir: string,
+  email: string,
+  token: string,
+): Promise<void> {
+  const resetUrl = new URL(E2E_RESET_URL);
+  resetUrl.searchParams.set("token", token);
+
+  await mkdir(mailDir, { recursive: true });
+  await appendFile(
+    join(mailDir, "password-reset.jsonl"),
+    `${JSON.stringify({ email, token, resetUrl: resetUrl.toString() })}\n`,
+  );
 }
 
 function createResendPasswordResetDelivery(
@@ -68,6 +86,14 @@ async function deliverPasswordReset(
   token: string,
 ): Promise<void> {
   let send: PasswordResetDeliveryHandler | undefined;
+
+  if (env.NODE_ENV === "e2e") {
+    if (!env.E2E_MAIL_DIR) {
+      throw new Error("E2E password-reset delivery requires E2E_MAIL_DIR.");
+    }
+    await appendE2eResetDelivery(env.E2E_MAIL_DIR, email, token);
+    return;
+  }
 
   if (process.env["NODE_ENV"] === "test") {
     send = testDeliveryOverride;
