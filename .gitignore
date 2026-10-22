@@ -61,3 +61,5 @@ apps/web/test-results/benchmark/
 apps/web/test-results/playwright-benchmark/
 apps/web/test-results/playwright-e2e/
 apps/web/test-results/benchmark-benchmark-mobile-*/
+docs/operations/
+docs/superpowers/
