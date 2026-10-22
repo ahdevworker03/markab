@@ -2,6 +2,7 @@ import { execFile } from "node:child_process";
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { promisify } from "node:util";
+import { psqlDatabaseUrl } from "./benchmark-database-url";
 
 const execFileAsync = promisify(execFile);
 const outputPath = resolve(
@@ -39,7 +40,7 @@ async function main(): Promise<void> {
     Object.entries(queries).map(async ([name, query]) => {
       const sql = `BEGIN READ ONLY; SET LOCAL app.organization_id = '${organizationId}'; EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) ${query}; ROLLBACK;`;
       const { stdout } = await execFileAsync("psql", [
-        url,
+        psqlDatabaseUrl(url),
         "-q",
         "-t",
         "-A",

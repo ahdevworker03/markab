@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { psqlDatabaseUrl } from "./benchmark-database-url";
 
 const execFileAsync = promisify(execFile);
 
@@ -14,10 +15,11 @@ export type ResourceSnapshot = {
 export async function captureLocalResources(): Promise<ResourceSnapshot> {
   const databaseUrl = process.env.BENCHMARK_DATABASE_URL;
   if (!databaseUrl) throw new Error("BENCHMARK_DATABASE_URL is required.");
+  const psqlUrl = psqlDatabaseUrl(databaseUrl);
   const [apiListener, connections] = await Promise.all([
     execFileAsync("lsof", ["-t", "-iTCP:3001", "-sTCP:LISTEN"]),
     execFileAsync("psql", [
-      databaseUrl,
+      psqlUrl,
       "-t",
       "-A",
       "-c",
@@ -26,7 +28,7 @@ export async function captureLocalResources(): Promise<ResourceSnapshot> {
   ]);
   const backendPids = (
     await execFileAsync("psql", [
-      databaseUrl,
+      psqlUrl,
       "-t",
       "-A",
       "-c",
