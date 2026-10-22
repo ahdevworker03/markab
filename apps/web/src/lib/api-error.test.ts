@@ -2,11 +2,11 @@ import { ApiError } from "@workspace/api-client-react";
 import { describe, expect, it } from "vitest";
 import { getApiErrorMessage } from "./api-error";
 
-function apiError(code: string, status = 422) {
+function apiError(code: string, status = 422, url = "/api/test") {
   return new ApiError(
     new Response(null, { status, statusText: "Error" }),
     { error: { code, message: "English backend message" } },
-    { method: "POST", url: "/api/test" },
+    { method: "POST", url },
   );
 }
 
@@ -24,6 +24,13 @@ describe("getApiErrorMessage", () => {
     expect(getApiErrorMessage(apiError("VEHICLE_UNAVAILABLE", 409)).title).toBe(
       "لا يمكن بدء الصيانة لأن السيارة مرتبطة بإيجار قائم أو غير متاحة حالياً.",
     );
+  });
+
+  it("localizes an unavailable vehicle for a rental request", () => {
+    expect(
+      getApiErrorMessage(apiError("VEHICLE_UNAVAILABLE", 409, "/api/rentals"))
+        .title,
+    ).toBe("هذه السيارة غير متاحة في الفترة المحددة.");
   });
 
   it("localizes missing, oversized, forbidden, and not-found file errors", () => {

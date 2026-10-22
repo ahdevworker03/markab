@@ -3,6 +3,7 @@ const VALID_NODE_ENVS = [
   "production",
   "test",
   "benchmark",
+  "e2e",
 ] as const;
 
 const VALID_LOG_LEVELS = [
@@ -47,6 +48,7 @@ export interface EnvConfig {
   STORAGE_DIR?: string;
   R2?: R2Config;
   PASSWORD_RESET_EMAIL?: PasswordResetEmailConfig;
+  E2E_MAIL_DIR?: string;
 }
 
 function isPlaceholder(value: string): boolean {
@@ -242,6 +244,14 @@ export function loadEnv(
     );
   }
 
+  const e2eMailDir = environment["E2E_MAIL_DIR"]?.trim();
+  if (nodeEnv !== "e2e" && e2eMailDir) {
+    throw new Error("E2E_MAIL_DIR is only available when NODE_ENV=e2e.");
+  }
+  if (nodeEnv === "e2e" && !e2eMailDir) {
+    throw new Error("E2E_MAIL_DIR is required when NODE_ENV=e2e.");
+  }
+
   const logLevel = (environment["LOG_LEVEL"] ?? "info") as LogLevel;
 
   if (!VALID_LOG_LEVELS.includes(logLevel)) {
@@ -316,6 +326,7 @@ export function loadEnv(
     STORAGE_DIR: environment["STORAGE_DIR"],
     R2: r2,
     PASSWORD_RESET_EMAIL: passwordResetEmail,
+    E2E_MAIL_DIR: e2eMailDir,
   };
 }
 
