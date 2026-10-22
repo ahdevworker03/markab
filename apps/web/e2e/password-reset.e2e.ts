@@ -27,7 +27,15 @@ async function confirmReset(page: Page, password: string) {
   ).toBeVisible();
 }
 
-test("password reset rejects the old password and accepts the new password", async ({ page }) => {
+test.afterEach(async ({ page }) => {
+  await requestReset(page, e2eOwner.email);
+  await page.goto(await readLatestResetUrl(e2eOwner.email));
+  await confirmReset(page, e2eOwner.password);
+});
+
+test("password reset rejects the old password and accepts the new password", async ({
+  page,
+}) => {
   await requestReset(page, e2eOwner.email);
   const resetUrl = await readLatestResetUrl(e2eOwner.email);
 
@@ -44,8 +52,12 @@ test("password reset rejects the old password and accepts the new password", asy
 
   await login(page, newPassword);
   await expect(page).toHaveURL(/\/$/);
+});
 
-  await requestReset(page, e2eOwner.email);
-  await page.goto(await readLatestResetUrl(e2eOwner.email));
-  await confirmReset(page, e2eOwner.password);
+test("seeded owner password remains available after the reset scenario", async ({
+  page,
+}) => {
+  await page.goto("/login");
+  await login(page, e2eOwner.password);
+  await expect(page).toHaveURL(/\/$/);
 });

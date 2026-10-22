@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import {
   getGetRentalQueryKey,
-  getGetVehicleQueryKey,
   getListCustomersQueryKey,
   getListRentalsQueryKey,
   getGetOutstandingBalancesQueryKey,
@@ -98,11 +97,6 @@ export default function RentalDetailPage({ params }: Props) {
     });
     void queryClient.invalidateQueries({ queryKey: getListRentalsQueryKey() });
     void queryClient.invalidateQueries({ queryKey: getListVehiclesQueryKey() });
-    if (rental) {
-      void queryClient.invalidateQueries({
-        queryKey: getGetVehicleQueryKey(rental.vehicleId),
-      });
-    }
     void queryClient.invalidateQueries({
       queryKey: getListCustomersQueryKey(),
     });
