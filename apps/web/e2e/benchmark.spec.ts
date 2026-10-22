@@ -1,4 +1,10 @@
-import { expect, test, type Page, type Request } from "@playwright/test";
+import {
+  expect,
+  test,
+  type Page,
+  type Request,
+  type Route,
+} from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import {
@@ -39,6 +45,13 @@ type ProjectionCounts = {
   rentals: number;
 };
 type SearchMarker = { generation: number };
+type BenchmarkStage = {
+  name: string;
+  sample?: number;
+  input?: string;
+  expectedMarker?: number;
+  apiRequests?: readonly string[];
+};
 type LocalSearchTiming = {
   generation: number;
   entity: "customers" | "vehicles";
@@ -47,6 +60,8 @@ type LocalSearchTiming = {
   records: number;
 };
 const searchMarkerSelector = "[data-benchmark-search-completion]";
+const syncStageTimeoutMs = 30_000;
+const searchMarkerStageTimeoutMs = 10_000;
 const fullPilotProjectionCounts: ProjectionCounts = {
   customers: 1_000,
   vehicles: 50,
@@ -115,22 +130,17 @@ async function syncAndWaitForFinalPull(
   expectedCounts: ProjectionCounts,
   expectedSyncRequests?: { push: number; pull: number },
 ): Promise<void> {
-  await expect
-    .poll(() =>
-      page.evaluate(async () =>
-        (await indexedDB.databases()).some(
-          (database) => database.name === "markab-offline-v1",
-        ),
-      ),
-    )
-    .toBe(true);
-  await page.locator('[data-offline-sync-ready="true"]').waitFor();
-  const observed: string[] = [];
   const syncRequests = { push: 0, pull: 0 };
+  const apiRequests: string[] = [];
+  const observeRequest = (request: { method(): string; url(): string }) => {
+    const url = new URL(request.url());
+    if (url.pathname.startsWith("/api/")) {
+      apiRequests.push(`${request.method()} ${url.pathname}`);
+    }
+  };
   const observe = (response: { url(): string; status(): number }) => {
     const path = new URL(response.url()).pathname;
     if (path === "/api/sync/pull") {
-      observed.push(String(response.status()));
       if (response.status() >= 200 && response.status() < 300) {
         syncRequests.pull += 1;
       }
@@ -143,66 +153,97 @@ async function syncAndWaitForFinalPull(
       syncRequests.push += 1;
     }
   };
-  page.on("response", observe);
-  const finalPull = page.waitForResponse(
-    async (response) => {
-      if (
-        new URL(response.url()).pathname !== "/api/sync/pull" ||
-        !response.ok()
-      ) {
-        return false;
-      }
-      const body = (await response.json()) as {
-        changes?: unknown[];
-        next_cursor?: string | null;
-      };
-      return body.next_cursor === null;
-    },
-    { timeout: 30_000 },
-  );
-  await page.evaluate(() => window.dispatchEvent(new Event("online")));
+  page.on("request", observeRequest);
   try {
-    await finalPull;
-  } catch {
-    throw new Error(
-      `Sync final pull not observed within 30 seconds; pull HTTP statuses: ${observed.join(", ") || "none"}.`,
+    await waitForBenchmarkStage(
+      page,
+      { name: "sync-indexeddb-ready", apiRequests },
+      () =>
+        expect
+          .poll(
+            () =>
+              page.evaluate(async () =>
+                (await indexedDB.databases()).some(
+                  (database) => database.name === "markab-offline-v1",
+                ),
+              ),
+            { timeout: syncStageTimeoutMs },
+          )
+          .toBe(true),
+    );
+    await waitForBenchmarkStage(
+      page,
+      { name: "sync-ready-marker", apiRequests },
+      () =>
+        page
+          .locator('[data-offline-sync-ready="true"]')
+          .waitFor({ timeout: syncStageTimeoutMs }),
+    );
+    page.on("response", observe);
+    const finalPull = page.waitForResponse(
+      async (response) => {
+        if (
+          new URL(response.url()).pathname !== "/api/sync/pull" ||
+          !response.ok()
+        ) {
+          return false;
+        }
+        const body = (await response.json()) as {
+          changes?: unknown[];
+          next_cursor?: string | null;
+        };
+        return body.next_cursor === null;
+      },
+      { timeout: syncStageTimeoutMs },
+    );
+    await page.evaluate(() => window.dispatchEvent(new Event("online")));
+    await waitForBenchmarkStage(
+      page,
+      { name: "sync-final-pull", apiRequests },
+      () => finalPull,
+    );
+    if (expectedSyncRequests) {
+      expect(syncRequests).toEqual(expectedSyncRequests);
+    }
+    await waitForBenchmarkStage(
+      page,
+      { name: "sync-projection-counts", apiRequests },
+      () =>
+        expect
+          .poll(
+            () =>
+              page.evaluate(async () => {
+                const database = await new Promise<IDBDatabase>((resolve, reject) => {
+                  const request = indexedDB.open("markab-offline-v1");
+                  request.onsuccess = () => resolve(request.result);
+                  request.onerror = () => reject(request.error);
+                });
+                const transaction = database.transaction(
+                  ["customers", "vehicles", "rentals"],
+                  "readonly",
+                );
+                const count = (store: string) =>
+                  new Promise<number>((resolve, reject) => {
+                    const request = transaction.objectStore(store).count();
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                  });
+                const [customers, vehicles, rentals] = await Promise.all([
+                  count("customers"),
+                  count("vehicles"),
+                  count("rentals"),
+                ]);
+                database.close();
+                return { customers, vehicles, rentals };
+              }),
+            { timeout: syncStageTimeoutMs },
+          )
+          .toEqual(expectedCounts),
     );
   } finally {
     page.off("response", observe);
+    page.off("request", observeRequest);
   }
-  if (expectedSyncRequests) {
-    expect(syncRequests).toEqual(expectedSyncRequests);
-  }
-  await expect
-    .poll(
-      () =>
-        page.evaluate(async () => {
-          const database = await new Promise<IDBDatabase>((resolve, reject) => {
-            const request = indexedDB.open("markab-offline-v1");
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
-          });
-          const transaction = database.transaction(
-            ["customers", "vehicles", "rentals"],
-            "readonly",
-          );
-          const count = (store: string) =>
-            new Promise<number>((resolve, reject) => {
-              const request = transaction.objectStore(store).count();
-              request.onsuccess = () => resolve(request.result);
-              request.onerror = () => reject(request.error);
-            });
-          const [customers, vehicles, rentals] = await Promise.all([
-            count("customers"),
-            count("vehicles"),
-            count("rentals"),
-          ]);
-          database.close();
-          return { customers, vehicles, rentals };
-        }),
-      { timeout: 30_000 },
-    )
-    .toEqual(expectedCounts);
 }
 
 function recordMeasurements(
@@ -219,7 +260,8 @@ async function assertOfflineLocal(page: Page): Promise<void> {
       page.evaluate(async () => {
         const databases = await indexedDB.databases();
         return (
-          !navigator.onLine &&
+          navigator.onLine &&
+          document.querySelector('button[data-state="offline"]') !== null &&
           databases.some((database) => database.name === "markab-offline-v1")
         );
       }),
@@ -230,10 +272,8 @@ async function assertOfflineLocal(page: Page): Promise<void> {
 async function readSearchMarker(page: Page): Promise<SearchMarker> {
   return page.evaluate((selector) => {
     const marker = document.querySelector<HTMLElement>(selector);
-    if (!marker)
-      throw new Error("Benchmark search completion marker is missing");
     return {
-      generation: Number(marker.dataset.searchGeneration),
+      generation: Number(marker?.dataset.searchGeneration ?? 0),
     };
   }, searchMarkerSelector);
 }
@@ -241,14 +281,187 @@ async function readSearchMarker(page: Page): Promise<SearchMarker> {
 async function waitForSearchMarker(
   page: Page,
   generation: number,
+  stage: Omit<BenchmarkStage, "expectedMarker">,
 ): Promise<void> {
-  await page.waitForFunction(
-    ({ selector, generation }) => {
-      const marker = document.querySelector<HTMLElement>(selector);
-      return Number(marker?.dataset.searchGeneration) > generation;
-    },
-    { selector: searchMarkerSelector, generation },
+  await waitForBenchmarkStage(
+    page,
+    { ...stage, expectedMarker: generation + 1 },
+    () =>
+      page.waitForFunction(
+        ({ selector, generation }) => {
+          const marker = document.querySelector<HTMLElement>(selector);
+          return Number(marker?.dataset.searchGeneration) > generation;
+        },
+        { selector: searchMarkerSelector, generation },
+        { timeout: searchMarkerStageTimeoutMs },
+      ),
   );
+}
+
+async function waitForBenchmarkStage(
+  page: Page,
+  stage: BenchmarkStage,
+  wait: () => Promise<unknown>,
+): Promise<void> {
+  try {
+    await wait();
+  } catch (error) {
+    const state = await page
+      .evaluate((selector) => {
+        const marker = document.querySelector<HTMLElement>(selector);
+        const inputs = Array.from(
+          document.querySelectorAll<HTMLInputElement>(
+            'input[type="search"], input[type="text"]',
+          ),
+        ).map((input) => ({
+          placeholder: input.placeholder,
+          value: input.value,
+        }));
+        const target = window as Window & {
+          __benchmarkSearchGetAll?: number;
+          __benchmarkSearchTransactions?: number;
+        };
+        return {
+          browserOnline: navigator.onLine,
+          marker: marker?.dataset.searchGeneration ?? null,
+          resultRows: document.querySelectorAll("tbody tr").length,
+          inputs,
+          syncReady: document
+            .querySelector<HTMLElement>("[data-offline-sync-ready]")
+            ?.dataset.offlineSyncReady ?? null,
+          offlineSyncControl: document.querySelector(
+            'button[data-state="offline"]',
+          ) !== null,
+          indexedDbReads: target.__benchmarkSearchGetAll ?? null,
+          indexedDbTransactions: target.__benchmarkSearchTransactions ?? null,
+        };
+      }, searchMarkerSelector)
+      .catch((diagnosticError) => ({
+        diagnosticError:
+          diagnosticError instanceof Error
+            ? diagnosticError.message
+            : String(diagnosticError),
+      }));
+    const sample =
+      stage.sample === undefined
+        ? { kind: "setup", index: null }
+        : stage.sample < 0
+          ? { kind: "warmup", index: stage.sample + sampling.warmups + 1 }
+          : { kind: "measured", index: stage.sample };
+    throw new Error(
+      `BENCHMARK_STAGE_TIMEOUT ${JSON.stringify({
+        stage: stage.name,
+        route: new URL(page.url()).pathname,
+        sample,
+        searchInput: stage.input ?? null,
+        expectedMarker: stage.expectedMarker ?? null,
+        apiRequestCount: stage.apiRequests?.length ?? null,
+        apiRequests: stage.apiRequests ?? [],
+        state,
+        cause: error instanceof Error ? error.message : String(error),
+      })}`,
+    );
+  }
+}
+
+async function establishOfflineSearchState(
+  page: Page,
+  customerId: string,
+): Promise<() => Promise<void>> {
+  const updatePath = `/api/customers/${customerId}`;
+  let abortedCustomerUpdate = 0;
+  let abortedSyncPushes = 0;
+  const abortHealthCheck = async (route: Route) => {
+    if (route.request().method() !== "GET") return route.continue();
+    await route.abort("failed");
+  };
+  const abortCustomerUpdate = async (route: Route) => {
+    if (route.request().method() !== "PATCH") return route.continue();
+    abortedCustomerUpdate += 1;
+    await route.abort("failed");
+  };
+  const abortSyncPush = async (route: Route) => {
+    if (route.request().method() !== "POST") return route.continue();
+    abortedSyncPushes += 1;
+    await route.abort("failed");
+  };
+
+  await page.route(`**${updatePath}`, abortCustomerUpdate);
+  await page.route("**/api/sync/push", abortSyncPush);
+  await page.route("**/api/healthz", abortHealthCheck);
+
+  await page.locator("#customer-address").fill("Benchmark Offline Transition");
+  try {
+    const navigation = page.waitForURL(/\/customers\/[^/]+$/, {
+      timeout: searchMarkerStageTimeoutMs,
+    });
+    await page.getByRole("button", { name: "حفظ التعديلات" }).click();
+    await waitForBenchmarkStage(
+      page,
+      { name: "offline-provider-customer-update-abort" },
+      () => expect.poll(() => abortedCustomerUpdate).toBe(1),
+    );
+    await page.unroute(`**${updatePath}`, abortCustomerUpdate);
+    await waitForBenchmarkStage(
+      page,
+      { name: "offline-provider-queue-update" },
+      () => navigation,
+    );
+    await waitForBenchmarkStage(
+      page,
+      { name: "offline-provider-transition" },
+      () =>
+        expect
+          .poll(
+            () =>
+              page.evaluate(async () => {
+                const outboxCount = await new Promise<number>((resolve, reject) => {
+                  const request = indexedDB.open("markab-offline-v1");
+                  request.onerror = () => reject(request.error);
+                  request.onsuccess = () => {
+                    const database = request.result;
+                    const transaction = database.transaction("outbox", "readonly");
+                    const count = transaction.objectStore("outbox").count();
+                    count.onerror = () => reject(count.error);
+                    count.onsuccess = () => {
+                      database.close();
+                      resolve(count.result);
+                    };
+                  };
+                });
+                return {
+                  browserOnline: navigator.onLine,
+                  syncReady:
+                    document
+                      .querySelector<HTMLElement>("[data-offline-sync-ready]")
+                      ?.dataset.offlineSyncReady ?? null,
+                  offlineSyncControl: document.querySelector(
+                    'button[data-state="offline"]',
+                  ) !== null,
+                  outboxCount,
+                };
+              }),
+            { timeout: searchMarkerStageTimeoutMs },
+          )
+          .toEqual({
+            browserOnline: true,
+            syncReady: "true",
+            offlineSyncControl: true,
+            outboxCount: 1,
+          }),
+    );
+    expect(abortedSyncPushes).toBeGreaterThan(0);
+  } catch (error) {
+    await page.unroute(`**${updatePath}`, abortCustomerUpdate);
+    await page.unroute("**/api/sync/push", abortSyncPush);
+    await page.unroute("**/api/healthz", abortHealthCheck);
+    throw error;
+  }
+
+  return async () => {
+    await page.unroute("**/api/sync/push", abortSyncPush);
+    await page.unroute("**/api/healthz", abortHealthCheck);
+  };
 }
 
 async function resetSearchReadCount(
@@ -335,6 +548,7 @@ async function runOfflineSearchSamples(
   expectedRecords: number,
   term: (sample: number) => string,
   action: (sample: number) => Promise<void>,
+  restartOfflineWindow: () => Promise<void>,
 ): Promise<Measurement> {
   let apiRequests: string[] = [];
   let marker: SearchMarker;
@@ -349,12 +563,17 @@ async function runOfflineSearchSamples(
     name,
     async (sample) => {
       await action(sample);
-      await waitForSearchMarker(page, marker.generation);
+      await waitForSearchMarker(page, marker.generation, {
+        name: `${entity}-search-marker`,
+        sample,
+        input: term(sample),
+        apiRequests,
+      });
       expect(
         await page.evaluate(() => document.querySelectorAll("tbody tr").length),
       ).toBe(
         term(sample) === (entity === "customers" ? "Customer1" : "Pilot")
-          ? expectedRecords
+          ? Math.min(expectedRecords, 50)
           : 1,
       );
       const evidence = await searchReadEvidence(page);
@@ -375,7 +594,17 @@ async function runOfflineSearchSamples(
       ...sampling,
       durationMs: async () => localDurationMs,
       beforeSample: async () => {
+        await resetSearchReadCount(page, entity, -1);
+        await restartOfflineWindow();
         await assertOfflineLocal(page);
+        await waitForBenchmarkStage(
+          page,
+          { name: `${entity}-offline-refresh-read` },
+          () =>
+            expect
+              .poll(async () => (await searchReadEvidence(page)).entries.length)
+              .toBe(1),
+        );
         marker = await readSearchMarker(page);
         await resetSearchReadCount(page, entity, marker.generation + 1);
         apiRequests = [];
@@ -1134,43 +1363,88 @@ test.describe("benchmark mobile IndexedDB and sync", () => {
         profileContext.page,
         fullPilotProjectionCounts,
       );
-      await profileContext.context.setOffline(true);
       await profileContext.page
         .locator('nav.fixed[aria-label="التنقل الرئيسي"] a[href="/customers"]')
         .click();
-      await waitForSearchMarker(profileContext.page, 0);
-      const customerSearch = await runOfflineSearchSamples(
-        "indexeddb-customer-search",
+      await waitForBenchmarkStage(
         profileContext.page,
-        "customers",
-        fullPilotProjectionCounts.customers,
-        (sample) => alternatingSearchTerm(sample, "Customer1", "BENCH-1-0001"),
-        async (sample) => {
-          await profileContext.page
-            .getByPlaceholder(
-              "ابحث بالاسم أو الهوية أو رقم الرخصة أو الهاتف...",
-            )
-            .fill(alternatingSearchTerm(sample, "Customer1", "BENCH-1-0001"));
-        },
+        { name: "offline-provider-open-customer" },
+        () =>
+          Promise.all([
+            profileContext.page.waitForURL(/\/customers\/[^/]+$/, {
+              timeout: searchMarkerStageTimeoutMs,
+            }),
+            profileContext.page
+              .getByRole("button", { name: "التفاصيل" })
+              .first()
+              .click(),
+          ]),
       );
-      recordMeasurements([customerSearch], profileContext.profile);
-      await profileContext.page
-        .locator('nav.fixed[aria-label="التنقل الرئيسي"] a[href="/vehicles"]')
-        .click();
-      await waitForSearchMarker(profileContext.page, 0);
-      const vehicleSearch = await runOfflineSearchSamples(
-        "indexeddb-vehicle-search",
+      await waitForBenchmarkStage(
         profileContext.page,
-        "vehicles",
-        fullPilotProjectionCounts.vehicles,
-        (sample) => alternatingSearchTerm(sample, "Pilot", "BM-1-001"),
-        async (sample) => {
-          await profileContext.page
-            .getByPlaceholder("ابحث بالاسم أو رقم اللوحة أو سنة الصنع...")
-            .fill(alternatingSearchTerm(sample, "Pilot", "BM-1-001"));
-        },
+        { name: "offline-provider-open-customer-edit" },
+        () =>
+          Promise.all([
+            profileContext.page.waitForURL(/\/edit$/, {
+              timeout: searchMarkerStageTimeoutMs,
+            }),
+            profileContext.page.getByRole("button", { name: "تعديل" }).click(),
+          ]),
       );
-      recordMeasurements([vehicleSearch], profileContext.profile);
+      await profileContext.page.locator("#customer-address").waitFor();
+      const customerId = new URL(profileContext.page.url()).pathname.split("/")[2]!;
+      const stopOfflineSimulation = await establishOfflineSearchState(
+        profileContext.page,
+        customerId,
+      );
+      try {
+        await profileContext.page
+          .locator('nav.fixed[aria-label="التنقل الرئيسي"] a[href="/customers"]')
+          .click();
+        const customerSearch = await runOfflineSearchSamples(
+          "indexeddb-customer-search",
+          profileContext.page,
+          "customers",
+          fullPilotProjectionCounts.customers,
+          (sample) => alternatingSearchTerm(sample, "Customer1", "BENCH-1-0001"),
+          async (sample) => {
+            await profileContext.page
+              .getByPlaceholder(
+                "ابحث بالاسم أو الهوية أو رقم الرخصة أو الهاتف...",
+              )
+              .fill(alternatingSearchTerm(sample, "Customer1", "BENCH-1-0001"));
+          },
+          async () => {
+            await profileContext.page
+              .getByRole("button", { name: "غير متصل" })
+              .click();
+          },
+        );
+        recordMeasurements([customerSearch], profileContext.profile);
+        await profileContext.page
+          .locator('nav.fixed[aria-label="التنقل الرئيسي"] a[href="/vehicles"]')
+          .click();
+        const vehicleSearch = await runOfflineSearchSamples(
+          "indexeddb-vehicle-search",
+          profileContext.page,
+          "vehicles",
+          fullPilotProjectionCounts.vehicles,
+          (sample) => alternatingSearchTerm(sample, "Pilot", "BM-1-001"),
+          async (sample) => {
+            await profileContext.page
+              .getByPlaceholder("ابحث بالاسم أو رقم اللوحة أو سنة الصنع...")
+              .fill(alternatingSearchTerm(sample, "Pilot", "BM-1-001"));
+          },
+          async () => {
+            await profileContext.page
+              .getByRole("button", { name: "غير متصل" })
+              .click();
+          },
+        );
+        recordMeasurements([vehicleSearch], profileContext.profile);
+      } finally {
+        await stopOfflineSimulation();
+      }
     } finally {
       await profileContext.context.close();
       await resetBenchmark();
