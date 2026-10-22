@@ -19,6 +19,7 @@ const paymentVehicleId = "00000000-0000-4000-8000-000000000012";
 const lifecycleRentalId = "00000000-0000-4000-8000-000000000013";
 const conflictRentalId = "00000000-0000-4000-8000-000000000014";
 const paymentRentalId = "00000000-0000-4000-8000-000000000015";
+const maintenanceVehicleId = "00000000-0000-4000-8000-000000000016";
 const employeeEmail = "employee-e2e@markab.local";
 const platformOwnerEmail = "platform-owner-e2e@markab.local";
 
@@ -207,6 +208,13 @@ export async function seedE2e(prisma: PrismaClient): Promise<E2eSeed> {
         model: "E2E Payment",
         plate_number: "E2E-1004",
         status: "RESERVED" as const,
+      },
+      {
+        id: maintenanceVehicleId,
+        make: "Toyota",
+        model: "E2E Maintenance",
+        plate_number: "E2E-1005",
+        status: "AVAILABLE" as const,
       },
     ]) {
       await transaction.vehicle.upsert({
