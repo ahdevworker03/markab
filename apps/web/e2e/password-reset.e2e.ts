@@ -44,4 +44,8 @@ test("password reset rejects the old password and accepts the new password", asy
 
   await login(page, newPassword);
   await expect(page).toHaveURL(/\/$/);
+
+  await requestReset(page, e2eOwner.email);
+  await page.goto(await readLatestResetUrl(e2eOwner.email));
+  await confirmReset(page, e2eOwner.password);
 });
