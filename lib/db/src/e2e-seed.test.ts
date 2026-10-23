@@ -64,7 +64,7 @@ test("seeds the deterministic E2E owner", async () => {
     const result = await seedE2e(prisma as never);
 
     assert.equal(result.ownerEmail, "owner-e2e@markab.local");
-    assert.equal(calls.length, 15);
+    assert.equal(calls.length, 16);
     assert.equal(calls[1]!.data.email, "owner-e2e@markab.local");
     assert.deepEqual(
       calls
@@ -92,7 +92,7 @@ test("seeds the deterministic E2E owner", async () => {
       calls
         .filter((call) => call.model === "vehicle")
         .map((call) => call.data.status),
-      ["AVAILABLE", "RESERVED", "RESERVED", "RESERVED"],
+      ["AVAILABLE", "RESERVED", "RESERVED", "RESERVED", "AVAILABLE"],
     );
   } finally {
     for (const key of Object.keys(process.env)) delete process.env[key];

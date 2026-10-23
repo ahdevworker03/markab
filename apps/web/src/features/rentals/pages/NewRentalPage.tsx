@@ -123,10 +123,15 @@ export default function NewRentalPage() {
   );
 
   const availabilityParams = useMemo(() => {
-    if (!pickupDateTime || !returnDateTime || returnDateTime <= pickupDateTime)
+    if (
+      !selectedVehicleId ||
+      !pickupDateTime ||
+      !returnDateTime ||
+      returnDateTime <= pickupDateTime
+    )
       return null;
     return {
-      vehicleId: selectedVehicleId || "x",
+      vehicleId: selectedVehicleId,
       pickupDate: pickupDateTime.toISOString(),
       expectedReturnDate: returnDateTime.toISOString(),
     };
