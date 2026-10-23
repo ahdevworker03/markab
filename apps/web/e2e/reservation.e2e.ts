@@ -6,7 +6,9 @@ import {
   selectE2eDate,
 } from "./e2e-fixtures";
 
-test("customer and available vehicle create a reserved rental", async ({ page }) => {
+test("customer and available vehicle create a reserved rental", async ({
+  page,
+}) => {
   await loginAsE2eOwner(page);
   await page.goto("/customers/add");
   await page.getByLabel("الاسم الأول").fill("Reservation");
@@ -29,9 +31,13 @@ test("customer and available vehicle create a reserved rental", async ({ page })
   await page.getByLabel("الأجرة اليومية").fill("75");
   await page.getByRole("button", { name: "حفظ الإيجار" }).click();
 
-  await expect(page.getByRole("heading", { name: "تم إنشاء عقد الإيجار" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "تم إنشاء عقد الإيجار" }),
+  ).toBeVisible();
   await expect(page.getByText("Reservation E2E")).toBeVisible();
-  await expect(page.getByText(e2eRentalFixtures.availableVehicle)).toBeVisible();
+  await expect(
+    page.getByText(e2eRentalFixtures.availableVehicle),
+  ).toBeVisible();
   await page.waitForURL(/\/rentals$/);
   const rentals = page.getByRole("table");
   const reservation = rentals.getByRole("row", { name: /Reservation E2E/ });

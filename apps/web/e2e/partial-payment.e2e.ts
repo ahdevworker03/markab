@@ -6,13 +6,17 @@ import {
   selectE2eDate,
 } from "./e2e-fixtures";
 
-test("partial payment updates the server-derived outstanding balance", async ({ page }) => {
+test("partial payment updates the server-derived outstanding balance", async ({
+  page,
+}) => {
   await loginAsE2eOwner(page);
   await page.goto(`/rentals/${e2eRentalFixtures.paymentRentalId}`);
   const total = page.getByText("إجمالي العقد", { exact: true }).locator("..");
   const paid = page.getByText("المدفوع", { exact: true }).locator("..");
   const outstanding = page.getByText("المتبقي", { exact: true }).locator("..");
-  const paymentStatus = page.getByText("حالة الدفع", { exact: true }).locator("..");
+  const paymentStatus = page
+    .getByText("حالة الدفع", { exact: true })
+    .locator("..");
   await expect(total.locator(":scope > div")).toHaveText("USD 100");
   await expect(paid.locator(":scope > div")).toHaveText("USD 0");
 

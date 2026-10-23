@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { e2eRentalFixtures, loginAsE2eOwner } from "./e2e-fixtures";
 
-test("reserved rental is picked up and returned through its lifecycle", async ({ page }) => {
+test("reserved rental is picked up and returned through its lifecycle", async ({
+  page,
+}) => {
   await loginAsE2eOwner(page);
   await page.goto(`/rentals/${e2eRentalFixtures.lifecycleRentalId}`);
   const rentalStatus = page.getByText("حالة الإيجار").locator("..");

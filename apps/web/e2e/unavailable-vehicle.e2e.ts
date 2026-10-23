@@ -5,7 +5,9 @@ import {
   selectE2eDate,
 } from "./e2e-fixtures";
 
-test("overlapping reservation reports an unavailable vehicle without creating another rental", async ({ page }) => {
+test("overlapping reservation reports an unavailable vehicle without creating another rental", async ({
+  page,
+}) => {
   await loginAsE2eOwner(page);
   await page.goto("/rentals/new");
   await page.getByLabel("البحث عن عميل").fill("عميل اختبار");
@@ -15,7 +17,9 @@ test("overlapping reservation reports an unavailable vehicle without creating an
   await selectE2eDate(page, "تاريخ الاستلام", dateAfterE2eAnchor(4));
   await selectE2eDate(page, "تاريخ الإرجاع المتوقع", dateAfterE2eAnchor(6));
   await page.getByLabel("الأجرة اليومية").fill("100");
-  await expect(page.getByText("هذه السيارة غير متاحة في الفترة المحددة.")).toBeVisible();
+  await expect(
+    page.getByText("هذه السيارة غير متاحة في الفترة المحددة."),
+  ).toBeVisible();
   await page.getByRole("button", { name: "حفظ الإيجار" }).click();
   await expect(
     page.getByRole("alert").filter({

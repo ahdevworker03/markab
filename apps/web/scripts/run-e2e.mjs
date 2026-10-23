@@ -1,8 +1,12 @@
 import { spawn } from "node:child_process";
 import { mkdir, rm } from "node:fs/promises";
 import { resolve } from "node:path";
-import { setTimeout as sleep } from "node:timers/promises";
-import { start, stop } from "./e2e-processes.mjs";
+import {
+  assertPortAvailable,
+  start,
+  stop,
+  waitForHttp,
+} from "./e2e-processes.mjs";
 
 const rootDirectory = resolve(import.meta.dirname, "../../..");
 const webDirectory = resolve(rootDirectory, "apps/web");
@@ -47,20 +51,6 @@ function run(command, args, options = {}) {
   });
 }
 
-async function waitFor(url, process, name) {
-  for (let attempt = 0; attempt < 120; attempt += 1) {
-    if (process.exitCode !== null)
-      throw new Error(`${name} exited before starting.`);
-    try {
-      if ((await fetch(url)).ok) return;
-    } catch {
-      // The process has not bound its local port yet.
-    }
-    await sleep(250);
-  }
-  throw new Error(`${name} did not start at ${url}.`);
-}
-
 async function waitForDatabase(process) {
   for (let attempt = 0; attempt < 120; attempt += 1) {
     if (process.exitCode !== null)
@@ -77,7 +67,7 @@ async function waitForDatabase(process) {
       ]);
       return;
     } catch {
-      await sleep(250);
+      await new Promise((resolve) => setTimeout(resolve, 250));
     }
   }
   throw new Error("E2E PostgreSQL did not become ready.");
@@ -133,11 +123,13 @@ try {
   await waitForDatabase(database);
   await run("pnpm", ["--filter", "@workspace/db", "run", "db:migrate:deploy"]);
   await run("pnpm", ["--filter", "@workspace/db", "run", "db:seed:e2e"]);
+  await assertPortAvailable("127.0.0.1", 3002, "E2E API");
   api = await start(
     "pnpm",
     ["--filter", "@workspace/api-server", "run", "start"],
     { cwd: rootDirectory, env: environment, stdio: "inherit" },
   );
+  await assertPortAvailable("127.0.0.1", 4173, "E2E web preview");
   web = await start(
     "pnpm",
     [
@@ -155,8 +147,8 @@ try {
     { cwd: rootDirectory, env: environment, stdio: "inherit" },
   );
   await Promise.all([
-    waitFor(`${apiOrigin}/api/healthz`, api, "E2E API"),
-    waitFor(webOrigin, web, "E2E web preview"),
+    waitForHttp(`${apiOrigin}/api/healthz`, api, "E2E API"),
+    waitForHttp(webOrigin, web, "E2E web preview"),
   ]);
   await run("pnpm", [
     "--filter",

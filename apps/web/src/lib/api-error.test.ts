@@ -28,9 +28,8 @@ describe("getApiErrorMessage", () => {
 
   it("localizes an unavailable vehicle for a rental request", () => {
     expect(
-      getApiErrorMessage(
-        apiError("VEHICLE_UNAVAILABLE", 409, "/api/rentals"),
-      ).title,
+      getApiErrorMessage(apiError("VEHICLE_UNAVAILABLE", 409, "/api/rentals"))
+        .title,
     ).toBe("هذه السيارة غير متاحة في الفترة المحددة.");
   });
 

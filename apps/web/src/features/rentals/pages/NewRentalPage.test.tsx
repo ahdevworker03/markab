@@ -5,6 +5,9 @@ import NewRentalPage from "./NewRentalPage";
 
 const setLocation = vi.fn();
 const useOffline = vi.hoisted(() => vi.fn());
+const useCheckRentalAvailability = vi.hoisted(() =>
+  vi.fn(() => ({ data: { data: { available: true } } })),
+);
 const create = {
   isPending: false,
   mutateAsync: vi.fn().mockResolvedValue(undefined),
@@ -38,7 +41,7 @@ vi.mock("@workspace/api-client-react", () => ({
   getCheckRentalAvailabilityQueryKey: vi.fn(),
   getListRentalsQueryKey: vi.fn(),
   getListVehiclesQueryKey: vi.fn(),
-  useCheckRentalAvailability: () => ({ data: { data: { available: true } } }),
+  useCheckRentalAvailability,
   useCreateRental: () => create,
   useListCustomers: () => ({ data: { data: [customer] }, isLoading: false }),
   useListVehicles: () => ({ data: { data: [vehicle] }, isLoading: false }),
@@ -184,7 +187,9 @@ describe("NewRentalPage", () => {
       );
     });
     expect(
-      screen.getByRole("heading", { name: "تمت إضافة الإيجار إلى قائمة الانتظار" }),
+      screen.getByRole("heading", {
+        name: "تمت إضافة الإيجار إلى قائمة الانتظار",
+      }),
     ).toBeInTheDocument();
     expect(
       screen.getByText("سيُرسل إلى الخادم للتحقق عند استعادة الاتصال."),
@@ -231,6 +236,18 @@ describe("NewRentalPage", () => {
     ).toContain("USD 50");
     expect(screen.getByText("المدة").parentElement?.textContent).toContain(
       "3 أيام",
+    );
+  });
+
+  it("does not check availability before a vehicle is selected", () => {
+    render(<NewRentalPage />);
+    setValidPeriod();
+
+    expect(useCheckRentalAvailability).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        query: expect.objectContaining({ enabled: false }),
+      }),
     );
   });
 });

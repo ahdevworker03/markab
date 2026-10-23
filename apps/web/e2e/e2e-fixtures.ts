@@ -12,9 +12,9 @@ export const e2eOwner = {
 
 export const e2eRentalFixtures = {
   availableVehicle: "Toyota E2E Available",
-  lifecycleRentalId: "00000000-0000-4000-8000-000000000008",
+  lifecycleRentalId: "00000000-0000-4000-8000-000000000013",
   conflictVehicle: "Toyota E2E Conflict",
-  paymentRentalId: "00000000-0000-4000-8000-000000000010",
+  paymentRentalId: "00000000-0000-4000-8000-000000000015",
 } as const;
 
 export function dateAfterE2eAnchor(daysFromToday: number): string {
@@ -54,6 +54,20 @@ export async function loginAsE2eOwner(page: Page): Promise<void> {
   await page.getByRole("button", { name: "دخول" }).click();
   await page.waitForURL(/\/$/);
 }
+
+export const e2eEmployee = {
+  email: "employee-e2e@markab.local",
+  password: "e2e-owner-password",
+} as const;
+
+export const e2ePlatformOwner = {
+  email: "platform-owner-e2e@markab.local",
+  password: "e2e-owner-password",
+} as const;
+
+export const e2eTenantBoundary = {
+  otherCustomerId: "00000000-0000-4000-8000-000000000004",
+} as const;
 
 type ResetDelivery = {
   email: string;
