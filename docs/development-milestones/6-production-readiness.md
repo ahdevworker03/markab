@@ -36,9 +36,9 @@ Milestones 1 through 5.8 and Step 58 are documented as complete. Milestone 5.8 c
 
 ### Functionality Requiring Completion
 
-- Platform administration has a status mutation but no organization discovery/detail contract, dedicated frontend route, or secure production bootstrap.
-- Production environment validation, deployable artifacts, durable object storage, dependency-aware readiness, graceful shutdown, centralized observability, backups, restore evidence, and release runbooks are incomplete.
-- The planned browser E2E suite is documented but has no executable runner, configuration, scripts, or scenarios.
+- Platform administration now has organization discovery/detail APIs, a dedicated frontend route, and a secure production bootstrap command; production bootstrap rehearsal remains release work.
+- Production deployment and operations foundations, including validated artifacts, durable object storage, readiness, graceful shutdown, observability, backup/restore evidence, and runbooks, are complete under Step 65; final Step 66 release verification and pilot go/no-go remain open.
+- The executable normal browser E2E suite now exists; remaining completion work is release verification, manual/offline coverage, and CI evidence.
 
 ### Deferred or Future Work
 
@@ -135,7 +135,7 @@ Create one evidence-based production-readiness baseline and lock the decisions r
 ### Current State
 
 - Milestone 5.8 is closed. Architecture documents establish the component topology and PostgreSQL authority. The production deployment providers are already approved (see "Approved Production Deployment Decisions" above); this step locks the remaining synchronization contracts, pilot performance targets, recovery objectives, and validates the approved initial capacity against representative staging measurements.
-- The E2E and manual plans define release-critical workflows, but no executable E2E environment exists. Test, build, migration, Docker, storage, email, and health capabilities are incomplete for production.
+- The E2E and manual plans define release-critical workflows. An executable normal E2E environment now exists; remaining test, build, migration, Docker, storage, email, and health capabilities still require their applicable production-release evidence.
 
 ### Scope
 
@@ -703,6 +703,8 @@ After this migration succeeds, normal rollback to the old API is unsafe because 
 
 ## Step 66 — Regression Hardening, Release Verification, and Documentation
 
+**Status:** Online E2E implementation and its latest integrated verification are complete. Step 66 and Milestone 6 remain open pending the remaining release evidence and final pilot go/no-go decision.
+
 ### Objective
 
 Prove the integrated Version 2 product is safe and usable in production, fix release-blocking defects at their root, update authoritative documentation/runbooks, and make the final go/no-go decision.
@@ -710,7 +712,13 @@ Prove the integrated Version 2 product is safe and usable in production, fix rel
 ### Current State
 
 - Lower-level API/frontend coverage is substantial and should be extended rather than replaced.
-- `docs/testing/e2e-test-plan.md` defines six P0 and two optional P1 initial scenarios, but no executable suite exists; `docs/testing/manual-test-plan.md` defines responsive, RTL, accessibility, browser, file, print/PDF, offline, security-state, and release checks. README and several architecture/testing statements are stale relative to current implementation.
+- The executable normal E2E environment uses a built production web preview, real API process, dedicated disposable PostgreSQL E2E database, `prisma migrate deploy`, deterministic E2E seed, controlled E2E password-reset delivery, and an isolated browser runner. Runner-owned API/frontend ports fail fast when occupied, so Playwright cannot run against an unrelated process.
+- The normal browser suite covers authenticated access/session; customer and vehicle reservation; pickup and return; unavailable-vehicle conflict; partial payment and remaining balance; tenant/employee access boundary; Platform Admin organization suspend/reactivate; password reset; deterministic owner-password usability after reset-isolation cleanup; and Maintenance P1 creation, start, active-maintenance rental-selection blocking, completion with cost, and vehicle availability restoration.
+- Task P1 has no browser E2E because API tests own lifecycle, authorization, persistence, duplicate completion, and recurrence correctness; frontend tests own create/redirect/list/filter/completion/error/employee-control behavior; and manual release verification owns real UI, navigation, and dashboard integration. Browser duplication does not materially close a release-critical gap.
+- Latest integrated verification on `staging`: full normal E2E `10/10` passed; Maintenance P1 passed individually; combined business E2Es `7/7` passed; rental page tests `7/7`, maintenance API tests `46/46`, maintenance frontend tests `8/8`, and E2E seed tests `1/1` passed.
+- This slice fixed stale vehicle-detail state after pickup/return by invalidating the individual vehicle query; maps rental `VEHICLE_UNAVAILABLE` to `هذه السيارة غير متاحة في الفترة المحددة.` while retaining the maintenance-specific message; disables the New Rental availability query until a real vehicle is selected rather than requesting placeholder vehicle ID `x`; restores the deterministic owner password after password-reset E2E; and fails the E2E runner before Playwright starts when an owned port is occupied.
+- Step 66 still requires full risk-based API/web regression and CI release gates; manual release-plan verification; responsive/RTL/accessibility/browser verification; files/contracts/PDF/print/CSV checks; financial/state/report reconciliation; staging/release smoke and operator rehearsal; security/migration/backup/restore/monitoring evidence; documentation reconciliation; and final pilot go/no-go decision.
+- Step 64 remains **PAUSED / OPEN**: reconnect/reconciliation P95 `<= 10,000 ms`, offline customer/vehicle search qualification during retry-state transitions, and offline-first production qualification remain open. The controlled online-first pilot path remains allowed; full Milestone 6 completion remains blocked until these gates and the remaining Step 65/66 criteria are satisfied.
 
 ### Scope
 
@@ -747,6 +755,8 @@ Prove the integrated Version 2 product is safe and usable in production, fix rel
 
 - Run clean install/generated drift/typecheck/lint/test/build/migration/container/security/performance checks through CI.
 - Run the complete required E2E suite repeatedly against a reset isolated environment to establish determinism; run focused regression tests for every fixed defect and full affected-package suites.
+- Completed: full normal E2E `10/10`, individual Maintenance P1, and combined business E2Es `7/7` passed.
+- Completed: rental page tests `7/7`, maintenance API tests `46/46`, maintenance frontend tests `8/8`, and E2E seed tests `1/1` passed. Typecheck, targeted ESLint, Prettier, API and web production builds, and `git diff --check` passed.
 - Run production-like deployment smoke probes and non-destructive production health/shell checks after release; verify migration status, backup completion, alert delivery, and version correlation automatically where the selected providers support it.
 - Manual: execute `manual-test-plan.md` release sections with recorded evidence; complete the full owner rental lifecycle, employee restrictions, cross-tenant denial, platform lifecycle workflow, real reset email, storage/files, reports/exports, and approved offline outage/reconnect workflows; verify 375px/768px/1024px/1440px/1920px layouts, keyboard/focus/screen-reader critical paths, and supported Chromium/Firefox/Safari behavior; conduct a timed operator rehearsal for bootstrap, deployment, migration, backup restore, incident detection, rollback/fix-forward, and recovery.
 
